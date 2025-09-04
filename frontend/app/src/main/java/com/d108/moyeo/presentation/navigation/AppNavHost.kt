@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
+import com.d108.moyeo.presentation.ui.screen.home.HomeSecondScreen
 import com.d108.moyeo.presentation.ui.screen.more.MoreScreen
 import com.d108.moyeo.presentation.ui.screen.qr.QRScreen
 
@@ -25,6 +26,9 @@ fun AppNavHost(
     ) {
         composable(AppScreen.Home.route) {
             HomeScreen(navController = navController)
+        }
+        composable(AppScreen.HomeSecond.route) { // HomeSecondScreen 라우트 추가
+            HomeSecondScreen(navController = navController)
         }
 
         composable(AppScreen.Exchange.route) {
