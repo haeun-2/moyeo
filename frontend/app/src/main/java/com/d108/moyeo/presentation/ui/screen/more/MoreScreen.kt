@@ -1,6 +1,5 @@
 package com.d108.moyeo.presentation.ui.screen.more
 
-import android.R.attr.text
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,9 +20,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.text
 import androidx.navigation.NavController
+import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
@@ -34,7 +32,7 @@ import com.d108.moyeo.presentation.ui.component.more.MoreItem
 fun MoreScreen(navController: NavController) {
 
     val context = LocalContext.current
-    val menuItems = listOf("생체인증", "알림 설정", "비밀번호 변경", "공지사항", "로그아웃")
+    val menuItems = listOf("생체인증", "연결 계좌 관리", "공지 사항", "비밀번호 변경", "자주 묻는 질문")
 
     Column(
         modifier = Modifier.padding(
@@ -82,7 +80,16 @@ fun MoreScreen(navController: NavController) {
                 } else {
                     // 다른 메뉴들은 기존과 동일하게 표시
                     MoreItem(
-                        onClick = { Toast.makeText(context, "'$menuItem' 클릭됨", Toast.LENGTH_SHORT).show() },
+                        onClick = {
+                            when (menuItem) {
+                                "연결 계좌 관리" -> navController.navigate(AppScreen.ConnectedAccountSettings.route)
+                                "공지 사항" -> navController.navigate(AppScreen.Notices.route)
+                                "비밀번호 변경" -> navController.navigate(AppScreen.ChangePassword.route)
+                                "자주 묻는 질문" -> navController.navigate(AppScreen.FAQ.route)
+
+
+                            }
+                        },
                         text = menuItem
                     )
                 }
