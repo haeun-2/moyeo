@@ -86,8 +86,6 @@ fun MoreScreen(navController: NavController) {
                                 "공지 사항" -> navController.navigate(AppScreen.Notices.route)
                                 "비밀번호 변경" -> navController.navigate(AppScreen.ChangePassword.route)
                                 "자주 묻는 질문" -> navController.navigate(AppScreen.FAQ.route)
-
-
                             }
                         },
                         text = menuItem
