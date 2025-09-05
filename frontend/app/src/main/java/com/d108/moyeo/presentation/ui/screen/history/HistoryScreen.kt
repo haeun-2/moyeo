@@ -46,7 +46,7 @@ import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.onPrimaryLight
 import com.d108.moyeo.presentation.theme.primaryLight
 import com.d108.moyeo.presentation.theme.surfaceLight
-
+import com.d108.moyeo.presentation.ui.component.history.HistoryItem
 
 
 @Composable
@@ -132,7 +132,7 @@ fun HistoryScreen(navController: NavController) {
             // 2. 원형 그래프 (임시 플레이스홀더)
             Box(
                 modifier = Modifier
-                    .size(214.dp)
+                    .size(214.dp)  // 이 크기를 상수화 할 것!!
                     .clip(CircleShape)
                     .background(surfaceLight),
                 contentAlignment = Alignment.Center
@@ -164,18 +164,12 @@ fun HistoryScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(Spacing.Large))
 
-            // 5. 리사이클러뷰(LazyColumn) 영역
             LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.width(248.dp),  // 이 크기를 상수화 할 것!
                 verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
             ) {
                 items(20) { index ->
-                    Text(
-                        text = "내역 ${index + 1}",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp)
-                    )
+                    HistoryItem() // 기존 Text를 새로 만든 HistoryItem으로 교체
                 }
             }
         }
