@@ -30,6 +30,10 @@ object Padding {
     val ScreenTop = 72.dp
     val ScreenTopLarge = 96.dp
 
+    val ScreenBottomSmall = 48.dp
+    val ScreenBottom = 72.dp
+    val ScreenBottomLarge = 96.dp
+
     // 일반적인 컨텐츠 영역의 기본 패딩
     val Content = 16.dp
 }
