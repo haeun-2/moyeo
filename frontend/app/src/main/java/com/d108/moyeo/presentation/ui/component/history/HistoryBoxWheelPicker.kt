@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.component.common
+package com.d108.moyeo.presentation.ui.component.history
 
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Box
@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,11 +23,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.d108.moyeo.presentation.theme.primaryLight
 import kotlin.math.abs
 
 @Composable
-fun WheelPicker(
+fun HistoryBoxWheelPicker(
     items: List<String>,
     modifier: Modifier = Modifier,
     itemHeight: Dp = 40.dp,
@@ -88,9 +86,9 @@ fun WheelPicker(
 
         // 2. 선택 영역을 표시하는 상단/하단 라인
         Column(modifier = Modifier.fillMaxWidth()) {
-            HorizontalDivider(thickness = 2.dp, color = primaryLight)
+            HorizontalDivider(thickness = 2.dp, color = Color.Black)
             Spacer(modifier = Modifier.height(itemHeight))
-            HorizontalDivider(thickness = 2.dp, color = primaryLight)
+            HorizontalDivider(thickness = 2.dp, color = Color.Black)
         }
     }
 }

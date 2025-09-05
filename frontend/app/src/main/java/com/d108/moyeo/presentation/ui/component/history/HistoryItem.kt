@@ -65,7 +65,6 @@ fun HistoryItem() {
 @Preview(showBackground = true)
 @Composable
 fun HistoryItemPreview() {
-    // 미리보기 화면의 여백을 위해 Box로 감쌉니다.
     Box(modifier = Modifier.padding(16.dp)) {
         HistoryItem()
     }

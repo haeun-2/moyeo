@@ -18,19 +18,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.d108.moyeo.presentation.ui.component.common.WheelPicker
+import com.d108.moyeo.presentation.theme.Typography
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryDetailBottomSheet(
-    onDismiss: () -> Unit // 부모 Composable에서 닫기 이벤트를 처리하기 위한 람다
+    onDismiss: () -> Unit, // 취소(외부 클릭)
+    onConfirm: (selectedCategory: String) -> Unit,  // 확인 버튼 클릭
+    onCancel: () -> Unit  // 핸들 내리기
 ) {
-    val sheetState = rememberModalBottomSheetState()
-    val categories = remember { listOf("통장1", "통장2", "통장3", "통장4", "통장5", "통장 6") }
-    var selectedCategory by remember { mutableStateOf(categories[0]) }
+
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true  // 걸쳐있는 동작 해제
+    )
+    val moyeoBoxes = remember { listOf("통장1", "통장2", "통장3", "통장4", "통장5", "통장 6") }
+    var selectedMoyeoBoxes by remember { mutableStateOf(moyeoBoxes[0]) }
 
     ModalBottomSheet(
-        onDismissRequest = { onDismiss() },
+        onDismissRequest = { onDismiss() },  // 시트 외부 클릭, 뒤로가기, 드래그 핸들로 내리기
         sheetState = sheetState
     ) {
         // 바텀시트 내부에 표시될 내용
@@ -42,23 +47,21 @@ fun HistoryDetailBottomSheet(
         ) {
             Text(
                 text = "카테고리 선택",
-                style = com.d108.moyeo.presentation.theme.Typography.titleLarge
+                style = Typography.titleLarge
             )
             Spacer(modifier = Modifier.height(20.dp))
 
             // WheelPicker 컴포저블 호출
-            WheelPicker(
-                items = categories,
+            HistoryBoxWheelPicker(
+                items = moyeoBoxes,
                 onItemSelected = { category ->
-                    selectedCategory = category // 선택된 아이템 상태 업데이트
+                    selectedMoyeoBoxes = category // 선택된 아이템 상태 업데이트
                 }
             )
 
             Spacer(modifier = Modifier.height(20.dp))
-            Text(text = "선택된 항목: $selectedCategory")
-            Spacer(modifier = Modifier.height(20.dp))
 
-            Button(onClick = { onDismiss() }) {
+            Button(onClick = { onConfirm(selectedMoyeoBoxes) }) {
                 Text("선택 완료")
             }
         }

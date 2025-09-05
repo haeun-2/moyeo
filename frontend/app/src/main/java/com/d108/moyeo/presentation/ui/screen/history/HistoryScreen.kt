@@ -53,7 +53,16 @@ fun HistoryScreen(navController: NavController) {
     var showHistoryDetailSheet by remember { mutableStateOf(false) }
 
     if (showHistoryDetailSheet) {
-        HistoryDetailBottomSheet(onDismiss = { showHistoryDetailSheet = false })
+        HistoryDetailBottomSheet(
+            onDismiss = { showHistoryDetailSheet = false },
+            onConfirm = { selectedCategory ->
+                showHistoryDetailSheet = false
+                Toast.makeText(context, "선택된 모여박스: ${selectedCategory}", Toast.LENGTH_SHORT).show()
+            },
+            onCancel = {
+                showHistoryDetailSheet = false
+            }
+        )
     }
 
     Column(
