@@ -33,9 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -43,9 +41,8 @@ import androidx.navigation.compose.rememberNavController
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.theme.onPrimaryLight
-import com.d108.moyeo.presentation.theme.primaryLight
 import com.d108.moyeo.presentation.theme.surfaceLight
+import com.d108.moyeo.presentation.ui.component.history.HistoryDetailBottomSheet
 import com.d108.moyeo.presentation.ui.component.history.HistoryItem
 
 
@@ -53,6 +50,11 @@ import com.d108.moyeo.presentation.ui.component.history.HistoryItem
 fun HistoryScreen(navController: NavController) {
 
     val context = LocalContext.current
+    var showHistoryDetailSheet by remember { mutableStateOf(false) }
+
+    if (showHistoryDetailSheet) {
+        HistoryDetailBottomSheet(onDismiss = { showHistoryDetailSheet = false })
+    }
 
     Column(
         modifier = Modifier.padding(
@@ -66,8 +68,8 @@ fun HistoryScreen(navController: NavController) {
         ) {
             Row(
                 modifier = Modifier
-                    .clickable { // 이 Row에만 클릭 이벤트를 적용합니다.
-                        Toast.makeText(context, "사용내역 클릭됨!", Toast.LENGTH_SHORT).show()
+                    .clickable {
+                        showHistoryDetailSheet = true
                     },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -83,17 +85,6 @@ fun HistoryScreen(navController: NavController) {
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = "상세보기로 이동"
                 )
-            }
-
-            Button(
-                onClick = { Toast.makeText(context, "지도 보기 클릭됨", Toast.LENGTH_SHORT).show() },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryLight,
-                    contentColor = onPrimaryLight
-                ),
-                modifier = Modifier.align(Alignment.CenterEnd) // Box의 오른쪽 끝에 배치합니다.
-            ) {
-                Text(text = "지도 보기")
             }
         }
 
@@ -169,7 +160,7 @@ fun HistoryScreen(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
             ) {
                 items(20) { index ->
-                    HistoryItem() // 기존 Text를 새로 만든 HistoryItem으로 교체
+                    HistoryItem()
                 }
             }
         }

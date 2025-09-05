@@ -11,9 +11,14 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.d108.moyeo.presentation.ui.component.common.WheelPicker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,6 +26,8 @@ fun HistoryDetailBottomSheet(
     onDismiss: () -> Unit // 부모 Composable에서 닫기 이벤트를 처리하기 위한 람다
 ) {
     val sheetState = rememberModalBottomSheetState()
+    val categories = remember { listOf("통장1", "통장2", "통장3", "통장4", "통장5", "통장 6") }
+    var selectedCategory by remember { mutableStateOf(categories[0]) }
 
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
@@ -34,14 +41,25 @@ fun HistoryDetailBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "사용내역 상세",
+                text = "카테고리 선택",
                 style = com.d108.moyeo.presentation.theme.Typography.titleLarge
             )
             Spacer(modifier = Modifier.height(20.dp))
-            Text("여기에 상세 내역 UI가 들어갑니다.")
+
+            // WheelPicker 컴포저블 호출
+            WheelPicker(
+                items = categories,
+                onItemSelected = { category ->
+                    selectedCategory = category // 선택된 아이템 상태 업데이트
+                }
+            )
+
             Spacer(modifier = Modifier.height(20.dp))
+            Text(text = "선택된 항목: $selectedCategory")
+            Spacer(modifier = Modifier.height(20.dp))
+
             Button(onClick = { onDismiss() }) {
-                Text("닫기")
+                Text("선택 완료")
             }
         }
     }
