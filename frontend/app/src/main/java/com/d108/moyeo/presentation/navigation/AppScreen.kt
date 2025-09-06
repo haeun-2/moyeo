@@ -19,6 +19,10 @@ sealed class AppScreen(
 
     object Dummy: AppScreen(route = "dummy", title = "Dummy")
 
+
+    // 로그인 관련
+    object Login: AppScreen(route = "login", title= "Login")
+
     // 홈 스크린 관련
     object Home: AppScreen(route = "home", title = "Home", icon = Icons.Default.Home)
     object HomeSecond : AppScreen(route = "home_second", title = "Home Second") // HomeSecond 스크린 추가

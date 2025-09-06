@@ -2,7 +2,6 @@ package com.d108.moyeo.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.d108.moyeo.presentation.ui.screen.*
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -10,6 +9,7 @@ import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeSecondScreen
+import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.MoreScreen
 import com.d108.moyeo.presentation.ui.screen.qr.QRScreen
 
@@ -24,6 +24,11 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = modifier
     ) {
+
+        composable(AppScreen.Login.route) {
+            LoginScreen(navController = navController)
+        }
+
         composable(AppScreen.Home.route) {
             HomeScreen(navController = navController)
         }
