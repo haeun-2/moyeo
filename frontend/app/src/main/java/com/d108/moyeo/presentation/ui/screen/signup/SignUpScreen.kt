@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.screen.signup
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation.Companion.keyboardOptions
@@ -25,6 +26,11 @@ fun SignUpScreen(
     navController: NavController,
     viewModel: SignUpViewModel = viewModel()
 ) {
+
+    BackHandler {
+        viewModel.onBackClicked()
+    }
+
     val uiState by viewModel.uiState.collectAsState()
 
     Column(

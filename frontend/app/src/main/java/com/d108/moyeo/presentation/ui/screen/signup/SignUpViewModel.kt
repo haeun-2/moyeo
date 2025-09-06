@@ -1,9 +1,13 @@
 package com.d108.moyeo.presentation.ui.screen.signup
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 // 회원가입 과정의 모든 상태를 담는 데이터 클래스
 data class SignUpUiState(
@@ -29,10 +33,20 @@ data class SignUpUiState(
     val isBiometricsUsed: Boolean = false // 생체인증 쓰는지 여부
 )
 
+// UI로 전달할 일회성 탐색 이벤트
+sealed class SignUpNavigationEvent {
+    object NavigateToHome : SignUpNavigationEvent()
+    object NavigateBack : SignUpNavigationEvent() // 뒤로가기 이벤트 추가
+}
+
 class SignUpViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState = _uiState.asStateFlow()
+
+    // 화면 이동과 같은 일회성 이벤트를 전달하기 위한 SharedFlow
+    private val _navigationEvent = MutableSharedFlow<SignUpNavigationEvent>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
 
     fun onNextClicked() {
         // 현재 단계에 따라 다음 단계로 상태를 변경하는 로직
@@ -54,7 +68,26 @@ class SignUpViewModel : ViewModel() {
     }
 
     fun onBackClicked() {
-        // 뒤로가기 로직 (필요 시 구현)
+        val currentStep = _uiState.value.currentStep
+        val previousStep = when (currentStep) {
+            SignUpStep.ACCOUNT -> SignUpStep.NAME
+            SignUpStep.VERIFY_ACCOUNT -> SignUpStep.ACCOUNT
+            SignUpStep.TERMS -> SignUpStep.VERIFY_ACCOUNT
+            SignUpStep.PIN -> SignUpStep.TERMS
+            SignUpStep.BIOMETRICS -> SignUpStep.PIN
+            SignUpStep.COMPLETE -> SignUpStep.BIOMETRICS
+            else -> null // 첫 단계(NAME)에서는 이전 단계가 없음
+        }
+
+        if (previousStep != null) {
+            // 이전 단계가 있으면 상태만 업데이트
+            _uiState.update { it.copy(currentStep = previousStep) }
+        } else {
+            // 첫 단계에서 뒤로가기를 누르면, 화면을 닫으라는 이벤트를 발생시킴
+            viewModelScope.launch {
+                _navigationEvent.emit(SignUpNavigationEvent.NavigateBack)
+            }
+        }
     }
 
     // 각 데이터 변경 시 호출될 함수들
