@@ -21,7 +21,10 @@ sealed class AppScreen(
 
 
     // 로그인 관련
-    object Login: AppScreen(route = "login", title= "Login")
+    object Login: AppScreen(route = "login", title = "Login")
+
+    // 회원가입 관련
+    object Join: AppScreen(route = "join", title = "Join")
 
     // 홈 스크린 관련
     object Home: AppScreen(route = "home", title = "Home", icon = Icons.Default.Home)
