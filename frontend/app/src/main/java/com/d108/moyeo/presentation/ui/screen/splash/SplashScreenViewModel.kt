@@ -8,8 +8,8 @@ import kotlinx.coroutines.launch
 
 // 1. 목적지를 나타내는 Sealed Class 또는 Enum 정의
 sealed class StartDestination(val route: String) {
-    object Home : StartDestination(AppScreen.Home.route)
-    object Join : StartDestination(AppScreen.Join.route) // AppScreen에 Join 경로가 정의되어 있다고 가정
+    object Home : StartDestination(AppScreen.Home.route)  // 로그인 된 상태
+    object First : StartDestination(AppScreen.First.route) // 로그아웃 된 상태
 }
 
 class SplashScreenViewModel : ViewModel() {
@@ -19,7 +19,7 @@ class SplashScreenViewModel : ViewModel() {
     val isReady = _isReady.asStateFlow()
 
     // 3. 최종 목적지 상태
-    private val _startDestination = MutableStateFlow<StartDestination>(StartDestination.Join) // 기본값은 로그인
+    private val _startDestination = MutableStateFlow<StartDestination>(StartDestination.First)
     val startDestination = _startDestination.asStateFlow()
 
     init {
@@ -35,7 +35,7 @@ class SplashScreenViewModel : ViewModel() {
             if (isLoggedIn) {
                 _startDestination.value = StartDestination.Home
             } else {
-                _startDestination.value = StartDestination.Join
+                _startDestination.value = StartDestination.First
             }
 
             // 모든 확인이 끝나면 isReady를 true로 변경하여 스플래시를 닫도록 신호를 보냅니다.

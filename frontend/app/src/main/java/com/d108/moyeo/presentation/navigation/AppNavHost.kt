@@ -5,12 +5,15 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.d108.moyeo.presentation.ui.screen.FirstScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeSecondScreen
+import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.MoreScreen
 import com.d108.moyeo.presentation.ui.screen.qr.QRScreen
+import com.d108.moyeo.presentation.ui.screen.signup.SignUpScreen
 
 @Composable
 fun AppNavHost(
@@ -24,12 +27,16 @@ fun AppNavHost(
         modifier = modifier
     ) {
 
-        composable(AppScreen.Join.route) {
-            com.d108.moyeo.presentation.ui.screen.join.JoinScreen(navController = navController)
+        composable(AppScreen.First.route) {
+            FirstScreen(navController = navController)
+        }
+
+        composable(AppScreen.SignUp.route) {
+            SignUpScreen(navController = navController)
         }
 
         composable(AppScreen.Login.route) {
-            com.d108.moyeo.presentation.ui.screen.login.LoginScreen(navController = navController)
+            LoginScreen(navController = navController)
         }
 
         composable(AppScreen.Home.route) {
