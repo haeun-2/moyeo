@@ -8,12 +8,24 @@ import kotlinx.coroutines.flow.update
 // 회원가입 과정의 모든 상태를 담는 데이터 클래스
 data class SignUpUiState(
     val currentStep: SignUpStep = SignUpStep.NAME,
+
     val name: String = "",  // 사용자 이름
+
     val accountBank: String = "",  // 은행 이름
     val accountNumber: String = "",  // 계좌번호
+
+    val oneCoinNumber: String = "",  // 1원 인증으로 입력받을 번호
     val isOneCoinVerified: Boolean = false,  // 1원인증 완료 여부
+
     val isTermsAccepted: Boolean = false,  // 약관 동의 여부
-    val pin: String = "",  // 6자리 핀번호
+
+    val pin: String = "",  // 6자리 핀번호 최초 입력
+    val pinConfirm: String = "",  // 6자리 핀번호 확인
+
+    val allTermsAccepted: Boolean = false,
+    val termsOfServiceAccepted: Boolean = false,
+    val privacyPolicyAccepted: Boolean = false,
+
     val isBiometricsUsed: Boolean = false // 생체인증 쓰는지 여부
 )
 
@@ -46,8 +58,70 @@ class SignUpViewModel : ViewModel() {
     }
 
     // 각 데이터 변경 시 호출될 함수들
+
+
+    // 이름 단계
     fun onNameChanged(name: String) {
         _uiState.update { it.copy(name = name) }
     }
-    // ... 계좌번호 등 다른 데이터 변경 함수들 ...
+
+    // 계좌 단계
+    fun onAccountBankChanged(accountBank: String) {
+        _uiState.update { it.copy(accountBank = accountBank) }
+    }
+
+    fun onAccountNumberChanged(accountNumber: String) {
+        _uiState.update { it.copy(accountNumber = accountNumber) }
+    }
+
+    // 1원 인증단계
+    fun onOneCoinNumberChanged(oneCoinNumber: String) {
+        _uiState.update { it.copy(oneCoinNumber = oneCoinNumber) }
+    }
+
+    fun onIsOneCoinVerifiedChanged(isOneCoinVerified: Boolean) {
+        _uiState.update { it.copy(isOneCoinVerified = isOneCoinVerified) }
+    }
+
+    // 약관 동의 상태
+    fun onAllTermsChanged(isChecked: Boolean) {
+        _uiState.update {
+            it.copy(
+                allTermsAccepted = isChecked,
+                termsOfServiceAccepted = isChecked,
+                privacyPolicyAccepted = isChecked
+            )
+        }
+    }
+
+    fun onTermsOfServiceChanged(isChecked: Boolean) {
+        _uiState.update {
+            val allChecked = isChecked && it.privacyPolicyAccepted
+            it.copy(termsOfServiceAccepted = isChecked, allTermsAccepted = allChecked)
+        }
+    }
+
+    fun onPrivacyPolicyChanged(isChecked: Boolean) {
+        _uiState.update {
+            val allChecked = isChecked && it.termsOfServiceAccepted
+            it.copy(privacyPolicyAccepted = isChecked, allTermsAccepted = allChecked)
+        }
+    }
+
+
+    // 6자리 핀번호 입력
+    fun onPinChanged(pin: String) {
+        _uiState.update { it.copy(pin = pin) }
+    }
+
+    fun onPinConfirmChanged(pinConfirm: String) {
+        _uiState.update { it.copy(pinConfirm = pinConfirm) }
+    }
+
+
+
+    fun onIsBiometricsUsedChanged(isBiometricsUsed: Boolean) {
+        _uiState.update { it.copy(isBiometricsUsed = isBiometricsUsed) }
+    }
+
 }
