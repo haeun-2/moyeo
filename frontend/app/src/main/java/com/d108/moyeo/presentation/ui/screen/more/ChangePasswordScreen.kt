@@ -136,7 +136,7 @@ fun ChangePasswordScreen(navController: NavController) {
                     confirmPassword = it
                 }
             },
-            placeholder = { Text("새 비밀번호 확인") }, // label을 placeholder로 변경
+            placeholder = { Text("새 비밀번호 확인") }, // 초기 힌트
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
