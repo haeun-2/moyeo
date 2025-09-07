@@ -48,6 +48,11 @@ class SignUpViewModel : ViewModel() {
     private val _navigationEvent = MutableSharedFlow<SignUpNavigationEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
+    val bankList: List<String> = listOf(
+        "NH농협은행", "카카오뱅크", "KB국민은행", "신한은행", "토스뱅크", "우리은행", "IBK기업은행", "하나은행",
+        "NH농협은행", "카카오뱅크", "KB국민은행", "신한은행", "토스뱅크", "우리은행", "IBK기업은행", "하나은행"
+    )
+
     fun onNextClicked() {
         // 현재 단계에 따라 다음 단계로 상태를 변경하는 로직
         val nextStep = when (_uiState.value.currentStep) {  // before -> after

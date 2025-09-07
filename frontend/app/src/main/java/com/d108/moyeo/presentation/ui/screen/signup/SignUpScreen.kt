@@ -1,6 +1,7 @@
 package com.d108.moyeo.presentation.ui.screen.signup
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,6 +22,7 @@ import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.onSurfaceLight
+import com.d108.moyeo.presentation.ui.component.signup.BankSelectionBottomSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +37,20 @@ fun SignUpScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
+    var showBankBottomSheet by remember { mutableStateOf(false) }
+    if (showBankBottomSheet) {
+        BankSelectionBottomSheet(
+            banks = viewModel.bankList,
+            onBankSelected = { selectedBank ->
+                viewModel.onAccountBankChanged(selectedBank) // ViewModel에 선택된 은행 전달
+                showBankBottomSheet = false // 바텀시트 닫기
+            },
+            onDismiss = {
+                showBankBottomSheet = false // 바텀시트 닫기
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -43,7 +59,7 @@ fun SignUpScreen(
         Box(modifier = Modifier.weight(1f).padding(Spacing.Medium)) { // 스텝에 따라서 컴포저블이 보일 영역
             when (uiState.currentStep) {
                 SignUpStep.NAME -> NameInputContent(uiState, viewModel)
-                SignUpStep.ACCOUNT -> AccountInputContent(uiState, viewModel)
+                SignUpStep.ACCOUNT -> AccountInputContent(uiState, viewModel, onBankFieldClick = { showBankBottomSheet = true })
                 SignUpStep.VERIFY_ACCOUNT -> VerifyAccountContent(uiState, viewModel)
                 SignUpStep.TERMS -> TermsContent(uiState, viewModel)
                 SignUpStep.PIN -> PinInputContent(uiState, viewModel)
@@ -94,27 +110,60 @@ private fun NameInputContent(uiState: SignUpUiState, viewModel: SignUpViewModel)
                     style = Typography.bodyMedium,
                     color = onSurfaceLight
                 )}, // 플레이스홀더 텍스트 설정
-            shape = RoundedCornerShape(15.dp)  // 모서리를 둥글게 설정
+            shape = RoundedCornerShape(15.dp)  // 모서리를 둥글게 설정. 후에 상수화 할 것
         )
     }
 }
 
 @Composable
-private fun AccountInputContent(uiState: SignUpUiState, viewModel: SignUpViewModel) {
-    Column {
-        Text("계좌번호를 입력해주세요.", style = Typography.titleLarge)
-        Spacer(Modifier.height(32.dp))
-        TextField(
-            value = uiState.accountBank,
-            onValueChange = viewModel::onAccountBankChanged,
-            modifier = Modifier.fillMaxWidth()) // TODO: 은행 선택 UI로 변경
-        Spacer(Modifier.height(16.dp))
-        TextField(
-            value = uiState.accountNumber,
-            onValueChange = viewModel::onAccountNumberChanged,
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-    }
+private fun AccountInputContent(
+    uiState: SignUpUiState,
+    viewModel: SignUpViewModel,
+    onBankFieldClick: () -> Unit) {
+        Column {
+            Text("연결할 계좌번호를\n입력해주세요", style = Typography.titleLarge)
+
+            Spacer(Modifier.height(20.dp))  // 후에 상수화 할 것
+
+            Box(
+                modifier = Modifier.clickable(onClick = onBankFieldClick) // 클릭 이벤트를 Box로 옮겼습니다.
+            ) {
+                OutlinedTextField(
+                    value = uiState.accountBank,
+                    onValueChange = { },
+                    modifier = Modifier.fillMaxWidth(),
+                    readOnly = true,
+                    enabled = false,  // 포커스 및 커서 깜빡임을 방지
+                    singleLine = true,
+                    placeholder = {
+                        Text(text = "은행을 선택해주세요")
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        disabledTextColor = onSurfaceLight,
+                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                    shape = RoundedCornerShape(15.dp)  // 모서리를 둥글게 설정. 후에 상수화 할 것
+                )
+            }
+
+
+            Spacer(Modifier.height(20.dp))  // 후에 상수화 할 것
+
+            OutlinedTextField(
+                value = uiState.accountNumber,
+                onValueChange = viewModel::onAccountNumberChanged,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                placeholder = {
+                    Text(text = "계좌번호를 입력해주세요",
+                        style = Typography.bodyMedium,
+                        color = onSurfaceLight
+                    )},// 플레이스홀더 텍스트 설정
+                shape = RoundedCornerShape(15.dp)  // 모서리를 둥글게 설정. 후에 상수화 할 것
+            )
+        }
 }
 
 @Composable
