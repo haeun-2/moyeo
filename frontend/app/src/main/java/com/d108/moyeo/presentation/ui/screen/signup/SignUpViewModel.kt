@@ -60,7 +60,8 @@ class SignUpViewModel : ViewModel() {
             SignUpStep.ACCOUNT -> SignUpStep.VERIFY_ACCOUNT
             SignUpStep.VERIFY_ACCOUNT -> SignUpStep.TERMS
             SignUpStep.TERMS -> SignUpStep.PIN
-            SignUpStep.PIN -> SignUpStep.BIOMETRICS
+            SignUpStep.PIN -> SignUpStep.PIN_CONFIRM
+            SignUpStep.PIN_CONFIRM -> SignUpStep.BIOMETRICS
             SignUpStep.BIOMETRICS -> SignUpStep.COMPLETE
             SignUpStep.COMPLETE -> null // 마지막 단계에서는 다른 동작 처리 (예: 홈으로 이동)
         }
@@ -79,7 +80,8 @@ class SignUpViewModel : ViewModel() {
             SignUpStep.VERIFY_ACCOUNT -> SignUpStep.ACCOUNT
             SignUpStep.TERMS -> SignUpStep.VERIFY_ACCOUNT
             SignUpStep.PIN -> SignUpStep.TERMS
-            SignUpStep.BIOMETRICS -> SignUpStep.PIN
+            SignUpStep.PIN_CONFIRM -> SignUpStep.PIN
+            SignUpStep.BIOMETRICS -> SignUpStep.PIN_CONFIRM
             SignUpStep.COMPLETE -> SignUpStep.BIOMETRICS
             else -> null // 첫 단계(NAME)에서는 이전 단계가 없음
         }
@@ -92,6 +94,34 @@ class SignUpViewModel : ViewModel() {
             viewModelScope.launch {
                 _navigationEvent.emit(SignUpNavigationEvent.NavigateBack)
             }
+        }
+    }
+
+    fun onPinInput(digit: String, isConfirm: Boolean) {
+        if (isConfirm) {
+            if (_uiState.value.pinConfirm.length < 6) {
+                _uiState.update { it.copy(pinConfirm = it.pinConfirm + digit) }
+            }
+        } else {
+            if (_uiState.value.pin.length < 6) {
+                _uiState.update { it.copy(pin = it.pin + digit) }
+            }
+        }
+    }
+
+    fun onPinBackspace(isConfirm: Boolean) {
+        if (isConfirm) {
+            _uiState.update { it.copy(pinConfirm = it.pinConfirm.dropLast(1)) }
+        } else {
+            _uiState.update { it.copy(pin = it.pin.dropLast(1)) }
+        }
+    }
+
+    fun onPinClear(isConfirm: Boolean) {
+        if (isConfirm) {
+            _uiState.update { it.copy(pinConfirm = "") }
+        } else {
+            _uiState.update { it.copy(pin = "") }
         }
     }
 
