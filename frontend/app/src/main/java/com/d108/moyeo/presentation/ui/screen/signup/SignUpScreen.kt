@@ -2,6 +2,7 @@ package com.d108.moyeo.presentation.ui.screen.signup
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation.Companion.keyboardOptions
 import androidx.compose.material.icons.Icons
@@ -19,6 +20,7 @@ import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.theme.onSurfaceLight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +40,7 @@ fun SignUpScreen(
             .fillMaxSize()
             .padding(horizontal = Padding.HorizontalMedium, vertical = Padding.VerticalMedium)
     ) {
-        Box(modifier = Modifier.weight(1f).padding(Spacing.Medium)) {
+        Box(modifier = Modifier.weight(1f).padding(Spacing.Medium)) { // 스텝에 따라서 컴포저블이 보일 영역
             when (uiState.currentStep) {
                 SignUpStep.NAME -> NameInputContent(uiState, viewModel)
                 SignUpStep.ACCOUNT -> AccountInputContent(uiState, viewModel)
@@ -51,7 +53,7 @@ fun SignUpScreen(
         }
 
         // 하단 버튼
-        val isButtonEnabled = when(uiState.currentStep) {
+        val isButtonEnabled = when(uiState.currentStep) {  // 각 버튼이 활성화되는 타이밍
             SignUpStep.NAME -> uiState.name.isNotBlank()
             SignUpStep.ACCOUNT -> uiState.accountBank.isNotBlank() && uiState.accountNumber.isNotBlank()
             SignUpStep.VERIFY_ACCOUNT -> true // TODO: 인증번호 유효성 검사
@@ -80,13 +82,19 @@ fun SignUpScreen(
 @Composable
 private fun NameInputContent(uiState: SignUpUiState, viewModel: SignUpViewModel) {
     Column {
-        Text("이름을 입력해주세요.", style = Typography.titleLarge)
-        Spacer(Modifier.height(32.dp))
-        TextField(
+        Text("이름을\n입력해주세요", style = Typography.titleLarge)
+        Spacer(Modifier.height(20.dp))  // 후에 상수화 할 것
+        OutlinedTextField(
             value = uiState.name,
             onValueChange = viewModel::onNameChanged,
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            singleLine = true,
+            placeholder = {
+                Text(text = "홍길동",
+                    style = Typography.bodyMedium,
+                    color = onSurfaceLight
+                )}, // 플레이스홀더 텍스트 설정
+            shape = RoundedCornerShape(15.dp)  // 모서리를 둥글게 설정
         )
     }
 }
