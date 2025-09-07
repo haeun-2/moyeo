@@ -44,5 +44,12 @@ sealed class AppScreen(
     object Notices : AppScreen(route = "notices", title = "공지사항")
     object ChangePassword : AppScreen(route = "change_password", title = "비밀번호 변경")
     object FAQ: AppScreen(route = "faq", title = "자주 묻는 질문")
+    object ChatConsultation: AppScreen(route = "chat_consultation", title = "채팅 상담")
+
+    object MyConsultation : AppScreen(route = "my_consultation", title = "내 상담 이력")
+
+    // '내 문의 내역'의 상세 화면 경로. {consultationId} 부분이 파라미터
+    object ConsultationDetail: AppScreen(route = "consultation_detail/{consultationId}", title = "상담 내용 상세")
+
 
 }
