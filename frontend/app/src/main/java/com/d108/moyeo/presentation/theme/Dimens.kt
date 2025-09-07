@@ -27,8 +27,12 @@ object Padding {
     val HorizontalLarge = 40.dp
 
     // 수직 (상하) 패딩 - 특히 화면 상단 여백
-    val ScreenTop = 72.dp
-    val ScreenTopLarge = 96.dp
+    val ScreenTop = 48.dp
+    val ScreenTopLarge = 72.dp
+
+    val ScreenBottomSmall = 32.dp
+    val ScreenBottom = 48.dp
+    val ScreenBottomLarge = 72.dp
 
     // 일반적인 컨텐츠 영역의 기본 패딩
     val Content = 16.dp
