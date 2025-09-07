@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.ui.component.signup.BankSelectionBottomSheet
@@ -27,6 +28,25 @@ fun SignUpScreen(
 
     BackHandler {
         viewModel.onBackClicked()
+    }
+
+    LaunchedEffect(key1 = true) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is SignUpNavigationEvent.NavigateToHome -> {
+                    // 홈 화면으로 이동하라는 이벤트
+                    // FirstScreen까지의 모든 화면을 스택에서 제거하고 홈으로 이동
+                    navController.navigate(AppScreen.Home.route) {
+                        popUpTo(AppScreen.First.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+                is SignUpNavigationEvent.NavigateBack -> {
+                    navController.popBackStack()
+                }
+            }
+        }
     }
 
     val uiState by viewModel.uiState.collectAsState()

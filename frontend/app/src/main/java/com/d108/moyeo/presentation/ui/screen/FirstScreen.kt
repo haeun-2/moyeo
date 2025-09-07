@@ -98,6 +98,12 @@ fun FirstScreen(navController: NavHostController) {  // 로그아웃 or 앱 최�
                 }) {
                     Text("이미 회원이신가요?")
                 }
+
+                TextButton(onClick = {
+                   navController.navigate(AppScreen.Home.route)
+                }) {
+                    Text("디버깅용 즉시 홈으로 이동")
+                }
             }
         }
     }

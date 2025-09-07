@@ -66,7 +66,6 @@ class SignUpViewModel : ViewModel() {
             SignUpStep.COMPLETE -> {
                 viewModelScope.launch {
                     // TODO: 실제 서버에 회원가입 정보를 전송하는 API 호출 로직이 여기에 위치해야 합니다.
-                    _navigationEvent.emit(SignUpNavigationEvent.NavigateToHome)
                 }
                 null // nextStep을 null로 하여 상태 업데이트를 막음
             }
@@ -75,7 +74,10 @@ class SignUpViewModel : ViewModel() {
         if (nextStep != null) {
             _uiState.update { it.copy(currentStep = nextStep) }
         } else {
-            // TODO: 회원가입 완료 후 홈 화면으로 이동하는 로직
+            viewModelScope.launch {
+                _navigationEvent.emit(SignUpNavigationEvent.NavigateToHome)
+            }
+
         }
     }
 
