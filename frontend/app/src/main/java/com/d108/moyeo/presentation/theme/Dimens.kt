@@ -26,7 +26,12 @@ object Padding {
     val HorizontalMedium = 32.dp
     val HorizontalLarge = 40.dp
 
-    // 수직 (상하) 패딩 - 특히 화면 상단 여백
+    // 수직 (상하) 패딩
+    val VerticalSmall = 24.dp
+    val VerticalMedium = 32.dp
+    val VerticalLarge = 40.dp
+
+    // 화면 상하 여백
     val ScreenTop = 48.dp
     val ScreenTopLarge = 72.dp
 
