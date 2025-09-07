@@ -3,12 +3,15 @@ package com.d108.moyeo.presentation.ui.screen.signup
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Padding
@@ -74,6 +77,19 @@ fun SignUpScreen(
             SignUpStep.COMPLETE -> true
         }
 
+        // 생체 인증 단계에서만 보일 화면
+        if (uiState.currentStep == SignUpStep.BIOMETRICS) {
+            Button(
+                onClick = viewModel::onNextClicked, // "완료" 버튼과 동일한 동작. 추후 수정 필요.
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = Spacing.Medium)
+            ) {
+                Text("건너뛰기")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
         Button(
             onClick = viewModel::onNextClicked,
             modifier = Modifier
@@ -83,7 +99,7 @@ fun SignUpScreen(
         ) {
             val buttonText = when(uiState.currentStep) {
                 SignUpStep.COMPLETE -> "시작하기"
-                SignUpStep.BIOMETRICS -> "완료"
+                SignUpStep.BIOMETRICS -> "사용하기"
                 else -> "다음"
             }
             Text(buttonText)
