@@ -26,7 +26,6 @@ object Padding {
     val HorizontalMedium = 32.dp
     val HorizontalLarge = 40.dp
 
-
     // 수직 (상하) 패딩
     val VerticalSmall = 24.dp
     val VerticalMedium = 32.dp
