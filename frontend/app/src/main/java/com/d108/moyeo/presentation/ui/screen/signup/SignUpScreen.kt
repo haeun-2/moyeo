@@ -22,6 +22,7 @@ import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.onSurfaceLight
+import com.d108.moyeo.presentation.theme.primaryLight
 import com.d108.moyeo.presentation.ui.component.signup.BankSelectionBottomSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,7 +57,9 @@ fun SignUpScreen(
             .fillMaxSize()
             .padding(horizontal = Padding.HorizontalMedium, vertical = Padding.VerticalMedium)
     ) {
-        Box(modifier = Modifier.weight(1f).padding(Spacing.Medium)) { // 스텝에 따라서 컴포저블이 보일 영역
+        Box(modifier = Modifier
+            .weight(1f)
+            .padding(Spacing.Medium)) { // 스텝에 따라서 컴포저블이 보일 영역
             when (uiState.currentStep) {
                 SignUpStep.NAME -> NameInputContent(uiState, viewModel)
                 SignUpStep.ACCOUNT -> AccountInputContent(uiState, viewModel, onBankFieldClick = { showBankBottomSheet = true })
@@ -81,7 +84,9 @@ fun SignUpScreen(
 
         Button(
             onClick = viewModel::onNextClicked,
-            modifier = Modifier.fillMaxWidth().padding(bottom = Spacing.Medium),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = Spacing.Medium),
             enabled = isButtonEnabled
         ) {
             val buttonText = when(uiState.currentStep) {
@@ -169,14 +174,34 @@ private fun AccountInputContent(
 @Composable
 private fun VerifyAccountContent(uiState: SignUpUiState, viewModel: SignUpViewModel) {
     Column {
-        Text("계좌로 1원을 보냈습니다.", style = Typography.titleLarge)
-        Text("입금자명 뒤 숫자 4자리를 입력해주세요.", style = Typography.bodyMedium)
-        Spacer(Modifier.height(32.dp))
-        TextField(
-            value = uiState.oneCoinNumber,
-            onValueChange = viewModel::onOneCoinNumberChanged,
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+        Text("해당 계좌로\n1원을 보냈어요", style = Typography.titleLarge)
+
+        Spacer(Modifier.height(20.dp))  // 후에 상수화 할 것
+
+        Box(modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.CenterEnd) {// 오른쪽 끝, 세로 중앙에 정렬
+
+            OutlinedTextField(
+                value = uiState.oneCoinNumber,
+                onValueChange = viewModel::onOneCoinNumberChanged,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                placeholder = {
+                    Text(
+                        text = "입금자 명을 입력해주세요",
+                        style = Typography.bodyMedium,
+                        color = onSurfaceLight
+                    )
+                }, // 플레이스홀더 텍스트 설정
+                shape = RoundedCornerShape(15.dp)  // 모서리를 둥글게 설정. 후에 상수화 할 것
+            )
+            Text(
+                text = "3:00",
+                modifier = Modifier.padding(end = 16.dp), // TextField의 테두리와 겹치지 않도록 패딩 추가
+                style = Typography.bodyMedium,
+                color = primaryLight // 타이머 색상을 강조색으로 설정
+            )
+        }
     }
 }
 
