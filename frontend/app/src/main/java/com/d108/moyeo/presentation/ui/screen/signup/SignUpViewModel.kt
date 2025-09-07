@@ -63,7 +63,13 @@ class SignUpViewModel : ViewModel() {
             SignUpStep.PIN -> SignUpStep.PIN_CONFIRM
             SignUpStep.PIN_CONFIRM -> SignUpStep.BIOMETRICS
             SignUpStep.BIOMETRICS -> SignUpStep.COMPLETE
-            SignUpStep.COMPLETE -> null // 마지막 단계에서는 다른 동작 처리 (예: 홈으로 이동)
+            SignUpStep.COMPLETE -> {
+                viewModelScope.launch {
+                    // TODO: 실제 서버에 회원가입 정보를 전송하는 API 호출 로직이 여기에 위치해야 합니다.
+                    _navigationEvent.emit(SignUpNavigationEvent.NavigateToHome)
+                }
+                null // nextStep을 null로 하여 상태 업데이트를 막음
+            }
         }
 
         if (nextStep != null) {
