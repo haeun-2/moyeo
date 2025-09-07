@@ -97,34 +97,6 @@ class SignUpViewModel : ViewModel() {
         }
     }
 
-    fun onPinInput(digit: String, isConfirm: Boolean) {
-        if (isConfirm) {
-            if (_uiState.value.pinConfirm.length < 6) {
-                _uiState.update { it.copy(pinConfirm = it.pinConfirm + digit) }
-            }
-        } else {
-            if (_uiState.value.pin.length < 6) {
-                _uiState.update { it.copy(pin = it.pin + digit) }
-            }
-        }
-    }
-
-    fun onPinBackspace(isConfirm: Boolean) {
-        if (isConfirm) {
-            _uiState.update { it.copy(pinConfirm = it.pinConfirm.dropLast(1)) }
-        } else {
-            _uiState.update { it.copy(pin = it.pin.dropLast(1)) }
-        }
-    }
-
-    fun onPinClear(isConfirm: Boolean) {
-        if (isConfirm) {
-            _uiState.update { it.copy(pinConfirm = "") }
-        } else {
-            _uiState.update { it.copy(pin = "") }
-        }
-    }
-
     // 각 데이터 변경 시 호출될 함수들
 
 
@@ -178,16 +150,35 @@ class SignUpViewModel : ViewModel() {
 
 
     // 6자리 핀번호 입력
-    fun onPinChanged(pin: String) {
-        _uiState.update { it.copy(pin = pin) }
+    fun onPinInput(digit: String, isConfirm: Boolean) {
+        if (isConfirm) {
+            if (_uiState.value.pinConfirm.length < 6) {
+                _uiState.update { it.copy(pinConfirm = it.pinConfirm + digit) }
+            }
+        } else {
+            if (_uiState.value.pin.length < 6) {
+                _uiState.update { it.copy(pin = it.pin + digit) }
+            }
+        }
     }
 
-    fun onPinConfirmChanged(pinConfirm: String) {
-        _uiState.update { it.copy(pinConfirm = pinConfirm) }
+    fun onPinBackspace(isConfirm: Boolean) {
+        if (isConfirm) {
+            _uiState.update { it.copy(pinConfirm = it.pinConfirm.dropLast(1)) }
+        } else {
+            _uiState.update { it.copy(pin = it.pin.dropLast(1)) }
+        }
     }
 
+    fun onPinClear(isConfirm: Boolean) {
+        if (isConfirm) {
+            _uiState.update { it.copy(pinConfirm = "") }
+        } else {
+            _uiState.update { it.copy(pin = "") }
+        }
+    }
 
-
+    // 생체 인증
     fun onIsBiometricsUsedChanged(isBiometricsUsed: Boolean) {
         _uiState.update { it.copy(isBiometricsUsed = isBiometricsUsed) }
     }
