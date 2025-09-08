@@ -15,6 +15,9 @@ data class SignUpUiState(
 
     val name: String = "",  // 사용자 이름
 
+    val email: String = "",  // 사용자 이메일
+    val isEmailVerified: Boolean = false,  // 이메일 인증 여부
+
     val accountBank: String = "",  // 은행 이름
     val accountNumber: String = "",  // 계좌번호
 
@@ -75,9 +78,11 @@ class SignUpViewModel : ViewModel() {
 
         // 나머지 일반적인 단계들은 다음 단계로 상태를 업데이트
         val nextStep = when (currentStep) {
-            SignUpStep.NAME -> SignUpStep.ACCOUNT
-            SignUpStep.ACCOUNT -> SignUpStep.VERIFY_ACCOUNT
-            SignUpStep.VERIFY_ACCOUNT -> SignUpStep.TERMS
+            SignUpStep.NAME -> SignUpStep.EMAIL_INPUT
+            SignUpStep.EMAIL_INPUT -> SignUpStep.EMAIL_VERIFY
+            SignUpStep.EMAIL_VERIFY -> SignUpStep.ACCOUNT
+            SignUpStep.ACCOUNT -> SignUpStep.ACCOUNT_VERIFY
+            SignUpStep.ACCOUNT_VERIFY -> SignUpStep.TERMS
             SignUpStep.TERMS -> SignUpStep.PIN
             SignUpStep.PIN -> SignUpStep.PIN_CONFIRM
             SignUpStep.PIN_CONFIRM -> SignUpStep.BIOMETRICS
@@ -93,8 +98,8 @@ class SignUpViewModel : ViewModel() {
         val currentStep = _uiState.value.currentStep
         val previousStep = when (currentStep) {
             SignUpStep.ACCOUNT -> SignUpStep.NAME
-            SignUpStep.VERIFY_ACCOUNT -> SignUpStep.ACCOUNT
-            SignUpStep.TERMS -> SignUpStep.VERIFY_ACCOUNT
+            SignUpStep.ACCOUNT_VERIFY -> SignUpStep.ACCOUNT
+            SignUpStep.TERMS -> SignUpStep.ACCOUNT_VERIFY
             SignUpStep.PIN -> SignUpStep.TERMS
             SignUpStep.PIN_CONFIRM -> SignUpStep.PIN
             SignUpStep.BIOMETRICS -> SignUpStep.PIN_CONFIRM
@@ -119,6 +124,15 @@ class SignUpViewModel : ViewModel() {
     // 이름 단계
     fun onNameChanged(name: String) {
         _uiState.update { it.copy(name = name) }
+    }
+
+    // 이메일 단계
+    fun onEmailChanged(email: String) {
+        _uiState.update { it.copy(email = email) }
+    }
+
+    fun onEmailVerified() {
+        _uiState.update { it.copy(isEmailVerified = true) }
     }
 
     // 계좌 단계

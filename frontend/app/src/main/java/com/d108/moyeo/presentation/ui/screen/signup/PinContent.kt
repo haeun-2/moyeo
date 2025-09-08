@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.theme.errorLight
 import com.d108.moyeo.presentation.ui.component.CustomKeypad
 import com.d108.moyeo.presentation.ui.component.KeypadKey
 
@@ -60,7 +61,7 @@ private fun PinContentLayout(
         if (errorMessage != null) {
             Text(
                 errorMessage,
-                color = MaterialTheme.colorScheme.error,
+                color = errorLight,
                 style = Typography.bodySmall,
                 modifier = Modifier.padding(top = 8.dp)
             )
