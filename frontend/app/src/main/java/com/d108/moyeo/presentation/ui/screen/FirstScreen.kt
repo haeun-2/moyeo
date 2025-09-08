@@ -104,6 +104,7 @@ fun FirstScreen(navController: NavHostController) {  // 로그아웃 or 앱 최�
                 }) {
                     Text("디버깅용 즉시 홈으로 이동")
                 }
+
             }
         }
     }
