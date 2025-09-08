@@ -2,4 +2,16 @@
 <resources>
 
     <style name="Theme.MoYeo" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- 아래 내용을 새로 추가 -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- 스플래시 화면의 배경색 -->
+        <item name="windowSplashScreenBackground">@color/purple_200</item>
+
+        <!-- 스플래시 화면에 표시될 로고 (저희가 추가한 PNG 파일) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+
+        <!-- 스플래시 화면이 끝난 후 적용될 실제 앱 테마 -->
+        <item name="postSplashScreenTheme">@style/Theme.MoYeo</item>
+    </style>
 </resources>

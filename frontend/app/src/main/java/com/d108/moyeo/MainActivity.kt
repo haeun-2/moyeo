@@ -1,33 +1,45 @@
 package com.d108.moyeo
 
+import SplashScreenViewModel
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Column
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavHost
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.d108.moyeo.presentation.navigation.AppNavHost
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.MoYeoTheme
 import com.d108.moyeo.presentation.ui.component.MoyeoBottomNavigation
+import kotlin.getValue
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        val viewModel: SplashScreenViewModel by viewModels()
+
+        installSplashScreen().apply {
+            setKeepOnScreenCondition {
+                !viewModel.isReady.value
+            }
+        }
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MoYeoTheme {
+                val startDestination by viewModel.startDestination.collectAsState()
                 val navController = rememberNavController()
 
                 // 현재 화면의 경로를 가져오기 위해 NavBackStackEntry를 관찰
@@ -68,7 +80,7 @@ class MainActivity : ComponentActivity() {
                     AppNavHost(
                         navController = navController,
                         modifier = Modifier.padding(innerPadding),
-                        startDestination = AppScreen.Home.route
+                        startDestination = startDestination.route  // 여기서 startDestination을 설정
                     )
                 }
             }
