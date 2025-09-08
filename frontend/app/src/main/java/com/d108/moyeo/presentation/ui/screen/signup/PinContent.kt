@@ -1,11 +1,7 @@
 package com.d108.moyeo.presentation.ui.screen.signup
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -15,11 +11,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.ui.component.CustomKeypad
+import com.d108.moyeo.presentation.ui.component.KeypadKey
 
 @Composable
 fun PinInputContent(uiState: SignUpUiState, viewModel: SignUpViewModel) {
     PinContentLayout(
-        title = "사용하실 PIN 6자리를 입력해주세요.",
+        title = "사용하실 PIN 6자리를 \n 입력해주세요.",
         pinValue = uiState.pin,
         onDigitClick = { digit -> viewModel.onPinInput(digit, isConfirm = false) },
         onClearClick = { viewModel.onPinClear(isConfirm = false) },
@@ -54,22 +52,32 @@ private fun PinContentLayout(
         modifier = Modifier.fillMaxSize()
     ) {
         Text(title, style = Typography.titleLarge, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.weight(1f))
 
         // 네모칸 6개
         PinDisplay(pinLength = pinValue.length)
 
         if (errorMessage != null) {
-            Text(errorMessage, color = MaterialTheme.colorScheme.error, style = Typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+            Text(
+                errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = Typography.bodySmall,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
 
         Spacer(Modifier.weight(1f))
 
-        // 커스텀 키패드
-        PinKeypad(
-            onDigitClick = onDigitClick,
-            onClearClick = onClearClick,
-            onBackspaceClick = onBackspaceClick
+        CustomKeypad(
+            onKeyPress = { key ->
+                when (key) {
+                    is KeypadKey.Digit -> onDigitClick(key.value.toString())
+                    KeypadKey.Clear -> onClearClick()
+                    KeypadKey.Backspace -> onBackspaceClick()
+                    is KeypadKey.Custom -> {}
+                }
+            },
+            keypadType = "normal"
         )
     }
 }
@@ -88,43 +96,6 @@ private fun PinDisplay(pinLength: Int) {
                         shape = CircleShape
                     )
             )
-        }
-    }
-}
-
-// 4x3 커스텀 키패드
-@Composable
-private fun PinKeypad(
-    onDigitClick: (String) -> Unit,
-    onClearClick: () -> Unit,
-    onBackspaceClick: () -> Unit
-) {
-    val buttons = listOf(
-        "1", "2", "3",
-        "4", "5", "6",
-        "7", "8", "9",
-        "초기화", "0", "←"
-    )
-
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
-        modifier = Modifier.padding(horizontal = 32.dp)
-    ) {
-        items(buttons) { key ->
-            TextButton(
-                onClick = {
-                    when (key) {
-                        "초기화" -> onClearClick()
-                        "←" -> onBackspaceClick()
-                        else -> onDigitClick(key)
-                    }
-                },
-                modifier = Modifier.aspectRatio(1.5f),
-                shape = CircleShape,
-                border = if (key == "초기화" || key == "←") null else BorderStroke(1.dp, Color.LightGray)
-            ) {
-                Text(key, style = Typography.headlineMedium)
-            }
         }
     }
 }
