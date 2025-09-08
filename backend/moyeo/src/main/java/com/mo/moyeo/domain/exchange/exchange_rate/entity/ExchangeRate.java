@@ -1,5 +1,6 @@
 package com.mo.moyeo.domain.exchange.exchange_rate.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.mo.moyeo.domain.currency.entity.Currency;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,18 +18,26 @@ import java.time.LocalDateTime;
 @Data
 public class ExchangeRate {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "rate_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "currency_code")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Currency currency;
 
     @Column(name = "buy_rate")
-    private Long buyRate;
+    private Double buyRate;
 
     @Column(name = "sell_rate")
-    private Long sellRate;
+    private Double sellRate;
+
+    @Column(name = "exchange_min")
+    private Double exchangeMin;
+
+    @Column(name = "original_rate")
+    private Double originalRate;
 
     @CreationTimestamp
     @Column(name = "recorded_at")

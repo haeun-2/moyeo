@@ -3,6 +3,7 @@ package com.d108.moyeo.presentation.navigation
 import MyConsultationDetail
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.d108.moyeo.presentation.ui.screen.*
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost

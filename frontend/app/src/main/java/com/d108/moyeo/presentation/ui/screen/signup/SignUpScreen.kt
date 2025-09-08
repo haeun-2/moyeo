@@ -1,6 +1,8 @@
 package com.d108.moyeo.presentation.ui.screen.signup
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,13 +13,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.ui.component.signup.BankSelectionBottomSheet
+import com.d108.moyeo.util.BiometricAuthManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +35,10 @@ fun SignUpScreen(
     BackHandler {
         viewModel.onBackClicked()
     }
+
+    val context = LocalContext.current
+    val activity = context as FragmentActivity
+    val biometricManager = remember { BiometricAuthManager(activity) }
 
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->
@@ -44,6 +54,32 @@ fun SignUpScreen(
                 }
                 is SignUpNavigationEvent.NavigateBack -> {
                     navController.popBackStack()
+                }
+
+                is SignUpNavigationEvent.ShowBiometricPrompt -> {
+                    if (biometricManager.canAuthenticate()) {
+                        biometricManager.authenticate(
+                            title = "지문 인증",
+                            negativeButtonText = "건너뛰기",
+                            onSuccess = {
+                                Toast.makeText(context, "성공!", Toast.LENGTH_SHORT).show()
+                                viewModel.onBiometricsSucceeded()
+                            },
+                            onError = { errorCode, errString ->
+                                if (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                                    viewModel.skipBiometrics() // 건너뛰기 로직 호출
+                                } else {
+                                    // 그 외 다른 에러들은 토스트 메시지를 보여줍니다.
+                                    Toast.makeText(context, "실패: $errString", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            onFailed = {
+                                Toast.makeText(context, "실패!", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    } else {
+                        Toast.makeText(context, "생체 인식을 사용할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -75,35 +111,46 @@ fun SignUpScreen(
             .padding(Spacing.Medium)) { // 스텝에 따라서 컴포저블이 보일 영역
             when (uiState.currentStep) {
                 SignUpStep.NAME -> NameInputContent(uiState, viewModel)
+                SignUpStep.EMAIL_INPUT -> EmailInputContent(uiState, viewModel)
+                SignUpStep.EMAIL_VERIFY -> EmailVerifyContent(uiState, viewModel)
                 SignUpStep.ACCOUNT -> AccountInputContent(uiState, viewModel, onBankFieldClick = { showBankBottomSheet = true })
-                SignUpStep.VERIFY_ACCOUNT -> VerifyAccountContent(uiState, viewModel)
+                SignUpStep.ACCOUNT_VERIFY -> VerifyAccountContent(uiState, viewModel)
                 SignUpStep.TERMS -> TermsContent(uiState, viewModel)
                 SignUpStep.PIN -> PinInputContent(uiState, viewModel)
                 SignUpStep.PIN_CONFIRM -> PinConfirmContent(uiState, viewModel)
                 SignUpStep.BIOMETRICS -> BiometricsContent(viewModel)
                 SignUpStep.COMPLETE -> CompleteContent()
+
             }
         }
 
         // 하단 버튼
         val isButtonEnabled = when(uiState.currentStep) {  // 각 버튼이 활성화되는 타이밍
             SignUpStep.NAME -> uiState.name.isNotBlank()
+            SignUpStep.EMAIL_INPUT -> uiState.email.isNotBlank()
+            // SignUpStep.EMAIL_VERIFY -> uiState.isEmailVerified
+            SignUpStep.EMAIL_VERIFY -> true  // 우선은 일단 가능하게
             SignUpStep.ACCOUNT -> uiState.accountBank.isNotBlank() && uiState.accountNumber.isNotBlank()
-            SignUpStep.VERIFY_ACCOUNT -> true // TODO: 인증번호 유효성 검사
+            SignUpStep.ACCOUNT_VERIFY -> true // TODO: 인증번호 유효성 검사
             SignUpStep.TERMS -> uiState.termsOfServiceAccepted && uiState.privacyPolicyAccepted
             SignUpStep.PIN -> uiState.pin.length == 6
             SignUpStep.PIN_CONFIRM -> uiState.pinConfirm.length == 6 && uiState.pin == uiState.pinConfirm
             SignUpStep.BIOMETRICS -> true
             SignUpStep.COMPLETE -> true
+
         }
 
-        // 생체 인증 단계에서만 보일 화면
+        // 생체 인증 단계에서만 보일 건너뛰기 버튼
         if (uiState.currentStep == SignUpStep.BIOMETRICS) {
             Button(
-                onClick = viewModel::onNextClicked, // "완료" 버튼과 동일한 동작. 추후 수정 필요.
+                onClick = viewModel::skipBiometrics,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = Spacing.Medium)
+                    .padding(bottom = Spacing.Medium),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Gray,
+                    contentColor = Color.Black
+                )
             ) {
                 Text("건너뛰기")
             }
