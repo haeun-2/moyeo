@@ -32,7 +32,7 @@ import com.d108.moyeo.presentation.ui.component.more.MoreItem
 fun MoreScreen(navController: NavController) {
 
     val context = LocalContext.current
-    val menuItems = listOf("생체인증", "연결 계좌 관리", "공지 사항", "비밀번호 변경", "자주 묻는 질문")
+    val menuItems = listOf("생체인증", "연결 계좌 관리", "공지 사항", "비밀번호 변경", "자주 묻는 질문", "채팅 상담")
 
     Column(
         modifier = Modifier.padding(
@@ -86,6 +86,7 @@ fun MoreScreen(navController: NavController) {
                                 "공지 사항" -> navController.navigate(AppScreen.Notices.route)
                                 "비밀번호 변경" -> navController.navigate(AppScreen.ChangePassword.route)
                                 "자주 묻는 질문" -> navController.navigate(AppScreen.FAQ.route)
+                                "채팅 상담" -> navController.navigate(AppScreen.ChatConsultation.route)
                             }
                         },
                         text = menuItem

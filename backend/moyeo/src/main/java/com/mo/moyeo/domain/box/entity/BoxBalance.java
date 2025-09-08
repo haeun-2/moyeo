@@ -1,8 +1,10 @@
 package com.mo.moyeo.domain.box.entity;
 
 
+import com.mo.moyeo.domain.currency.entity.Currency;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -32,9 +34,9 @@ public class BoxBalance {
     @JoinColumn(name = "box_id", nullable = false)
     private Box box;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "currency_code", referencedColumnName = "currency_code", nullable = false)
-//    private Currency currency;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "currency_code", referencedColumnName = "currency_code", nullable = false)
+    private Currency currency;
 
     @Column(name = "balance", nullable = false, precision = 20, scale = 4)
     private BigDecimal balance = BigDecimal.ZERO;
@@ -43,12 +45,12 @@ public class BoxBalance {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-//    @Builder
-//    public BoxBalance(Box box, Currency currency, BigDecimal balance) {
-//        this.box = box;
-//        this.currency = currency;
-//        this.balance = balance != null ? balance : BigDecimal.ZERO;
-//    }
+    @Builder
+    public BoxBalance(Box box, Currency currency, BigDecimal balance) {
+        this.box = box;
+        this.currency = currency;
+        this.balance = balance != null ? balance : BigDecimal.ZERO;
+    }
 
     // 금액 증가
     public void increaseBalance(BigDecimal amount) {
