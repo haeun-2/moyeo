@@ -15,12 +15,12 @@ public class Currency {
     @Id
     @Column(name = "currency_code")
     @Enumerated(EnumType.STRING)
-    private CurrencyType id;
+    private CurrencyType code;
 
     @Column(name = "country_name")
     private String countryName;
 
-    @Column(name="currency_unit")
+    @Column(name = "currency_unit")
     private String currencyUnit;
 
     @Column(name = "country_flag")
