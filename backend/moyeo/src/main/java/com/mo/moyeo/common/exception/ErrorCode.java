@@ -64,9 +64,13 @@ public enum ErrorCode {
     /**
      * 403 FORBIDDEN - 접근 권한 없음
      */
-    ACCESS_DENIED(HttpStatus.FORBIDDEN, "AUTH_403_01", "접근 권한이 없습니다.");
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "AUTH_403_01", "접근 권한이 없습니다."),
 
-
+    /**
+     * Box Error Code
+     */
+    BOX_NOT_FOUND(HttpStatus.NOT_FOUND, "BOX_404_01", "요청한 박스를 찾을 수 없습니다.");
+    
     private final HttpStatus status;
     private final String code;
     private final String message;
