@@ -18,6 +18,17 @@ sealed class AppScreen(
 
     object Dummy: AppScreen(route = "dummy", title = "Dummy")
 
+    // 로그아웃 또는 앱 최초 설치
+    object First: AppScreen(route = "first", title = "First")
+
+
+    // 회원가입 관련
+    object SignUp : AppScreen(route = "signup", title = "SignUp")
+
+    // 로그인 관련
+    object Login: AppScreen(route = "login", title = "Login")
+
+
     // 홈 스크린 관련
     object Home: AppScreen(route = "home", title = "홈", icon = Icons.Default.Home)
     object HomeSecond : AppScreen(route = "home_second", title = "Home Second") // HomeSecond 스크린 추가
