@@ -2,16 +2,15 @@ package com.d108.moyeo.presentation.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.d108.moyeo.R
 
 sealed class AppScreen(
     val route: String,
     val title: String,
-    val icon: ImageVector? = null
+    val icon: ImageVector? = null,
+    val iconResId: Int? = null
 ) {
 
     // ImageVector가 있으면 바텀 내비 클릭해서 보이는 화면
@@ -20,25 +19,25 @@ sealed class AppScreen(
     object Dummy: AppScreen(route = "dummy", title = "Dummy")
 
     // 홈 스크린 관련
-    object Home: AppScreen(route = "home", title = "Home", icon = Icons.Default.Home)
+    object Home: AppScreen(route = "home", title = "홈", icon = Icons.Default.Home)
     object HomeSecond : AppScreen(route = "home_second", title = "Home Second") // HomeSecond 스크린 추가
 
 
     // 환율 스크린 관련
-    object Exchange: AppScreen(route = "exchange", title = "Exchange", icon = Icons.Default.Call)
+    object Exchange: AppScreen(route = "exchange", title = "환율", iconResId = R.drawable.outline_currency_exchange_24)
 
 
 
     // QR 스크린 관련
-    object QR: AppScreen(route = "qr", title = "QR", icon = Icons.Default.Favorite)
+    object QR: AppScreen(route = "qr", title = "QR", iconResId = R.drawable.outline_qr_code_24)
 
 
 
     // 통장 히스토리 관련
-    object History: AppScreen(route = "history", title = "History", icon = Icons.Default.AccountBox)
+    object History: AppScreen(route = "history", title = "기록", icon = Icons.Default.AccountBox)
 
 
     // 삼점바 관련
-    object More: AppScreen(route = "more", title = "More", icon = Icons.Default.Build)
+    object More: AppScreen(route = "more", title = "메뉴", iconResId = R.drawable.outline_more_horiz_24)
 
 }
