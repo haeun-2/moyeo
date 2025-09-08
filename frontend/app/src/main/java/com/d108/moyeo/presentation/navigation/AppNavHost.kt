@@ -10,7 +10,11 @@ import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeSecondScreen
+import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
+import com.d108.moyeo.presentation.ui.screen.more.ConnectedAccountSettingsScreen
+import com.d108.moyeo.presentation.ui.screen.more.FAQScreen
 import com.d108.moyeo.presentation.ui.screen.more.MoreScreen
+import com.d108.moyeo.presentation.ui.screen.more.NoticesScreen
 import com.d108.moyeo.presentation.ui.screen.qr.QRScreen
 
 @Composable
@@ -47,5 +51,20 @@ fun AppNavHost(
             MoreScreen(navController = navController)
         }
 
+        composable(AppScreen.ConnectedAccountSettings.route) {
+            ConnectedAccountSettingsScreen(navController = navController)
+        }
+
+        composable(AppScreen.Notices.route) {
+            NoticesScreen(navController = navController)
+        }
+
+        composable(AppScreen.ChangePassword.route) {
+            ChangePasswordScreen(navController = navController)
+        }
+
+        composable(AppScreen.FAQ.route) {
+            FAQScreen(navController = navController)
+        }
     }
 }
