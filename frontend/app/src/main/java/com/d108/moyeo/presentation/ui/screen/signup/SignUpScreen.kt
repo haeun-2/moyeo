@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -18,6 +19,7 @@ import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.ui.component.signup.BankSelectionBottomSheet
+import com.d108.moyeo.presentation.ui.component.signup.BiometricsModal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +67,20 @@ fun SignUpScreen(
         )
     }
 
+    if (uiState.showBiometricsDialog) {
+        BiometricsModal(
+            onDismissRequest = {
+                // 외부를 클릭하면 모달을 닫기만 함
+                viewModel.dismissBiometricsDialog()
+                // 실제 지문 인증 성공 시에는 onBiometricsSucceeded()를 호출해야 합니다.
+            },
+            // 모달의 건너뛰기 버튼 클릭하면 넘어가짐
+            onSkipClicked = {
+                viewModel.skipBiometrics()
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -97,13 +113,17 @@ fun SignUpScreen(
             SignUpStep.COMPLETE -> true
         }
 
-        // 생체 인증 단계에서만 보일 화면
+        // 생체 인증 단계에서만 보일 건너뛰기 버튼
         if (uiState.currentStep == SignUpStep.BIOMETRICS) {
             Button(
-                onClick = viewModel::onNextClicked, // "완료" 버튼과 동일한 동작. 추후 수정 필요.
+                onClick = viewModel::skipBiometrics,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = Spacing.Medium)
+                    .padding(bottom = Spacing.Medium),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Gray,
+                    contentColor = Color.Black
+                )
             ) {
                 Text("건너뛰기")
             }

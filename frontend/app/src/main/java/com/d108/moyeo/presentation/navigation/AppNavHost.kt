@@ -10,12 +10,16 @@ import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeSecondScreen
+import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
+import com.d108.moyeo.presentation.ui.screen.more.ChatConsultationScreen
 import com.d108.moyeo.presentation.ui.screen.more.ConnectedAccountSettingsScreen
 import com.d108.moyeo.presentation.ui.screen.more.FAQScreen
 import com.d108.moyeo.presentation.ui.screen.more.MoreScreen
+import com.d108.moyeo.presentation.ui.screen.more.MyConsultationScreen
 import com.d108.moyeo.presentation.ui.screen.more.NoticesScreen
 import com.d108.moyeo.presentation.ui.screen.qr.QRScreen
+import com.d108.moyeo.presentation.ui.screen.signup.SignUpScreen
 
 @Composable
 fun AppNavHost(
@@ -78,6 +82,14 @@ fun AppNavHost(
 
         composable(AppScreen.FAQ.route) {
             FAQScreen(navController = navController)
+        }
+
+        composable(AppScreen.MyConsultation.route) {
+            MyConsultationScreen(navController = navController)
+        }
+
+        composable(AppScreen.ChatConsultation.route) {
+            ChatConsultationScreen(navController = navController)
         }
     }
 }

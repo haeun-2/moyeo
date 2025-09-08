@@ -30,7 +30,8 @@ data class SignUpUiState(
     val termsOfServiceAccepted: Boolean = false,
     val privacyPolicyAccepted: Boolean = false,
 
-    val isBiometricsUsed: Boolean = false // 생체인증 쓰는지 여부
+    val isBiometricsUsed: Boolean = false, // 생체인증 쓰는지 여부
+    val showBiometricsDialog: Boolean = false  // 생체 인증 모달창
 )
 
 // UI로 전달할 일회성 탐색 이벤트
@@ -54,30 +55,35 @@ class SignUpViewModel : ViewModel() {
     )
 
     fun onNextClicked() {
-        // 현재 단계에 따라 다음 단계로 상태를 변경하는 로직
-        val nextStep = when (_uiState.value.currentStep) {  // before -> after
+        val currentStep = _uiState.value.currentStep
+
+        // BIOMETRICS 단계에서는 "사용하기" 버튼이 모달만 띄우도록
+        if (currentStep == SignUpStep.BIOMETRICS) {
+            showBiometricsDialog()
+            return // 함수를 여기서 종료
+        }
+
+        // COMPLETE 단계에서는 "시작하기" 버튼이 홈으로 가도록 이벤트 발생 후 종료
+        if (currentStep == SignUpStep.COMPLETE) {
+            viewModelScope.launch {
+                _navigationEvent.emit(SignUpNavigationEvent.NavigateToHome)
+            }
+            return
+        }
+
+        // 나머지 일반적인 단계들은 다음 단계로 상태를 업데이트
+        val nextStep = when (currentStep) {
             SignUpStep.NAME -> SignUpStep.ACCOUNT
             SignUpStep.ACCOUNT -> SignUpStep.VERIFY_ACCOUNT
             SignUpStep.VERIFY_ACCOUNT -> SignUpStep.TERMS
             SignUpStep.TERMS -> SignUpStep.PIN
             SignUpStep.PIN -> SignUpStep.PIN_CONFIRM
             SignUpStep.PIN_CONFIRM -> SignUpStep.BIOMETRICS
-            SignUpStep.BIOMETRICS -> SignUpStep.COMPLETE
-            SignUpStep.COMPLETE -> {
-                viewModelScope.launch {
-                    // TODO: 실제 서버에 회원가입 정보를 전송하는 API 호출 로직이 여기에 위치해야 합니다.
-                }
-                null // nextStep을 null로 하여 상태 업데이트를 막음
-            }
+            else -> null // 위에서 이미 처리된 BIOMETRICS, COMPLETE는 여기에 도달하지 않음
         }
 
         if (nextStep != null) {
             _uiState.update { it.copy(currentStep = nextStep) }
-        } else {
-            viewModelScope.launch {
-                _navigationEvent.emit(SignUpNavigationEvent.NavigateToHome)
-            }
-
         }
     }
 
@@ -186,9 +192,33 @@ class SignUpViewModel : ViewModel() {
         }
     }
 
+
     // 생체 인증
-    fun onIsBiometricsUsedChanged(isBiometricsUsed: Boolean) {
-        _uiState.update { it.copy(isBiometricsUsed = isBiometricsUsed) }
+    // "사용하기" 버튼 클릭 시 호출
+    private fun showBiometricsDialog() {
+        _uiState.update { it.copy(showBiometricsDialog = true) }
+    }
+
+    // 모달이 닫힐 때 호출 (외부 클릭, 건너뛰기 등)
+    fun dismissBiometricsDialog() {
+        _uiState.update { it.copy(showBiometricsDialog = false) }
+    }
+
+    // "건너뛰기" 버튼 클릭 시 호출
+    fun skipBiometrics() {
+        _uiState.update { it.copy(
+            isBiometricsUsed = false,
+            currentStep = SignUpStep.COMPLETE
+        )}
+    }
+
+    // 실제 지문 인증이 성공했을 때 호출될 함수 (지금은 UI 테스트용)
+    fun onBiometricsSucceeded() {
+        _uiState.update { it.copy(
+            isBiometricsUsed = true,
+            showBiometricsDialog = false, // 모달 닫기
+            currentStep = SignUpStep.COMPLETE // 완료 단계로 이동
+        )}
     }
 
 }
