@@ -2,7 +2,6 @@ package com.d108.moyeo
 
 import SplashScreenViewModel
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -16,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.d108.moyeo.presentation.navigation.AppNavHost
@@ -24,7 +24,7 @@ import com.d108.moyeo.presentation.theme.MoYeoTheme
 import com.d108.moyeo.presentation.ui.component.MoyeoBottomNavigation
 import kotlin.getValue
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
 
         val viewModel: SplashScreenViewModel by viewModels()

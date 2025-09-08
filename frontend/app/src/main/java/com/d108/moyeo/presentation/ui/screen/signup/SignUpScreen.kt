@@ -1,6 +1,8 @@
 package com.d108.moyeo.presentation.ui.screen.signup
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,14 +14,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.ui.component.signup.BankSelectionBottomSheet
-import com.d108.moyeo.presentation.ui.component.signup.BiometricsModal
+import com.d108.moyeo.util.BiometricAuthManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +36,10 @@ fun SignUpScreen(
     BackHandler {
         viewModel.onBackClicked()
     }
+
+    val context = LocalContext.current
+    val activity = context as FragmentActivity
+    val biometricManager = remember { BiometricAuthManager(activity) }
 
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->
@@ -46,6 +55,25 @@ fun SignUpScreen(
                 }
                 is SignUpNavigationEvent.NavigateBack -> {
                     navController.popBackStack()
+                }
+
+                is SignUpNavigationEvent.ShowBiometricPrompt -> {
+                    if (biometricManager.canAuthenticate()) {
+                        biometricManager.authenticate(
+                            onSuccess = {
+                                Toast.makeText(context, "성공!", Toast.LENGTH_SHORT).show()
+                                viewModel.onBiometricsSucceeded()
+                            },
+                            onError = { _, errString ->
+                                Toast.makeText(context, "실패: $errString", Toast.LENGTH_SHORT).show()
+                            },
+                            onFailed = {
+                                Toast.makeText(context, "실패!", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    } else {
+                        Toast.makeText(context, "생체 인식을 사용할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -63,20 +91,6 @@ fun SignUpScreen(
             },
             onDismiss = {
                 showBankBottomSheet = false // 바텀시트 닫기
-            }
-        )
-    }
-
-    if (uiState.showBiometricsDialog) {
-        BiometricsModal(
-            onDismissRequest = {
-                // 외부를 클릭하면 모달을 닫기만 함
-                viewModel.dismissBiometricsDialog()
-                // 실제 지문 인증 성공 시에는 onBiometricsSucceeded()를 호출해야 합니다.
-            },
-            // 모달의 건너뛰기 버튼 클릭하면 넘어가짐
-            onSkipClicked = {
-                viewModel.skipBiometrics()
             }
         )
     }

@@ -31,13 +31,13 @@ data class SignUpUiState(
     val privacyPolicyAccepted: Boolean = false,
 
     val isBiometricsUsed: Boolean = false, // 생체인증 쓰는지 여부
-    val showBiometricsDialog: Boolean = false  // 생체 인증 모달창
 )
 
 // UI로 전달할 일회성 탐색 이벤트
 sealed class SignUpNavigationEvent {
     object NavigateToHome : SignUpNavigationEvent()
     object NavigateBack : SignUpNavigationEvent() // 뒤로가기 이벤트 추가
+    object ShowBiometricPrompt : SignUpNavigationEvent()  // 생체 인증 프롬프트창
 }
 
 class SignUpViewModel : ViewModel() {
@@ -57,9 +57,11 @@ class SignUpViewModel : ViewModel() {
     fun onNextClicked() {
         val currentStep = _uiState.value.currentStep
 
-        // BIOMETRICS 단계에서는 "사용하기" 버튼이 모달만 띄우도록
+        // BIOMETRICS 단계에서는 "사용하기" 버튼에서 함수 호출
         if (currentStep == SignUpStep.BIOMETRICS) {
-            showBiometricsDialog()
+            viewModelScope.launch {
+                _navigationEvent.emit(SignUpNavigationEvent.ShowBiometricPrompt)
+            }
             return // 함수를 여기서 종료
         }
 
@@ -194,16 +196,6 @@ class SignUpViewModel : ViewModel() {
 
 
     // 생체 인증
-    // "사용하기" 버튼 클릭 시 호출
-    private fun showBiometricsDialog() {
-        _uiState.update { it.copy(showBiometricsDialog = true) }
-    }
-
-    // 모달이 닫힐 때 호출 (외부 클릭, 건너뛰기 등)
-    fun dismissBiometricsDialog() {
-        _uiState.update { it.copy(showBiometricsDialog = false) }
-    }
-
     // "건너뛰기" 버튼 클릭 시 호출
     fun skipBiometrics() {
         _uiState.update { it.copy(
@@ -212,11 +204,10 @@ class SignUpViewModel : ViewModel() {
         )}
     }
 
-    // 실제 지문 인증이 성공했을 때 호출될 함수 (지금은 UI 테스트용)
+    // 실제 지문 인증이 성공했을 때 호출될 함수
     fun onBiometricsSucceeded() {
         _uiState.update { it.copy(
             isBiometricsUsed = true,
-            showBiometricsDialog = false, // 모달 닫기
             currentStep = SignUpStep.COMPLETE // 완료 단계로 이동
         )}
     }
