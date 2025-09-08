@@ -27,6 +27,7 @@ import java.time.Duration;
 @Configuration
 @EnableCaching
 public class RedisConfig {
+
     @Value("${spring.data.redis.host}")
     private String redisHost;
 
@@ -73,7 +74,6 @@ public class RedisConfig {
         template.afterPropertiesSet(); // 모든 프로퍼티 설정 후 초기화
         return template;
     }
-
 
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
