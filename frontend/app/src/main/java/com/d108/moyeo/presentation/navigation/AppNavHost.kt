@@ -1,20 +1,24 @@
 package com.d108.moyeo.presentation.navigation
 
+import MyConsultationDetail
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.d108.moyeo.presentation.ui.screen.FirstScreen
+import androidx.navigation.navArgument
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeSecondScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
+import com.d108.moyeo.presentation.ui.screen.more.ChatConsultationScreen
 import com.d108.moyeo.presentation.ui.screen.more.ConnectedAccountSettingsScreen
 import com.d108.moyeo.presentation.ui.screen.more.FAQScreen
 import com.d108.moyeo.presentation.ui.screen.more.MoreScreen
+import com.d108.moyeo.presentation.ui.screen.more.MyConsultationScreen
 import com.d108.moyeo.presentation.ui.screen.more.NoticesScreen
 import com.d108.moyeo.presentation.ui.screen.qr.QRScreen
 import com.d108.moyeo.presentation.ui.screen.signup.SignUpScreen
@@ -80,6 +84,24 @@ fun AppNavHost(
 
         composable(AppScreen.FAQ.route) {
             FAQScreen(navController = navController)
+        }
+
+        composable(AppScreen.ChatConsultation.route) {
+            ChatConsultationScreen(navController = navController)
+        }
+
+        composable(AppScreen.MyConsultation.route) {
+            MyConsultationScreen(navController = navController)
+        }
+
+        composable(
+            route = AppScreen.ConsultationDetail.route,
+            // "consultationId"라는 이름의 파라미터를 받으며, 이 값은 정수(Int) 타입임을 정의합니다.
+            arguments = listOf(navArgument("consultationId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            // URL 경로로부터 "consultationId" 값을 안전하게 추출합니다.
+            val consultationId = backStackEntry.arguments?.getInt("consultationId") ?: -1
+            MyConsultationDetail(navController = navController, consultationId = consultationId)
         }
     }
 }
