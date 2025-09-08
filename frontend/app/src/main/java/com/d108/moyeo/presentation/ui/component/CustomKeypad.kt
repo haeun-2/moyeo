@@ -102,8 +102,6 @@ fun CustomKeypad(
     otherStyle: TextStyle = Typography.headlineMedium,
     keypadType: String
     ) {
-    val haptics = LocalHapticFeedback.current
-
     LazyVerticalGrid(
         columns = GridCells.Fixed(layout.columns),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -124,8 +122,6 @@ fun CustomKeypad(
 
             TextButton(
                 onClick = {
-//                    // 가벼운 햅틱 (선택)
-//                    haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                     onKeyPress(key)
                 },
                 shape = buttonShape,
