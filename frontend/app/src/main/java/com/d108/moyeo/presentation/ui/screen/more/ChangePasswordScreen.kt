@@ -42,7 +42,7 @@ fun ChangePasswordScreen(navController: NavController) {
     var isLogoutChecked by remember { mutableStateOf(false) }
 
     // 임시 현재 비밀번호
-    val correctCurrentPassword = "123456"
+    val correctCurrentPassword = "111111"
 
     // 유효성 검증 상태
     val isCurrentPasswordCorrect = currentPassword == correctCurrentPassword

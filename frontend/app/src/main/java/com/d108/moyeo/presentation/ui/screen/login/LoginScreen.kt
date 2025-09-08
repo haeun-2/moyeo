@@ -1,8 +1,10 @@
 package com.d108.moyeo.presentation.ui.screen.login
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -12,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.d108.moyeo.presentation.navigation.AppScreen
+import com.d108.moyeo.presentation.theme.Padding
+import com.d108.moyeo.presentation.theme.Spacing
 
 @Composable
 fun LoginScreen(
@@ -37,15 +41,19 @@ fun LoginScreen(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = Modifier.fillMaxSize()
+            .padding(horizontal = Padding.HorizontalMedium, vertical = Padding.VerticalMedium)
     ) {
-        // ViewModel의 상태에 따라 다른 UI를 보여줌
-        when (loginMode) {
-            LoginMode.BIOMETRIC -> BiometricLoginContent(viewModel)
-            LoginMode.PASSWORD -> PinLoginContent(viewModel)
+        Box(modifier = Modifier
+            .weight(1f)
+            .padding(Spacing.Medium)) {
+            // ViewModel의 상태에 따라 다른 UI를 보여줌
+            when (loginMode) {
+                LoginMode.BIOMETRIC -> BiometricLoginContent(viewModel)
+                LoginMode.PASSWORD -> PinLoginContent(viewModel)
+            }
         }
+
     }
 }
 
