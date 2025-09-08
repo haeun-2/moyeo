@@ -1,0 +1,15 @@
+package com.mo.moyeo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+
+@EnableJpaAuditing
+@SpringBootApplication
+public class MoyeoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(MoyeoApplication.class, args);
+    }
+
+}

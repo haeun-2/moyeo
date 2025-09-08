@@ -39,5 +39,9 @@ sealed class AppScreen(
 
     // 삼점바 관련
     object More: AppScreen(route = "more", title = "메뉴", iconResId = R.drawable.outline_more_horiz_24)
+    object ConnectedAccountSettings : AppScreen(route = "connected_account_settings", title = "연결 계좌 설정")
+    object Notices : AppScreen(route = "notices", title = "공지사항")
+    object ChangePassword : AppScreen(route = "change_password", title = "비밀번호 변경")
+    object FAQ: AppScreen(route = "faq", title = "자주 묻는 질문")
 
 }
