@@ -16,14 +16,16 @@ class BiometricAuthManager(
     }
 
     fun authenticate(
+        title: String,
+        negativeButtonText: String,
         onSuccess: (BiometricPrompt.AuthenticationResult) -> Unit,
         onError: (Int, CharSequence) -> Unit,
-        onFailed: () -> Unit
+        onFailed: () -> Unit,
+
     ) {
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("생체 정보로 인증해주세요")
-            .setSubtitle("지문을 입력하세요")
-            .setNegativeButtonText("취소")
+            .setTitle(title)                // 파라미터로 제목 사용
+            .setNegativeButtonText(negativeButtonText) // 파라미터로 버튼 텍스트 사용
             .build()
 
         val biometricPrompt = BiometricPrompt(activity, executor,

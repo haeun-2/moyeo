@@ -60,12 +60,19 @@ fun SignUpScreen(
                 is SignUpNavigationEvent.ShowBiometricPrompt -> {
                     if (biometricManager.canAuthenticate()) {
                         biometricManager.authenticate(
+                            title = "지문 인증",
+                            negativeButtonText = "건너뛰기",
                             onSuccess = {
                                 Toast.makeText(context, "성공!", Toast.LENGTH_SHORT).show()
                                 viewModel.onBiometricsSucceeded()
                             },
-                            onError = { _, errString ->
-                                Toast.makeText(context, "실패: $errString", Toast.LENGTH_SHORT).show()
+                            onError = { errorCode, errString ->
+                                if (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                                    viewModel.skipBiometrics() // 건너뛰기 로직 호출
+                                } else {
+                                    // 그 외 다른 에러들은 토스트 메시지를 보여줍니다.
+                                    Toast.makeText(context, "실패: $errString", Toast.LENGTH_SHORT).show()
+                                }
                             },
                             onFailed = {
                                 Toast.makeText(context, "실패!", Toast.LENGTH_SHORT).show()
