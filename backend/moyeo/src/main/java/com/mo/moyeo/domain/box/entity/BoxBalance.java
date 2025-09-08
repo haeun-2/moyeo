@@ -1,16 +1,14 @@
 package com.mo.moyeo.domain.box.entity;
 
 
-import com.mo.moyeo.domain.currency.entity.Currency;
+import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -34,35 +32,33 @@ public class BoxBalance {
     @JoinColumn(name = "box_id", nullable = false)
     private Box box;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "currency_code", referencedColumnName = "currency_code", nullable = false)
-    private Currency currency;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "currency_code", nullable = false, insertable = true, updatable = false)
+    private CurrencyType currencyCode;
 
-    @Column(name = "balance", nullable = false, precision = 20, scale = 4)
-    private BigDecimal balance = BigDecimal.ZERO;
+    @Column(name = "balance", nullable = false)
+    private Double balance = 0d;
 
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Builder
-    public BoxBalance(Box box, Currency currency, BigDecimal balance) {
+    public BoxBalance(Box box, CurrencyType currencyCode) {
         this.box = box;
-        this.currency = currency;
-        this.balance = balance != null ? balance : BigDecimal.ZERO;
+        this.currencyCode = currencyCode;
     }
 
     // 금액 증가
-    public void increaseBalance(BigDecimal amount) {
-        this.balance = this.balance.add(amount);
+    public void increaseBalance(Double amount) {
+        this.balance += amount;
     }
 
     // 금액 감소
-    public void decreaseBalance(BigDecimal amount) {
-        if (this.balance.compareTo(amount) < 0) {
+    public void decreaseBalance(Double amount) {
+        if (this.balance < amount) {
             throw new IllegalStateException("잔액이 부족합니다");
         }
-        this.balance = this.balance.subtract(amount);
+        this.balance -= amount;
     }
 
 }

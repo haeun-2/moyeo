@@ -2,7 +2,12 @@ package com.mo.moyeo.domain.box.entity;
 
 import com.mo.moyeo.domain.user.entity.User;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 
 @Getter
@@ -14,6 +19,7 @@ import java.time.LocalDateTime;
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EntityListeners(AuditingEntityListener.class)
 public class BoxMember {
 
     @Id
@@ -39,6 +45,7 @@ public class BoxMember {
     private Boolean canExchange = false;
 
     @Column(name = "joined_at")
+    @CreationTimestamp
     private LocalDateTime joinedAt;
 
     @Column(name = "left_at")
@@ -48,15 +55,17 @@ public class BoxMember {
     @Column(name = "status", nullable = false)
     private Status status = Status.JOINED;
 
-    @Builder
     public BoxMember(Box box, User user) {
         this.box = box;
         this.user = user;
-        this.canTransfer = isOwner(user.getUserId());
-        this.canPayment = isOwner(user.getUserId());
-        this.canExchange = isOwner(user.getUserId());
-        this.joinedAt = LocalDateTime.now();
-        this.status = Status.JOINED;
+    }
+
+    public BoxMember(Box box, User user, boolean isOwner) {
+        this.box = box;
+        this.user = user;
+        this.canTransfer = isOwner;
+        this.canPayment = isOwner;
+        this.canExchange = isOwner;
     }
 
     public void leave() {
@@ -73,10 +82,6 @@ public class BoxMember {
         if (canTransfer != null) this.canTransfer = canTransfer;
         if (canPayment != null) this.canPayment = canPayment;
         if (canExchange != null) this.canExchange = canExchange;
-    }
-
-    public boolean isOwner(Long userId) {
-        return box.getOwnerId().equals(userId);
     }
 
     public enum Status {
