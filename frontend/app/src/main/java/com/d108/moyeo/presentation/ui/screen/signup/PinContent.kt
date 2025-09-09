@@ -5,6 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -13,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.errorLight
 import com.d108.moyeo.presentation.ui.component.CustomKeypad
+import com.d108.moyeo.presentation.ui.component.KeyMode
 import com.d108.moyeo.presentation.ui.component.KeypadKey
 
 @Composable
@@ -48,6 +53,8 @@ private fun PinContentLayout(
     onBackspaceClick: () -> Unit,
     errorMessage: String? = null
 ) {
+    var keyMode by remember { mutableStateOf(KeyMode.Zeros) }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
@@ -73,12 +80,16 @@ private fun PinContentLayout(
             onKeyPress = { key ->
                 when (key) {
                     is KeypadKey.Digit -> onDigitClick(key.value.toString())
-                    KeypadKey.Clear -> onClearClick()
+                    KeypadKey.Clear -> when (keyMode) {
+                        KeyMode.Reset -> onClearClick()
+                        KeyMode.Zeros -> onDigitClick("00")
+                    }
                     KeypadKey.Backspace -> onBackspaceClick()
                     is KeypadKey.Custom -> {}
                 }
             },
-            keypadType = "normal"
+            keypadType = "normal",
+            keyMode = keyMode
         )
     }
 }
