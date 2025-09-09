@@ -19,7 +19,7 @@ public class Box extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "box_id")
-    private Long boxId;
+    private Long id;
 
     @Column(name = "box_name", length = 100, nullable = false)
     private String boxName;
@@ -41,11 +41,7 @@ public class Box extends BaseTimeEntity {
         this.ownerId = ownerId;
         this.type = type;
     }
-
-    public void updateBoxName(String boxName) {
-        this.boxName = boxName;
-    }
-
+    
     public boolean isPersonal() {
         return this.type.equals(Type.PERSONAL);
     }

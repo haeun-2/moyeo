@@ -22,12 +22,12 @@ public class BoxMemberResponse {
 
     public static BoxMemberResponse from(BoxMember boxMember, Long ownerId) {
         return BoxMemberResponse.builder()
-                .boxMemberId(boxMember.getBoxMemberId())
+                .boxMemberId(boxMember.getId())
                 .name(boxMember.getUser().getName())
                 .canTransfer(boxMember.getCanTransfer())
                 .canPayment(boxMember.getCanPayment())
                 .canExchange(boxMember.getCanExchange())
-                .isOwner(boxMember.getUser().getUserId().equals(ownerId))
+                .isOwner(boxMember.getUser().getId().equals(ownerId))
                 .build();
     }
 

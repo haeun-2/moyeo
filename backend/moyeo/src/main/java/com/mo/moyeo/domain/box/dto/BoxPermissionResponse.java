@@ -19,7 +19,7 @@ public class BoxPermissionResponse {
 
     public static BoxPermissionResponse from(Box box) {
         return BoxPermissionResponse.builder()
-                .boxId(box.getBoxId())
+                .boxId(box.getId())
                 .canTransfer(true)
                 .canPayment(true)
                 .canExchange(true)
@@ -29,7 +29,7 @@ public class BoxPermissionResponse {
 
     public static BoxPermissionResponse from(BoxMember boxMember, boolean isOwner) {
         return BoxPermissionResponse.builder()
-                .boxId(boxMember.getBox().getBoxId())
+                .boxId(boxMember.getBox().getId())
                 .canTransfer(boxMember.getCanTransfer())
                 .canPayment(boxMember.getCanPayment())
                 .canExchange(boxMember.getCanExchange())

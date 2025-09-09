@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface BoxMemberRepository extends JpaRepository<BoxMember, Long> {
 
-    Optional<BoxMember> findByBox_BoxIdAndUser_UserId(@Param("boxId") Long boxId, @Param("userId") Long userId);
+    Optional<BoxMember> findByBox_IdAndUser_Id(@Param("boxId") Long boxId, @Param("userId") Long userId);
 
     @Query("""
         SELECT bm

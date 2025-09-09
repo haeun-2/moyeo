@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface BoxRepository extends JpaRepository<Box, Long> {
 
-    @Query("SELECT b.ownerId FROM Box b WHERE b.boxId = :id")
+    @Query("SELECT b.ownerId FROM Box b WHERE b.id = :id")
     Optional<Long> findOwnerIdByBoxId(Long id);
 
     @Query("""
@@ -23,12 +23,11 @@ public interface BoxRepository extends JpaRepository<Box, Long> {
     """)
     Optional<Box> selectPersonalBoxByOwnerId(@Param("ownerId") Long ownerId);
 
-
     @Query("""
         SELECT DISTINCT b
         FROM Box b
-        LEFT JOIN FETCH b.balances
-        WHERE b.boxId in (
+        JOIN FETCH b.balances
+        WHERE b.id in (
             SELECT bm.box.id
             FROM BoxMember bm
             WHERE bm.user.id = :userId

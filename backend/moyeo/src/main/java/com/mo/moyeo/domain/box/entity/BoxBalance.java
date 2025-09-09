@@ -26,7 +26,7 @@ public class BoxBalance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "box_balance_id")
-    private Long boxBalanceId;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "box_id", nullable = false)
