@@ -1,16 +1,18 @@
 package com.d108.moyeo.presentation.ui.component.qr
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Card
@@ -23,18 +25,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.ui.screen.qr.MoyeoBox
 
 @Composable
-fun SquareMoyeoBoxItem() {
-    // Card를 사용하여 각 아이템에 그림자 효과와 모양을 부여합니다.
+fun SquareMoyeoBoxItem(
+    moyeoBox: MoyeoBox,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    // Card를 사용하여 각 아이템에 그림자 효과 및 모양 부여
     Card(
         modifier = Modifier
             .width(130.dp)
-            .fillMaxHeight(), // 높이는 부모(LazyRow)를 꽉 채우도록
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .fillMaxHeight() // 높이는 부모(LazyRow)를 꽉 채우도록
+            .clickable(onClick = onClick), // 클릭 이벤트 연결
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        // 선택되었을 때 테두리 하이라이트 효과
+        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
     ) {
         Column(
             modifier = Modifier.padding(Spacing.SmallMedium)
@@ -49,7 +58,7 @@ fun SquareMoyeoBoxItem() {
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = "일본 여행", // 임시 제목
+                    text = moyeoBox.name, // 파라미터로 받은 데이터 사용
                     style = Typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = Spacing.Small)
@@ -64,15 +73,12 @@ fun SquareMoyeoBoxItem() {
                 modifier = Modifier.weight(0.8f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // 스크롤을 테스트하기 위해 아이템 수를 늘립니다.
-                items(10) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("통화 ${it + 1}", style = Typography.labelSmall)
-                        Text("${15000 * (it + 1)}", style = Typography.labelMedium)
-                    }
+                // 스크롤을 테스트하기 위해 아이템 수를 늘림
+                items(moyeoBox.balances) { balance ->
+                    CurrencyItem(
+                        currencyName = balance.name,
+                        amount = balance.amount
+                    )
                 }
             }
         }
