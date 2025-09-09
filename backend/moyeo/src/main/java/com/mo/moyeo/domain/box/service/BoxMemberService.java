@@ -62,7 +62,7 @@ public class BoxMemberService {
     public void leaveGroupBox(Long boxId) {
         Long ownerId = boxRepository.findOwnerIdByBoxId(boxId).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
         Long loginUserId = AuthenticationUtil.getCurrentUserId();
-        BoxMember boxMember = boxMemberRepository.findByBox_IdAndUser_Id(boxId, loginUserId).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+        BoxMember boxMember = boxMemberRepository.findByBoxIdAndUserId(boxId, loginUserId).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
         // 모임주는 탈퇴할 수 없음
         if (ownerId.equals(loginUserId)) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "모임주는 모임을 탈퇴할 수 없습니다.");

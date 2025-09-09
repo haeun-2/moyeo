@@ -68,7 +68,7 @@ public class BoxService {
             return BoxPermissionResponse.from(box);
         }
 
-        BoxMember boxMember = boxMemberRepository.findByBox_IdAndUser_Id(boxId, loginUserId).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
+        BoxMember boxMember = boxMemberRepository.findByBoxIdAndUserId(boxId, loginUserId).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
         return BoxPermissionResponse.from(boxMember, box.getOwnerId().equals(loginUserId));
     }
 
