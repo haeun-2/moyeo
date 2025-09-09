@@ -104,7 +104,7 @@ fun CustomKeypad(
     /** 버튼 내부 텍스트 스타일 */
     digitStyle: TextStyle = Typography.displayLarge,
     otherStyle: TextStyle = Typography.headlineMedium,
-    keypadType: String,
+    keypadColortype: String,
     /** 초기화 / 00 버튼 분기 */
     keyMode: KeyMode = KeyMode.Reset
     ) {
@@ -136,7 +136,7 @@ fun CustomKeypad(
                     onKeyPress(key)
                 },
                 shape = buttonShape,
-                colors = if (keypadType == "normal") {
+                colors = if (keypadColortype == "normal") {
                     when {
                         isDigit -> KeypadDefaults.digitButtonColors()
                         key is KeypadKey.Clear && keyMode == KeyMode.Zeros ->
@@ -189,7 +189,7 @@ fun PinKeypadExample(
                 is KeypadKey.Custom -> { /* 필요 시 처리 */ }
             }
         },
-        keypadType = "normal"
+        keypadColortype = "normal"
     )
 }
 
