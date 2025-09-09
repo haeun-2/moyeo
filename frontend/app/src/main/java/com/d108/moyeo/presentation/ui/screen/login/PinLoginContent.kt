@@ -61,7 +61,7 @@ fun PinLoginContent(viewModel: LoginViewModel) {
                     else -> {}
                 }
             },
-            keypadType = "normal"
+            keypadColortype = "normal"
         )
     }
 }
