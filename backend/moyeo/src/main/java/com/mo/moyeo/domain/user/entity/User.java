@@ -2,7 +2,6 @@ package com.mo.moyeo.domain.user.entity;
 
 import com.mo.moyeo.common.entity.BaseTimeEntity;
 import com.mo.moyeo.domain.auth.signup.dto.SignupCompleteRequest;
-import com.mo.moyeo.domain.auth.signup.dto.SignupSessionDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,7 +18,7 @@ public class User extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private Long userId;
+    private Long id;
 
     @Column(name = "name", length = 50, nullable = false)
     private String name;
