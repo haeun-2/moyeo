@@ -50,8 +50,10 @@ class SignUpViewModel : ViewModel() {
     val navigationEvent = _navigationEvent.asSharedFlow()
 
     val bankList: List<String> = listOf(
-        "NH농협은행", "카카오뱅크", "KB국민은행", "신한은행", "토스뱅크", "우리은행", "IBK기업은행", "하나은행",
-        "NH농협은행", "카카오뱅크", "KB국민은행", "신한은행", "토스뱅크", "우리은행", "IBK기업은행", "하나은행"
+        "우리은행", "SC제일은행", "신한은행", "KB국민은행",
+        "KEB하나은행", "시티은행", "IM뱅크", "NH농협은행",
+        "IBK기업은행", "KDB산업은행", "MG새마을금고", "카카오뱅크",
+        "싸피은행"
     )
 
     fun onNextClicked() {
