@@ -11,7 +11,7 @@ public class BoxCreateResponse {
         private Long boxId;
 
         public static BoxCreateResponse from(Box box) {
-                return new BoxCreateResponse(box.getBoxId());
+                return new BoxCreateResponse(box.getId());
         }
 }
 

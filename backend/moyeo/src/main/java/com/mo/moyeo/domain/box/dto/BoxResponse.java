@@ -19,7 +19,7 @@ public class BoxResponse {
 
     public static BoxResponse from(Box box) {
         return BoxResponse.builder()
-                .boxId(box.getBoxId())
+                .boxId(box.getId())
                 .name(box.getBoxName())
                 .balances(Balance.from(box.getBalances()))
                 .type(box.getType().name())
