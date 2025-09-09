@@ -23,6 +23,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.theme.onSurfaceLight
+import com.d108.moyeo.presentation.theme.primaryLight
 
 /**
  * 키패드에서 발생하는 키 타입
@@ -71,13 +73,13 @@ object KeypadDefaults {
     @Composable
     fun digitButtonColors(): ButtonColors =
         ButtonDefaults.textButtonColors(
-            contentColor = MaterialTheme.colorScheme.onSurface
+            contentColor = onSurfaceLight
         )
 
     @Composable
     fun functionButtonColors(): ButtonColors =
         ButtonDefaults.textButtonColors(
-            contentColor = MaterialTheme.colorScheme.primary
+            contentColor = primaryLight
         )
 
     @Composable

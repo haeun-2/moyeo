@@ -21,6 +21,7 @@ import com.d108.moyeo.presentation.ui.screen.more.FAQScreen
 import com.d108.moyeo.presentation.ui.screen.more.MoreScreen
 import com.d108.moyeo.presentation.ui.screen.more.MyConsultationScreen
 import com.d108.moyeo.presentation.ui.screen.more.NoticesScreen
+import com.d108.moyeo.presentation.ui.screen.qr.QRBoxesScreen
 import com.d108.moyeo.presentation.ui.screen.qr.QRScreen
 import com.d108.moyeo.presentation.ui.screen.signup.SignUpScreen
 
@@ -48,6 +49,7 @@ fun AppNavHost(
             LoginScreen(navController = navController)
         }
 
+        // 홈 화면
         composable(AppScreen.Home.route) {
             HomeScreen(navController = navController)
         }
@@ -55,18 +57,28 @@ fun AppNavHost(
             HomeSecondScreen(navController = navController)
         }
 
+        // 환율 화면
         composable(AppScreen.Exchange.route) {
             ExchangeScreen(navController = navController)
         }
 
+        // QR 화면
         composable(AppScreen.QR.route) {
             QRScreen(navController = navController)
         }
 
+        composable(AppScreen.QRBoxes.route) {
+            QRBoxesScreen(navController = navController)
+        }
+
+
+        // 기록 화면
         composable(AppScreen.History.route) {
             HistoryScreen(navController = navController)
         }
 
+
+        // 더보기 화면
         composable(AppScreen.More.route) {
             MoreScreen(navController = navController)
         }

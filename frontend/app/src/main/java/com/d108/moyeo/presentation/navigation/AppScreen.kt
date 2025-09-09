@@ -41,7 +41,7 @@ sealed class AppScreen(
 
     // QR 스크린 관련
     object QR: AppScreen(route = "qr", title = "QR", iconResId = R.drawable.outline_qr_code_24)
-
+    object QRBoxes: AppScreen(route = "qr_boxes", title = "QR 박스")
 
 
     // 통장 히스토리 관련
