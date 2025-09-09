@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel // viewModel import
 import androidx.navigation.NavController
 import com.d108.moyeo.R // QR 코드 이미지 예제를 위해 R을 import합니다.
+import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
@@ -140,7 +141,7 @@ fun QRScreen(
 
         // 제일 아래쪽에 내 모여 박스 더 보기 버튼
         OutlinedButton(
-            onClick = { /*TODO*/ },
+            onClick = { navController.navigate(AppScreen.QRBoxes.route) },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = primaryLight,
