@@ -32,6 +32,7 @@ sealed class AppScreen(
     // 홈 스크린 관련
     object Home: AppScreen(route = "home", title = "홈", icon = Icons.Default.Home)
     object HomeSecond : AppScreen(route = "home_second", title = "Home Second") // HomeSecond 스크린 추가
+    object Notification: AppScreen(route = "notification", title = "알림")
 
 
     // 환율 스크린 관련

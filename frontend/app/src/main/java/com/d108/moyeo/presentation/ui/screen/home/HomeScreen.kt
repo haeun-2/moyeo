@@ -55,7 +55,9 @@ fun HomeScreen(navController: NavController,
             // 헤더
             HomeHeader(
                 title = "동찬",
-                onBellClick = { /* TODO: 알림 화면 이동 */ }
+                onBellClick = {
+                    navController.navigate(AppScreen.Notification.route)
+                }
             )
             Spacer(Modifier.height(16.dp))
             // 지갑 요약 카드
