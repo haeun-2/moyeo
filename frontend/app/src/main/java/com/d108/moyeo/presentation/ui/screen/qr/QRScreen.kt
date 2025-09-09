@@ -19,6 +19,9 @@ import com.d108.moyeo.R // QR 코드 이미지 예제를 위해 R을 import합�
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.theme.onPrimaryLight
+import com.d108.moyeo.presentation.theme.primaryLight
+import com.d108.moyeo.presentation.ui.component.qr.SquareMoyeoBoxItem
 
 @Composable
 fun QRScreen(navController: NavController) {
@@ -32,28 +35,28 @@ fun QRScreen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // --- 상단 타이틀 ---
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center // 텍스트를 중앙 정렬
-        ) {
-            // 뒤로가기 버튼을 왼쪽에 배치
-            IconButton(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.align(Alignment.CenterStart)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "뒤로가기"
-                )
-            }
-        }
+//        Box(
+//            modifier = Modifier.fillMaxWidth(),
+//            contentAlignment = Alignment.Center // 텍스트를 중앙 정렬
+//        ) {
+//            // 뒤로가기 버튼을 왼쪽에 배치
+//            IconButton(
+//                onClick = { navController.popBackStack() },
+//                modifier = Modifier.align(Alignment.CenterStart)
+//            ) {
+//                Icon(
+//                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+//                    contentDescription = "뒤로가기"
+//                )
+//            }
+//        }
 
         Spacer(modifier = Modifier.height(Spacing.Large))
 
-        // 250x250 dp의 QR 코드가 들어올 영역
+        // 200 200 dp의 QR 코드가 들어올 영역
         Box(
             modifier = Modifier
-                .size(250.dp)
+                .size(200.dp)
                 .background(Color.White), // QR 코드의 흰색 배경
             contentAlignment = Alignment.Center
         ) {
@@ -65,42 +68,41 @@ fun QRScreen(navController: NavController) {
             )
         }
 
-        // 72dp 스페이서
-        Spacer(modifier = Modifier.height(72.dp))
+        Spacer(modifier = Modifier.height(Spacing.ExtraLarge))
 
         // 내 모여 박스
         Text(
-            text = "내 모여 박스",
+            text = "내 모여 박스",  // 이거 글자가 지금 선택된 통장 글자로 바뀌는 게 보기 좋을듯
             style = Typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
 
-        Spacer(modifier = Modifier.height(Spacing.Medium))
+        Spacer(modifier = Modifier.height(Spacing.ExtraLarge))
 
-        // 아래쪽에 오른쪽 레이지로우
+        // 레이지로우가 남은 모든 공간 확보하도록 수정
         LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.Medium)
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f), // 남은 모든 세로 공간 확보
+            horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
+            verticalAlignment = Alignment.CenterVertically // 아이템들을 세로 중앙에 정렬
         ) {
             // 레이지로우 아이템은 우선 나중에 생각
             items(5) { index ->
-                Card(
-                    modifier = Modifier.size(120.dp, 80.dp)
-                ) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("통장 ${index + 1}")
-                    }
-                }
+                SquareMoyeoBoxItem()
             }
         }
 
-        // 남은 공간을 모두 차지하여 아래 버튼을 맨 밑으로.
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
 
         // 제일 아래쪽에 내 모여 박스 더 보기 버튼
         OutlinedButton(
             onClick = { /*TODO*/ },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = primaryLight,
+                contentColor = onPrimaryLight
+            )
         ) {
             Text("내 모여 박스 더 보기")
         }
