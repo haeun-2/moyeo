@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,16 +23,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.*
 import com.d108.moyeo.presentation.ui.component.home.WalletEditBottomSheet
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController,
+               viewModel: HomeViewModel = viewModel()) {
 
-    // --- 상태 관리 ---
-    var showWalletEditSheet by remember { mutableStateOf(false) }
+    // ViewModel의 상태를 구독합니다.
+    val uiState by viewModel.uiState.collectAsState()
 
     // 컬러칩
     // 바텀시트에서 사용할 색상 목록
@@ -41,33 +44,6 @@ fun HomeScreen(navController: NavController) {
         Color(0xFF009688), Color(0xFF4CAF50), Color(0xFF8BC34A), Color(0xFFCDDC39)
     )
 
-    // 샘플 데이터 (이미지와 동일한 분위기/텍스트)
-    var wallet by remember {
-        mutableStateOf(
-            WalletSummary(
-                title = "일론머스크 딱 대",
-                color = Color.Blue, // 임시 대표 색상
-                balances = listOf(
-                    CurrencyBalance("한국 원", "120,000 KRW"),
-                    CurrencyBalance("미국 달러", "20 USD"),
-                    CurrencyBalance("일본 엔", "400 JPY"),
-                    CurrencyBalance("영국 파운드", "30 GBP"),
-                    CurrencyBalance("유럽 유로", "15 EUR"), // 스크롤 테스트를 위해 추가
-                    CurrencyBalance("중국 위안", "100 CNY")  // 스크롤 테스트를 위해 추가
-                )
-            )
-        )
-    }
-
-    val groups = listOf(
-        GroupBox("상훈 풍헌 동찬 일본 여행", "50,000 JPY", pink), // 연한 핑크
-        GroupBox("미국 도대체 언제 감", "1,500 USD", brown),    // 브라운
-        GroupBox("오아시스", "1,000 GBP", purple),               // 라일락
-        GroupBox("유럽 갈끄니까", "2,000 EUR", Color.Cyan),     // 스크롤 테스트를 위해 추가
-        GroupBox("중국 출장비", "5,000 CNY", Color.Yellow)   // 스크롤 테스트를 위해 추가
-    )
-
-    // ▼▼▼ 화면 전체를 Box로 감싸서 바텀시트를 LazyColumn과 분리합니다 ▼▼▼
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -84,9 +60,9 @@ fun HomeScreen(navController: NavController) {
             Spacer(Modifier.height(16.dp))
             // 지갑 요약 카드
             WalletSummaryCard(
-                data = wallet,
+                data = uiState.wallet,
                 onTransferClick = { /* TODO: 이체 */ },
-                onMoreClick = { showWalletEditSheet = true },
+                onMoreClick = { viewModel.onWalletMoreClick() },
                 onRowClick = { /* TODO: 통화별 상세 이동 */ }
             )
             Spacer(Modifier.height(24.dp))
@@ -98,7 +74,7 @@ fun HomeScreen(navController: NavController) {
                 contentPadding = PaddingValues(bottom = 24.dp)
             ) {
                 // 그룹별 포켓 카드들
-                items(groups) { item ->
+                items(uiState.groups) { item ->
                     GroupBoxCard(
                         data = item,
                         onDepositClick = { /* TODO: 입금 */ },
@@ -117,20 +93,14 @@ fun HomeScreen(navController: NavController) {
             Spacer(Modifier.height(8.dp))
         }
 
-        // 바텀 시트 영역 (Box의 자식이므로 LazyColumn 위에 오버레이됩니다)
-        if (showWalletEditSheet) {
+        // 바텀 시트 영역 (Box의 자식이므로 LazyColumn 위에 오버레이)
+        if (uiState.showWalletEditSheet) {
             WalletEditBottomSheet(
-                initialName = wallet.title,
-                initialColor = wallet.color,
+                initialName = uiState.wallet.title,
+                initialColor = uiState.wallet.color,
                 availableColors = availableColors,
-                onConfirm = { newName, newColor ->
-                    // 확인 버튼을 누르면 실제 wallet 상태를 업데이트
-                    wallet = wallet.copy(title = newName, color = newColor)
-                    showWalletEditSheet = false // 시트 닫기
-                },
-                onDismiss = {
-                    showWalletEditSheet = false // 시트 닫기
-                }
+                onConfirm = viewModel::onWalletEditConfirm, // ViewModel 함수 호출
+                onDismiss = viewModel::onWalletEditDismiss // ViewModel 함수 호출
             )
         }
     }
@@ -164,14 +134,6 @@ private fun HomeHeader(
 }
 
 /* ---------- Wallet summary (상단 흰 카드) ---------- */
-
-private data class WalletSummary(
-    val title: String,
-    val color: Color,
-    val balances: List<CurrencyBalance>
-)
-
-private data class CurrencyBalance(val label: String, val value: String)
 
 @Composable
 private fun WalletSummaryCard(
@@ -248,13 +210,7 @@ private fun WalletRow(
     }
 }
 
-/* ---------- Group box cards (컬러 카드) ---------- */
-
-private data class GroupBox(
-    val title: String,
-    val amount: String,
-    val bg: Color
-)
+/* ---------- Group box cards (모여 박스 카드) ---------- */
 
 @Composable
 private fun GroupBoxCard(
@@ -312,8 +268,8 @@ private fun GroupBoxCard(
     }
 }
 
-/* ---------- Add bar (하단 + 바) ---------- */
 
+/* ---------- Add bar (하단 + 바) ---------- */
 @Composable
 private fun AddBar(
     label: String,
