@@ -40,7 +40,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**","/api/auth/signup/**", "/api/auth/login", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**","/api/auth/signup/**", "/api/auth/login", "/api/auth/refresh", "/api/boxes/invite/*", "/download.html").permitAll()
                         .anyRequest().authenticated())
         ;
 

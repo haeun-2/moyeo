@@ -84,6 +84,10 @@ public class BoxMember {
         if (canExchange != null) this.canExchange = canExchange;
     }
 
+    public boolean isMember() {
+        return this.status.equals(Status.JOINED);
+    }
+
     public enum Status {
         JOINED,
         LEFT
