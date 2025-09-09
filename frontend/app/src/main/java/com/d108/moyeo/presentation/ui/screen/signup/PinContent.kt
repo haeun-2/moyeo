@@ -88,7 +88,7 @@ private fun PinContentLayout(
                     is KeypadKey.Custom -> {}
                 }
             },
-            keypadType = "normal",
+            keypadColortype = "normal",
             keyMode = keyMode
         )
     }
