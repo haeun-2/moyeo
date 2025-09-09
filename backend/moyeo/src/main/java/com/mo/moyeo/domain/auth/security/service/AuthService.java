@@ -38,10 +38,10 @@ public class AuthService {
             }
 
             // JWT 토큰 생성
-            GeneratedTokenDTO tokens = jwtUtil.generateToken(user.getUserId(), user.getRole().toString());
+            GeneratedTokenDTO tokens = jwtUtil.generateToken(user.getId(), user.getRole().toString());
 
             // Redis에 refresh token 저장
-            jwtRedisService.saveRefreshToken(user.getUserId(), tokens.getRefreshToken());
+            jwtRedisService.saveRefreshToken(user.getId(), tokens.getRefreshToken());
 
             return LoginResponse.builder()
                     .accessToken(tokens.getAccessToken())
