@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
@@ -25,6 +24,9 @@ import androidx.compose.ui.unit.dp
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.onSurfaceLight
 import com.d108.moyeo.presentation.theme.primaryLight
+
+
+enum class KeyMode { Reset, Zeros }
 
 /**
  * 키패드에서 발생하는 키 타입
@@ -102,7 +104,9 @@ fun CustomKeypad(
     /** 버튼 내부 텍스트 스타일 */
     digitStyle: TextStyle = Typography.displayLarge,
     otherStyle: TextStyle = Typography.headlineMedium,
-    keypadType: String
+    keypadType: String,
+    /** 초기화 / 00 버튼 분기 */
+    keyMode: KeyMode = KeyMode.Reset
     ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(layout.columns),
@@ -113,12 +117,17 @@ fun CustomKeypad(
             val isDigit = key is KeypadKey.Digit
             val label = when (key) {
                 is KeypadKey.Digit -> key.value.toString()
-                KeypadKey.Clear -> "초기화"
+                KeypadKey.Clear -> if (keyMode == KeyMode.Zeros) "00" else "초기화"
                 KeypadKey.Backspace -> "←"
                 is KeypadKey.Custom -> key.label
             }
             val style = when (key) {
-                KeypadKey.Clear, KeypadKey.Backspace -> otherStyle
+                KeypadKey.Clear -> if (keyMode == KeyMode.Zeros) {
+                    digitStyle
+                } else {
+                    otherStyle
+                }
+                KeypadKey.Backspace -> otherStyle
                 else -> digitStyle
             }
 
@@ -127,8 +136,16 @@ fun CustomKeypad(
                     onKeyPress(key)
                 },
                 shape = buttonShape,
-                colors = if (keypadType == "normal") { if (isDigit) KeypadDefaults.digitButtonColors() else KeypadDefaults.functionButtonColors() }
-                        else { KeypadDefaults.whiteButtonColors() },
+                colors = if (keypadType == "normal") {
+                    when {
+                        isDigit -> KeypadDefaults.digitButtonColors()
+                        key is KeypadKey.Clear && keyMode == KeyMode.Zeros ->
+                            KeypadDefaults.digitButtonColors()   // ← 00 모드일 때는 숫자색
+                        else -> KeypadDefaults.functionButtonColors()
+                    }
+                } else {
+                    KeypadDefaults.whiteButtonColors()
+                },
                 border = null,
                 modifier = Modifier
                     .aspectRatio(buttonAspectRatio)
@@ -136,7 +153,7 @@ fun CustomKeypad(
                     .semantics(mergeDescendants = true) {
                         contentDescription = when (key) {
                             is KeypadKey.Digit -> "숫자 ${key.value}"
-                            KeypadKey.Clear -> "초기화"
+                            KeypadKey.Clear -> if (keyMode == KeyMode.Zeros) "00" else "초기화"
                             KeypadKey.Backspace -> "삭제"
                             is KeypadKey.Custom -> key.label
                         }
