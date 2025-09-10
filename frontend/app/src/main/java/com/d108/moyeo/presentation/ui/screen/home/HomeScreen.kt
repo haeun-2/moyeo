@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.screen.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +13,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +37,17 @@ fun HomeScreen(navController: NavController,
 
     // ViewModel의 상태를 구독합니다.
     val uiState by viewModel.uiState.collectAsState()
+
+    // ViewModel의 내비게이션 이벤트를 구독하고 처리
+    LaunchedEffect(key1 = true) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is HomeNavigationEvent.NavigateToMyWallet -> {
+                    navController.navigate(AppScreen.MyWallet.route)
+                }
+            }
+        }
+    }
 
     // 컬러칩
     // 바텀시트에서 사용할 색상 목록
@@ -63,6 +76,7 @@ fun HomeScreen(navController: NavController,
             // 지갑 요약 카드
             WalletSummaryCard(
                 data = uiState.wallet,
+                onTitleClick = { viewModel.onWalletTitleClick()},
                 onTransferClick = { /* TODO: 이체 */ },
                 onMoreClick = { viewModel.onWalletMoreClick() },
                 onRowClick = { /* TODO: 통화별 상세 이동 */ }
@@ -140,8 +154,9 @@ private fun HomeHeader(
 @Composable
 private fun WalletSummaryCard(
     data: WalletSummary,
-    onTransferClick: () -> Unit,
-    onMoreClick: () -> Unit,
+    onTitleClick: () -> Unit,
+    onTransferClick: () -> Unit,  // 이체 버튼 클릭
+    onMoreClick: () -> Unit,  // 삼점 클릭
     onRowClick: (CurrencyBalance) -> Unit
 ) {
     Card(
@@ -155,13 +170,26 @@ private fun WalletSummaryCard(
                     .padding(start = 24.dp, top = 12.dp, end = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = data.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onTitleClick() }
+                        .padding(end = 16.dp), // '>'와 '이체' 버튼 사이의 간격
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = data.title,
+                        style = Typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = ">",
+                        modifier = Modifier.weight(1f), // > 글자가 남은 공간을 모두 차지하도록
+                        style = Typography.titleMedium,
+                    )
+                }
                 AssistChip(
                     onClick = onTransferClick,
                     label = { Text("이체") },

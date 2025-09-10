@@ -12,7 +12,7 @@ import androidx.navigation.navArgument
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
-import com.d108.moyeo.presentation.ui.screen.home.HomeSecondScreen
+import com.d108.moyeo.presentation.ui.screen.home.MyWalletScreen
 import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
@@ -54,12 +54,15 @@ fun AppNavHost(
         composable(AppScreen.Home.route) {
             HomeScreen(navController = navController)
         }
-        composable(AppScreen.HomeSecond.route) { // HomeSecondScreen 라우트 추가
-            HomeSecondScreen(navController = navController)
-        }
 
         composable(AppScreen.Notification.route) {
             NotificationScreen(navController = navController)
+        }
+
+        // 후에 마이 월렛으로 어떤 버튼을 타고 들어왔는지 파라미터 도입...아니다 지금 할까?
+        // 고민해보자. 이 주석 절대 지우지 말 것.
+        composable(AppScreen.MyWallet.route) {
+            MyWalletScreen(navController = navController)
         }
 
         // 환율 화면
