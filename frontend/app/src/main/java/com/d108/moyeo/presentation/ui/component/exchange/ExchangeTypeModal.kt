@@ -57,7 +57,7 @@ fun ExchangeTypeModal(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(40.dp),
-                shape = RoundedCornerShape(8.dp)
+//                shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
                     text = "충전하기",
@@ -75,7 +75,7 @@ fun ExchangeTypeModal(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(40.dp),
-                shape = RoundedCornerShape(8.dp)
+//                shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
                     text = "돌려받기",
