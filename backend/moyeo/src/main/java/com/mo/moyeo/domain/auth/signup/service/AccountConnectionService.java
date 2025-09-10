@@ -40,7 +40,7 @@ public class AccountConnectionService {
     /**
      * 금융망 사용자 키 조회
      */
-    public String getUserKey(String email) {
+    protected String getUserKey(String email) {
         String url = BASE_URL + USER_SEARCH_ENDPOINT;
 
         Map<String, String> body = new HashMap<>();

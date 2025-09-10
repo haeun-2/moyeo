@@ -29,8 +29,8 @@ public class User extends BaseTimeEntity {
     @Column(name = "phone_number", length = 15, nullable = false)
     private String phoneNumber;
 
-    @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
+    @Column(name = "fid", nullable = false)
+    private String fid;
 
     @Column(name = "connected_bank_code", length = 3, nullable = false)
     private String connectedBankCode;
@@ -40,10 +40,6 @@ public class User extends BaseTimeEntity {
 
     @Column(name = "connected_bank_key", length = 255, nullable = false)
     private String connectedBankKey;
-
-    @Column(name = "biometric_enabled")
-    @Builder.Default
-    private Boolean biometricEnabled = false;
 
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -58,16 +54,15 @@ public class User extends BaseTimeEntity {
         ADMIN
     }
 
-    public static User from(SignupCompleteRequest request, String hashedPassword, String hashedBankKey) {
+    public static User from(SignupCompleteRequest request, String hashedFid, String encryptedBankKey) {
         return User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
-                .passwordHash(hashedPassword)
+                .fid(hashedFid)
                 .connectedBankCode(request.getConnectedBankCode())
                 .connectedBankAccount(request.getConnectedBankAccount())
-                .connectedBankKey(hashedBankKey)
-                .biometricEnabled(request.getBiometricEnabled())
+                .connectedBankKey(encryptedBankKey)
                 .build();
     }
 }
