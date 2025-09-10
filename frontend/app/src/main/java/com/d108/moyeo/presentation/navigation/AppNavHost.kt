@@ -13,6 +13,7 @@ import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeSecondScreen
+import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChatConsultationScreen
@@ -55,6 +56,10 @@ fun AppNavHost(
         }
         composable(AppScreen.HomeSecond.route) { // HomeSecondScreen 라우트 추가
             HomeSecondScreen(navController = navController)
+        }
+
+        composable(AppScreen.Notification.route) {
+            NotificationScreen(navController = navController)
         }
 
         // 환율 화면
