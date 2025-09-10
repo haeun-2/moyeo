@@ -26,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.ui.component.home.mywallet.MyWalletCurrencyBottomSheet
+import com.d108.moyeo.presentation.ui.component.home.mywallet.MyWalletFilterBottomSheet
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,6 +45,15 @@ fun MyWalletScreen(
             currencies = uiState.currencies,
             onItemSelected = viewModel::onCurrencySelected,
             onDismiss = viewModel::onCurrencySheetDismiss
+        )
+    }
+
+    // 필터 클릭 시 열릴 바텀 시트
+    if (uiState.showFilterSheet) {
+        MyWalletFilterBottomSheet(
+            initialFilters = uiState.filters,
+            onConfirm = viewModel::onFilterConfirm,
+            onDismiss = viewModel::onFilterSheetDismiss
         )
     }
 
@@ -76,7 +86,7 @@ fun MyWalletScreen(
                 searchQuery = uiState.searchQuery,
                 onSearchQueryChange = viewModel::onSearchQueryChanged, // 이벤트 연결
                 filters = uiState.filters,
-                onFilterClick = { /* TODO: 필터 바텀시트 열기 */ }
+                onFilterClick = viewModel::onFilterClick
             )
 
             // 거래 내역 목록
@@ -190,7 +200,7 @@ private fun SearchAndFilterBar(
 
         // 우측에는 1개월, 전체, 최신순 등 텍스트 버튼
         Row(
-            modifier = Modifier.clickable { onFilterClick },
+            modifier = Modifier.clickable { onFilterClick() },
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(filters.period, style = Typography.bodySmall)

@@ -16,7 +16,7 @@ data class Transaction(
     val balance: String
 )
 
-//필터 옵션을 위한 데이터 클래스 추가합니다
+//필터 옵션을 위한 데이터 클래스
 data class FilterOptions(
     val period: String = "1개월",
     val scope: String = "전체",
@@ -33,7 +33,10 @@ data class MyWalletUiState(
 
     // 화폐 단위 선택을 위한 바텀 시트
     val showCurrencySheet: Boolean = false,
-    val currencies: List<Currency> = emptyList()
+    val currencies: List<Currency> = emptyList(),
+
+    // 필터링을 위한 바텀 시트
+    val showFilterSheet: Boolean = false
 )
 
 class MyWalletViewModel : ViewModel() {
@@ -46,6 +49,7 @@ class MyWalletViewModel : ViewModel() {
         loadInitialData()
     }
 
+    // 검색어와 관련된 로직
     fun onSearchQueryChanged(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
         // TODO: 검색 쿼리에 따라 거래내역 필터링 로직
@@ -85,12 +89,12 @@ class MyWalletViewModel : ViewModel() {
         _uiState.update { it.copy(showCurrencySheet = true) }
     }
 
-    // 바텀시트가 닫힐 때 호출
+    // 화폐 바텀 시트가 닫힐 때 호출
     fun onCurrencySheetDismiss() {
         _uiState.update { it.copy(showCurrencySheet = false) }
     }
 
-    // 바텀시트에서 화폐를 선택했을 때 호출
+    // 화폐 바텀 시트에서 확정했을 때 호출
     fun onCurrencySelected(currency: Currency?) {
         val newBalance = if (currency == null) {
             "123,456,789 원" // '전체 보기' 선택 시
@@ -105,6 +109,21 @@ class MyWalletViewModel : ViewModel() {
         }
         // 잔액을 업데이트하고, 바텀시트를 닫습니다.
         _uiState.update { it.copy(totalBalance = newBalance, showCurrencySheet = false) }
+    }
+
+
+    // 필터링 버튼을 클릭했을 때 호출
+    fun onFilterClick() {
+        _uiState.update { it.copy(showFilterSheet = true) }
+    }
+
+    fun onFilterSheetDismiss() {
+        _uiState.update { it.copy(showFilterSheet = false) }
+    }
+
+    fun onFilterConfirm(newFilters: FilterOptions) {
+        _uiState.update { it.copy(filters = newFilters, showFilterSheet = false) }
+        // TODO: 변경된 필터에 따라 거래내역 다시 불러오기
     }
 
 }

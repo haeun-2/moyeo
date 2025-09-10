@@ -34,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import com.d108.moyeo.presentation.theme.Padding
+import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.onSurfaceLight
 import com.d108.moyeo.presentation.theme.surfaceLight
 import kotlinx.coroutines.flow.collectLatest
@@ -117,7 +119,7 @@ fun MyWalletCurrencyBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.8f)
-                .padding(24.dp),
+                .padding(horizontal = Padding.HorizontalSmall, vertical = Padding.VerticalSmall),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LazyVerticalGrid(
@@ -126,8 +128,8 @@ fun MyWalletCurrencyBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .nestedScroll(connection),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
+                verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
             ) {
                 // 맨 처음, 그러니까 0행 0열에는 전체 보기
                 item {
