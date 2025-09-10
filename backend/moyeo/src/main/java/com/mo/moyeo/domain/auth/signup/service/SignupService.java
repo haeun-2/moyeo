@@ -25,6 +25,7 @@ public class SignupService {
     private final SignupSessionRedisService signupSessionRedisService;
     private final VerificationService verificationService;
     private final AccountConnectionService accountConnectionService;
+    private final EncryptionService encryptionService;
 
     /**
      * 이메일 중복 확인 & 인증코드 전송
@@ -194,11 +195,11 @@ public class SignupService {
         String bankKey = accountConnectionService.getUserKey(request.getEmail());
 
         // 암호화
-        String hashedPassword = passwordEncoder.encode(request.getPassword());
-        String hashedBankKey = passwordEncoder.encode(bankKey);
+        String hashedFid = passwordEncoder.encode(request.getFid());
+        String encryptedBankKey = encryptionService.encrypt(bankKey);
 
         // 유저 객체 생성
-        User newUser = User.from(request, hashedPassword, hashedBankKey);
+        User newUser = User.from(request, hashedFid, encryptedBankKey);
 
         userRepository.save(newUser);
 

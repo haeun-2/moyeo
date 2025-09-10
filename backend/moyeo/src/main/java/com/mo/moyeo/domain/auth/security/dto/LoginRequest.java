@@ -7,5 +7,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LoginRequest {
     private String phoneNumber;
-    private String password;
+    private String fid;
 }
