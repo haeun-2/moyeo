@@ -79,7 +79,9 @@ fun HomeScreen(navController: NavController,
                 onTitleClick = { viewModel.onWalletTitleClick()},
                 onTransferClick = { /* TODO: 이체 */ },
                 onMoreClick = { viewModel.onWalletMoreClick() },
-                onRowClick = { /* TODO: 통화별 상세 이동 */ }
+                onRowClick = { currency ->
+                    viewModel.onWalletCurrencyClick()
+                }
             )
             Spacer(Modifier.height(24.dp))
 
@@ -230,6 +232,7 @@ private fun WalletRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick) // Row 전체를 클릭 가능하게 만듭니다.
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

@@ -96,4 +96,10 @@ class HomeViewModel : ViewModel() {
             currentState.copy(wallet = updatedWallet, showWalletEditSheet = false)
         }
     }
+
+    fun onWalletCurrencyClick() {
+        viewModelScope.launch {
+            _navigationEvent.emit(HomeNavigationEvent.NavigateToMyWallet)
+        }
+    }
 }
