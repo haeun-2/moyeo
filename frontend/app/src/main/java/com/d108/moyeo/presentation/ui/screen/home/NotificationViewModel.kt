@@ -39,7 +39,7 @@ class NotificationViewModel : ViewModel() {
             delay(1500L) // 1.5초간의 가상 로딩 딜레이
 
             val dummyNotifications = listOf(
-                Notification("1", "입금 완료", "'상훈 풍헌 동찬 일본 여행' 박스에 50,000원이 입금되었어요.", "1일 전", false),
+                Notification("1", "입금 완료", "'상훈 풍헌 동찬 일본 여행'동찬 일본 여행'동찬 일본 여행'동찬 일본 여행'동찬 일본 여행'동찬 일본 여행'동찬 일본 여행'동찬 일본 여행'동찬 일본 여행' 박스에 50,000원이 입금되었어요.", "1일 전", false),
                 Notification("2", "친구 초대", "김상훈님이 '미국 도대체 언제 감' 박스에 초대했어요.", "2일 전", false),
                 Notification("3", "환전 완료", "1,500 USD 환전이 정상적으로 처리되었습니다.", "5일 전", true),
                 Notification("4", "목표 달성!", "'오아시스' 박스의 목표 금액을 달성했어요! 축하합니다.", "7일 전", true)
