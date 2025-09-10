@@ -31,9 +31,14 @@ sealed class AppScreen(
 
     // 홈 스크린 관련
     object Home: AppScreen(route = "home", title = "홈", icon = Icons.Default.Home)
-    object HomeSecond : AppScreen(route = "home_second", title = "Home Second") // HomeSecond 스크린 추가
     object Notification: AppScreen(route = "notification", title = "알림")
 
+    // 마이월렛에 파라미터를 타고 넘어가는 게 맞는 방향일까?
+    // 이 주석 절대 지우지 말 것.
+    object MyWallet: AppScreen(route = "my_wallet", title = "내 지갑")
+
+    // 월렛에서 상세로 들어가는 화면
+    object MyWalletDetail : AppScreen(route = "my_wallet_detail/{transactionId}", title = "월렛 상세")
 
     // 환율 스크린 관련
     object Exchange: AppScreen(route = "exchange", title = "환율", iconResId = R.drawable.outline_currency_exchange_24)

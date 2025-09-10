@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.component.home
+package com.d108.moyeo.presentation.ui.component.home.notification
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,10 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.theme.errorLight
 import com.d108.moyeo.presentation.theme.onSurfaceVariantLight
 import com.d108.moyeo.presentation.theme.secondaryContainerLight
-import com.d108.moyeo.presentation.theme.surfaceLight
 import com.d108.moyeo.presentation.ui.screen.home.Notification
 
 @Composable

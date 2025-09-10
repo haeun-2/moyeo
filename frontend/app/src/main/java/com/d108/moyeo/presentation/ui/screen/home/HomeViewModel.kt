@@ -2,12 +2,16 @@ package com.d108.moyeo.presentation.ui.screen.home
 
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.presentation.theme.brown
 import com.d108.moyeo.presentation.theme.pink
 import com.d108.moyeo.presentation.theme.purple
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 // TODO: 이 데이터 클래스들은 domain/model 패키지로 이동해야 합니다.
 data class WalletSummary(
@@ -31,10 +35,19 @@ data class HomeUiState(
     val showWalletEditSheet: Boolean = false
 )
 
+// 화면 전환
+sealed class HomeNavigationEvent {
+    object NavigateToMyWallet : HomeNavigationEvent()
+}
+
 
 class HomeViewModel : ViewModel() {
 
     private val _uiState: MutableStateFlow<HomeUiState>
+
+    // 화면 이동 이벤트를 전달할 SharedFlow
+    private val _navigationEvent = MutableSharedFlow<HomeNavigationEvent>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
 
     init {
         // 샘플 데이터 (이미지와 동일한 분위기/텍스트)
@@ -63,6 +76,12 @@ class HomeViewModel : ViewModel() {
 
     val uiState = _uiState.asStateFlow()
 
+    fun onWalletTitleClick() {  // 내 지갑 "제목 >" 영역 클릭 시
+        viewModelScope.launch {
+            _navigationEvent.emit(HomeNavigationEvent.NavigateToMyWallet)
+        }
+    }
+
     fun onWalletMoreClick() {
         _uiState.update { it.copy(showWalletEditSheet = true) }
     }
@@ -75,6 +94,12 @@ class HomeViewModel : ViewModel() {
         _uiState.update { currentState ->
             val updatedWallet = currentState.wallet.copy(title = newName, color = newColor)
             currentState.copy(wallet = updatedWallet, showWalletEditSheet = false)
+        }
+    }
+
+    fun onWalletCurrencyClick() {
+        viewModelScope.launch {
+            _navigationEvent.emit(HomeNavigationEvent.NavigateToMyWallet)
         }
     }
 }

@@ -22,11 +22,14 @@ object Spacing {
  */
 object Padding {
     // 수평 (좌우) 패딩
+
+    val HorizontalExtraSmall = 16.dp
     val HorizontalSmall = 24.dp
     val HorizontalMedium = 32.dp
     val HorizontalLarge = 40.dp
 
     // 수직 (상하) 패딩
+    val VerticalExtraSmall = 16.dp
     val VerticalSmall = 24.dp
     val VerticalMedium = 32.dp
     val VerticalLarge = 40.dp

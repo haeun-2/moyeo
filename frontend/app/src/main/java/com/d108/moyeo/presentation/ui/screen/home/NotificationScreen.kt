@@ -25,7 +25,7 @@ import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.ui.component.home.NotificationItem
+import com.d108.moyeo.presentation.ui.component.home.notification.NotificationItem
 
 @Composable
 fun NotificationScreen(navController: NavController,
