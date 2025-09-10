@@ -11,9 +11,11 @@ import kotlinx.coroutines.flow.update
 data class Transaction(
     val id: String,
     val date: String,
-    val description: String,
+    val description: String,  // 모여 박스로 넣은 거면 박스 이름이 표시되고, 이외의 경우에는 가맹점 정보가 표시됨
     val amount: String,
-    val balance: String
+    val balance: String,
+    val timestamp: String, // "2025.09.08 13:42" 와 같은 전체 시각
+    val category: String   // "식/음료", "교통" 등
 )
 
 //필터 옵션을 위한 데이터 클래스
@@ -67,7 +69,9 @@ class MyWalletViewModel : ViewModel() {
                 date = "09.${String.format("%02d", 10 - it)}",
                 description = if (it % 2 == 0) "일본 여행" else "GS25 편의점",
                 amount = "- 5,${String.format("%03d", it * 100)} 원",
-                balance = "11${5 - it},${String.format("%03d", it * 100)} 원"
+                balance = "11${5 - it},${String.format("%03d", it * 100)} 원",
+                timestamp = "2025.09.${String.format("%02d", 10 - it)} 13:42",
+                category = if (it % 2 == 0) "여행" else "식/음료"
             )
         }
         val sampleCurrencies = listOf(

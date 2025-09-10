@@ -12,6 +12,7 @@ import androidx.navigation.navArgument
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
+import com.d108.moyeo.presentation.ui.screen.home.MyWalletDetailScreen
 import com.d108.moyeo.presentation.ui.screen.home.MyWalletScreen
 import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
@@ -64,6 +65,22 @@ fun AppNavHost(
         composable(AppScreen.MyWallet.route) {
             MyWalletScreen(navController = navController)
         }
+
+        composable(
+            route = AppScreen.MyWalletDetail.route,
+            // 경로에서 "transactionId"를 어떤 타입으로 받을지 정의합니다.
+            arguments = listOf(navArgument("transactionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            // 뒤로가기 스택에서 "transactionId" 값을 꺼냅니다.
+            val transactionId = backStackEntry.arguments?.getString("transactionId")
+            if (transactionId != null) {
+                MyWalletDetailScreen(
+                    navController = navController,
+                    transactionId = transactionId // 상세 화면에 ID를 전달합니다.
+                )
+            }
+        }
+
 
         // 환율 화면
         composable(AppScreen.Exchange.route) {

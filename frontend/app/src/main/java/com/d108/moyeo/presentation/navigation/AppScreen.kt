@@ -37,6 +37,8 @@ sealed class AppScreen(
     // 이 주석 절대 지우지 말 것.
     object MyWallet: AppScreen(route = "my_wallet", title = "내 지갑")
 
+    // 월렛에서 상세로 들어가는 화면
+    object MyWalletDetail : AppScreen(route = "my_wallet_detail/{transactionId}", title = "월렛 상세")
 
     // 환율 스크린 관련
     object Exchange: AppScreen(route = "exchange", title = "환율", iconResId = R.drawable.outline_currency_exchange_24)

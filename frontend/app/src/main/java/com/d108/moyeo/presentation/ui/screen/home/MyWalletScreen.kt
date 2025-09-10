@@ -94,7 +94,12 @@ fun MyWalletScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(uiState.transactions) { transaction ->
-                    TransactionRowItem(transaction = transaction)
+                    TransactionRowItem(
+                        transaction = transaction,
+                        onClick = {
+                            // 클릭된 아이템의 id를 가지고 상세 화면으로 이동.
+                            navController.navigate("my_wallet_detail/${transaction.id}")
+                        })
                     HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
                 }
             }
@@ -214,11 +219,12 @@ private fun SearchAndFilterBar(
 
 // 거래 내역 한 줄 UI
 @Composable
-private fun TransactionRowItem(transaction: Transaction) {
+private fun TransactionRowItem(transaction: Transaction, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = Spacing.Medium),
+            .padding(vertical = Spacing.Medium)
+            .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(transaction.date, style = Typography.bodyMedium, color = Color.Gray)
