@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,15 +51,12 @@ fun ExchangeTypeModal(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 충전하기 버튼 (보라색)
+            // 충전하기 버튼
             Button(
                 onClick = onChargeSelected,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF9C27B0) // 보라색으로 통일
-                ),
+                    .height(40.dp),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
@@ -72,20 +69,16 @@ fun ExchangeTypeModal(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 돌려받기 버튼 (보라색으로 변경)
+            // 돌려받기 버튼
             Button(
                 onClick = onRefundSelected,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF9C27B0) // 파란색에서 보라색으로 변경
-                ),
+                    .height(40.dp),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
                     text = "돌려받기",
-                    color = Color.White,
                     style = Typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
@@ -97,7 +90,7 @@ fun ExchangeTypeModal(
             TextButton(onClick = onDismiss) {
                 Text(
                     text = "취소",
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = Typography.bodyMedium
                 )
             }

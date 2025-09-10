@@ -2,7 +2,6 @@ package com.d108.moyeo.presentation.ui.screen.exchange
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,9 +34,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.ui.component.CustomKeypad
+import com.d108.moyeo.presentation.ui.component.KeyMode
+import com.d108.moyeo.presentation.ui.component.KeypadKey
 
 @Composable
 fun ExchangeKeypadScreen(
@@ -175,7 +176,7 @@ fun ExchangeKeypadScreen(
         // 입력 금액 표시
         Text(
             text = "$inputAmount 원",
-            style = Typography.displayLarge.copy(fontSize = 32.sp),
+            style = Typography.displayLarge,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
             modifier = Modifier.padding(start = 4.dp)
@@ -190,21 +191,38 @@ fun ExchangeKeypadScreen(
             color = Color.Gray,
             modifier = Modifier.padding(start = 4.dp)
         )
+        Spacer(modifier = Modifier.height(16.dp))
+        // 키패드 (CustomKeypad 사용)
+        CustomKeypad(
+            onKeyPress = { key ->
+                when (key) {
+                    is KeypadKey.Digit -> {
+                        inputAmount =
+                            if (inputAmount == "0") key.value.toString() else inputAmount + key.value.toString()
+                    }
 
-        Spacer(modifier = Modifier.height(48.dp))
+                    KeypadKey.Clear -> {
+                        // KeyMode.Zeros일 때는 "00" 추가
+                        inputAmount = if (inputAmount == "0") "00" else inputAmount + "00"
+                    }
 
-        // 키패드
-        KeypadGrid(
-            onNumberClick = { number ->
-                inputAmount = if (inputAmount == "0") number else inputAmount + number
+                    KeypadKey.Backspace -> {
+                        inputAmount = if (inputAmount.length <= 1) "0" else inputAmount.dropLast(1)
+                    }
+
+                    is KeypadKey.Custom -> {
+                        // 필요시 처리
+                    }
+                }
             },
-            onBackspaceClick = {
-                inputAmount = if (inputAmount.length <= 1) "0" else inputAmount.dropLast(1)
-            }
+            keypadColortype = "normal", // 일반 색상 사용
+            keyMode = KeyMode.Zeros, // 00 버튼 활성화
+            buttonAspectRatio = 1.2f,
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .height(320.dp) // 키패드 높이 고정
         )
-
         Spacer(modifier = Modifier.weight(1f))
-
         // 하단 실행 버튼
         Button(
             onClick = {
@@ -213,9 +231,6 @@ fun ExchangeKeypadScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF9C27B0)
-            ),
             shape = RoundedCornerShape(28.dp)
         ) {
             Text(
@@ -227,68 +242,6 @@ fun ExchangeKeypadScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-    }
-}
 
-@Composable
-fun KeypadGrid(
-    onNumberClick: (String) -> Unit,
-    onBackspaceClick: () -> Unit
-) {
-    val keypadButtons = listOf(
-        listOf("1", "2", "3"),
-        listOf("4", "5", "6"),
-        listOf("7", "8", "9"),
-        listOf("00", "0", "⌫")
-    )
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        keypadButtons.forEach { row ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                row.forEach { buttonText ->
-                    KeypadButton(
-                        text = buttonText,
-                        onClick = {
-                            when (buttonText) {
-                                "⌫" -> onBackspaceClick()
-                                "00" -> onNumberClick("00")
-                                else -> onNumberClick(buttonText)
-                            }
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun KeypadButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .height(60.dp)
-            .background(
-                color = Color.Transparent,
-                shape = RoundedCornerShape(8.dp)
-            )
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            style = Typography.titleLarge.copy(fontSize = 24.sp),
-            fontWeight = FontWeight.Normal,
-            color = Color.Black
-        )
     }
 }
