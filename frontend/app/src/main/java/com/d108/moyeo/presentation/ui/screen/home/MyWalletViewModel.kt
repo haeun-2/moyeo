@@ -1,7 +1,110 @@
 package com.d108.moyeo.presentation.ui.screen.home
 
 import androidx.lifecycle.ViewModel
+import com.d108.moyeo.presentation.ui.component.home.mywallet.Currency
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
-class MyWalletViewModel: ViewModel() {
+
+// 임시 데이터 클래스
+data class Transaction(
+    val id: String,
+    val date: String,
+    val description: String,
+    val amount: String,
+    val balance: String
+)
+
+//필터 옵션을 위한 데이터 클래스 추가합니다
+data class FilterOptions(
+    val period: String = "1개월",
+    val scope: String = "전체",
+    val sort: String = "최신"
+)
+
+// MyWalletScreen의 UI 상태
+data class MyWalletUiState(
+    val transactions: List<Transaction> = emptyList(),
+    val walletName: String = "내 통장",
+    val totalBalance: String = "123,456,789 원",
+    val searchQuery: String = "",
+    val filters: FilterOptions = FilterOptions(),
+
+    // 화폐 단위 선택을 위한 바텀 시트
+    val showCurrencySheet: Boolean = false,
+    val currencies: List<Currency> = emptyList()
+)
+
+class MyWalletViewModel : ViewModel() {
+
+    private val _uiState = MutableStateFlow(MyWalletUiState())
+    val uiState = _uiState.asStateFlow()
+
+    init {
+        // 임시 데이터 로드
+        loadInitialData()
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+        // TODO: 검색 쿼리에 따라 거래내역 필터링 로직
+    }
+
+    fun onFiltersChanged(newFilters: FilterOptions) {
+        _uiState.update { it.copy(filters = newFilters) }
+        // TODO: 변경된 필터에 따라 거래내역 다시 불러오기
+    }
+
+    private fun loadInitialData() {
+        val transactions = List(20) {
+            Transaction(
+                id = it.toString(),
+                date = "09.${String.format("%02d", 10 - it)}",
+                description = if (it % 2 == 0) "일본 여행" else "GS25 편의점",
+                amount = "- 5,${String.format("%03d", it * 100)} 원",
+                balance = "11${5 - it},${String.format("%03d", it * 100)} 원"
+            )
+        }
+        val sampleCurrencies = listOf(
+            Currency("KRW", "대한민국 원"),
+            Currency("USD", "미국 달러"),
+            Currency("JPY", "일본 엔"),
+            Currency("EUR", "유럽 유로"),
+            Currency("CNY", "중국 위안"),
+            Currency("GBP", "영국 파운드"),
+            Currency("CAD", "캐나다 달러"),
+            Currency("AUD", "호주 달러")
+        )
+        _uiState.update { it.copy(transactions = transactions, currencies = sampleCurrencies) }
+    }
+
+
+    // 잔액 부분을 클릭했을 때 호출할 화폐 바텀 시트 관련 로직
+    fun onBalanceClick() {
+        _uiState.update { it.copy(showCurrencySheet = true) }
+    }
+
+    // 바텀시트가 닫힐 때 호출
+    fun onCurrencySheetDismiss() {
+        _uiState.update { it.copy(showCurrencySheet = false) }
+    }
+
+    // 바텀시트에서 화폐를 선택했을 때 호출
+    fun onCurrencySelected(currency: Currency?) {
+        val newBalance = if (currency == null) {
+            "123,456,789 원" // '전체 보기' 선택 시
+        } else {
+            // 실제로는 해당 화폐의 잔액을 계산해야 합니다. 여기서는 임시 값.
+            when (currency.code) {
+                "USD" -> "$ 2,500.00"
+                "JPY" -> "¥ 350,000"
+                "EUR" -> "€ 2,200.50"
+                else -> "123,456,789 원"
+            }
+        }
+        // 잔액을 업데이트하고, 바텀시트를 닫습니다.
+        _uiState.update { it.copy(totalBalance = newBalance, showCurrencySheet = false) }
+    }
 
 }
