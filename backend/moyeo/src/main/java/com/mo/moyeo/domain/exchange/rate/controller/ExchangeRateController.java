@@ -5,6 +5,8 @@ import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
 import com.mo.moyeo.domain.exchange.rate.dto.ExchangeRateHistoryDto;
 import com.mo.moyeo.domain.exchange.rate.service.ExchangeRateCacheService;
 import com.mo.moyeo.domain.exchange.rate.service.ExchangeRateService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,16 +21,19 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/exchange/rates")
+@Tag(name = "ExchangeRateController", description = "환율 관련 정보")
 public class ExchangeRateController {
     private final ExchangeRateService exchangeRateService;
     private final ExchangeRateCacheService exchangeRateCacheService;
 
     @GetMapping
+    @Operation(summary = "현재 환율 조회", description = "제일 최신의 환율 정보를 조회합니다.")
     public ResponseEntity<Map<String, CurrentExchangeRateDto>> getCurrentExchangeRate() {
         return ResponseEntity.ok(exchangeRateCacheService.getCurrentExchangeRate());
     }
 
     @GetMapping("/history")
+    @Operation(summary = "환율 단일 조회", description = "하나의 통화에 대한 환율 기록 조회.")
     public ResponseEntity<List<ExchangeRateHistoryDto>> getHistory(@RequestParam CurrencyType currency) {
         return ResponseEntity.ok(exchangeRateService.getHistory(currency));
     }
