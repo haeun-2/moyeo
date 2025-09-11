@@ -65,7 +65,7 @@ class MyBoxViewModel : ViewModel() {
 
     // 임시 데이터를 생성하고 반환하는 가상 함수
     private fun findBoxDataById(boxId: String): MyBoxUiState {
-        // boxId에 따라 다른 데이터를 보여주는 것처럼 흉내 낼 수 있습니다.
+        // boxId에 따라 다른 데이터를 보여주는 것처럼 흉내
         val transactions = List(15) {
             BoxTransaction(
                 id = it.toString(),
@@ -131,6 +131,19 @@ class MyBoxViewModel : ViewModel() {
             }
         }
         _uiState.update { it.copy(totalAmount = newAmount, showCurrencySheet = false) }
+    }
+
+    fun onFilterClick() {
+        _uiState.update { it.copy(showFilterSheet = true) }
+    }
+
+    fun onFilterSheetDismiss() {
+        _uiState.update { it.copy(showFilterSheet = false) }
+    }
+
+    fun onFilterConfirm(newFilters: BoxFilterOptions) {
+        _uiState.update { it.copy(filters = newFilters, showFilterSheet = false) }
+        // TODO: 변경된 필터에 따라 거래내역 다시 불러오기
     }
 
 }
