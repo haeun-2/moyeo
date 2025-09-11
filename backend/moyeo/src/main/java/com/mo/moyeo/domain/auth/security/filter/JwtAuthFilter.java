@@ -1,6 +1,7 @@
 package com.mo.moyeo.domain.auth.security.filter;
 
 import com.mo.moyeo.domain.auth.security.dto.CustomUserDetails;
+import com.mo.moyeo.domain.auth.security.service.CustomUserDetailsService;
 import com.mo.moyeo.domain.auth.security.util.JwtUtil;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -25,6 +26,7 @@ import java.util.List;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
@@ -53,12 +55,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
 
             Long userId = jwtUtil.getUserId(token);
-            String role = jwtUtil.getRole(token);
 
-            CustomUserDetails userDetails = CustomUserDetails.builder()
-                    .userId(userId)
-                    .role(role)
-                    .build();
+            CustomUserDetails userDetails = customUserDetailsService.loadUserByUserId(userId);
 
             Authentication auth = getAuthentication(userDetails);
             SecurityContextHolder.getContext().setAuthentication(auth);
