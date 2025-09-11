@@ -65,6 +65,19 @@ public class BoxService {
     }
 
     @Transactional
+    public void createPersonalBox(User user) {
+        // 1. 개인 박스 생성
+        Box box = new Box(String.format("%s의 박스", user.getName()), user.getId(), Box.Type.PERSONAL);
+        boxRepository.save(box);
+
+        // 2. 박스 잔액 초기화 (한화 + 외화)
+        List<BoxBalance> boxBalances = Arrays.stream(CurrencyType.values())
+                .map(type -> new BoxBalance(box, type))
+                .toList();
+        boxBalanceRepository.saveAll(boxBalances);
+    }
+
+    @Transactional
     public BoxCreateResponse createGroupBox(User user, BoxCreateRequest request) {
         // 1. 모입 박스 생성
         Box box = new Box(request.getName(), user.getId(), Box.Type.GROUP);

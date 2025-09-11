@@ -3,6 +3,7 @@ package com.mo.moyeo.domain.auth.signup.service;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.domain.auth.signup.dto.*;
+import com.mo.moyeo.domain.box.service.BoxService;
 import com.mo.moyeo.domain.user.entity.User;
 import com.mo.moyeo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class SignupService {
     private final VerificationService verificationService;
     private final AccountConnectionService accountConnectionService;
     private final EncryptionService encryptionService;
+    private final BoxService boxService;
 
     /**
      * 이메일 중복 확인 & 인증코드 전송
@@ -199,9 +201,9 @@ public class SignupService {
         String encryptedBankKey = encryptionService.encrypt(bankKey);
 
         // 유저 객체 생성
-        User newUser = User.from(request, hashedFid, encryptedBankKey);
+        User newUser = userRepository.save(User.from(request, hashedFid, encryptedBankKey));
 
-        userRepository.save(newUser);
+        boxService.createPersonalBox(newUser);
 
         signupSessionRedisService.deleteSignupSession(sessionId);
     }
