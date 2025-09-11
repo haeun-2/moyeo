@@ -52,6 +52,10 @@ fun HomeScreen(navController: NavController,
                         .replace("{bgColor}", event.bgColor.toString())
                     )
                 }
+
+                is HomeNavigationEvent.NavigateToSending -> {
+                    navController.navigate(AppScreen.Sending.createRoute(event.currencyId))
+                }
             }
         }
     }
@@ -84,9 +88,9 @@ fun HomeScreen(navController: NavController,
             WalletSummaryCard(
                 data = uiState.wallet,
                 onTitleClick = { viewModel.onWalletTitleClick()},
-                onTransferClick = { /* TODO: 이체 */ },
+                onTransferClick = { viewModel.onTransferClicked("KRW")},  // 한화 디폴트
                 onMoreClick = { viewModel.onWalletMoreClick() },
-                onRowClick = { currency ->
+                onRowClick = { currency ->  // 어떤 화폐가 눌렸는지 알 수 있도록 해야함
                     viewModel.onWalletCurrencyClick()
                 }
             )
