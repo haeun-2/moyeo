@@ -16,4 +16,8 @@ public enum CategoryType {
     CategoryType(String name) {
         this.label = name;
     }
+
+    public String getLabel() {
+        return label;
+    }
 }

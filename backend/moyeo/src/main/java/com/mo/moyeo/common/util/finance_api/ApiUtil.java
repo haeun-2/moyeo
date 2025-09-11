@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Component
 public class ApiUtil {
-    @Value("${moyeo.api.key}")
+    @Value("${MOYEO_API_KEY}")
     private String apiKeyInstance;
 
     public static String apiKey;

@@ -2,9 +2,10 @@ package com.mo.moyeo.domain.currency.service;
 
 import com.mo.moyeo.domain.currency.dto.CurrencyListDto;
 import com.mo.moyeo.domain.currency.entity.Currency;
+import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.repository.CurrencyRepository;
-import com.mo.moyeo.domain.exchange.exchange_rate.dto.CurrentExchangeRateDto;
-import com.mo.moyeo.domain.exchange.exchange_rate.service.ExchangeRateCacheService;
+import com.mo.moyeo.domain.exchange_rate.dto.CurrentExchangeRateDto;
+import com.mo.moyeo.domain.exchange_rate.service.ExchangeRateCacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -32,5 +33,9 @@ public class CurrencyService {
                             current.get(c.getCode().name()).getMinExchange()
                     );
                 }).toList();
+    }
+
+    public Currency getReferenceByType(CurrencyType currencyType){
+        return currencyRepository.getReferenceById(currencyType);
     }
 }

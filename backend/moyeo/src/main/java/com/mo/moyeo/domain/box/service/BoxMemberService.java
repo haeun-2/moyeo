@@ -70,4 +70,10 @@ public class BoxMemberService {
         boxMember.leave();
     }
 
+    public BoxMemberResponse getMyPermission(Long boxId, Long userId){
+        Long ownerId = boxRepository.findOwnerIdByBoxId(boxId).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+        BoxMember boxMember = boxMemberRepository.findByBoxIdAndUserId(boxId, userId).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+
+        return BoxMemberResponse.from(boxMember, ownerId);
+    }
 }

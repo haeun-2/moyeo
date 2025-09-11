@@ -1,4 +1,4 @@
-package com.mo.moyeo.domain.exchange.exchange_rate.dto;
+package com.mo.moyeo.domain.exchange_rate.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

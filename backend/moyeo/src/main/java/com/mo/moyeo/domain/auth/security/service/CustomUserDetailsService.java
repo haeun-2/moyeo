@@ -1,0 +1,35 @@
+package com.mo.moyeo.domain.auth.security.service;
+
+import com.mo.moyeo.common.exception.CustomException;
+import com.mo.moyeo.common.exception.ErrorCode;
+import com.mo.moyeo.domain.auth.security.dto.CustomUserDetails;
+import com.mo.moyeo.domain.user.entity.User;
+import com.mo.moyeo.domain.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class CustomUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return null;
+    }
+
+    public CustomUserDetails loadUserByUserId(Long userId) throws UsernameNotFoundException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+
+        return CustomUserDetails.builder()
+                .userId(user.getId())
+                .role(user.getRole().name())
+                .user(user)
+                .build();
+    }
+}
