@@ -3,7 +3,6 @@ package com.mo.moyeo.domain.box.service;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.common.paging.PageResponse;
-import com.mo.moyeo.domain.auth.security.util.AuthenticationUtil;
 import com.mo.moyeo.domain.box.dto.BoxCreateRequest;
 import com.mo.moyeo.domain.box.dto.BoxCreateResponse;
 import com.mo.moyeo.domain.box.dto.BoxPermissionResponse;
@@ -16,7 +15,6 @@ import com.mo.moyeo.domain.box.repository.BoxMemberRepository;
 import com.mo.moyeo.domain.box.repository.BoxRepository;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.user.entity.User;
-import com.mo.moyeo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,53 +32,45 @@ import java.util.List;
 public class BoxService {
 
     private final BoxRepository boxRepository;
-    private final UserRepository userRepository;
     private final BoxMemberRepository boxMemberRepository;
     private final BoxBalanceRepository boxBalanceRepository;
 
-    public BoxResponse getMyBox() {
-        Long loginUserId = AuthenticationUtil.getCurrentUserId();
-        Box box = boxRepository.selectPersonalBoxByOwnerId(loginUserId).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
+    public BoxResponse getMyBox(User user) {
+        Box box = boxRepository.selectPersonalBoxByOwnerId(user.getId()).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
         return BoxResponse.from(box);
     }
 
-    public PageResponse<BoxResponse> getGroupBoxList(int page, int size) {
-        Long loginUserId = AuthenticationUtil.getCurrentUserId();
-
+    public PageResponse<BoxResponse> getGroupBoxList(User user, int page, int size) {
         Pageable pageable = PageRequest.of(
                 page,
                 size,
                 Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))
         );
 
-        Slice<Box> boxes = boxRepository.selectJoinedGroupBoxByUserId(loginUserId, pageable);
+        Slice<Box> boxes = boxRepository.selectJoinedGroupBoxByUserId(user.getId(), pageable);
         for (Box box: boxes) {
             box.getBalances();
         }
         return PageResponse.from(boxes, BoxResponse::from);
     }
 
-    public BoxPermissionResponse getMyBoxPermissions(Long boxId) {
-        Long loginUserId = AuthenticationUtil.getCurrentUserId();
-
+    public BoxPermissionResponse getMyBoxPermissions(Long boxId, User user) {
         Box box = boxRepository.findById(boxId).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
-        if (box.isPersonal() && box.getOwnerId().equals(loginUserId)) {
+        if (box.isPersonal() && box.getOwnerId().equals(user.getId())) {
             return BoxPermissionResponse.from(box);
         }
 
-        BoxMember boxMember = boxMemberRepository.findByBoxIdAndUserId(boxId, loginUserId).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
-        return BoxPermissionResponse.from(boxMember, box.getOwnerId().equals(loginUserId));
+        BoxMember boxMember = boxMemberRepository.findByBoxIdAndUserId(boxId, user.getId()).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
+        return BoxPermissionResponse.from(boxMember, box.getOwnerId().equals(user.getId()));
     }
 
     @Transactional
-    public BoxCreateResponse createGroupBox(BoxCreateRequest request) {
+    public BoxCreateResponse createGroupBox(User user, BoxCreateRequest request) {
         // 1. 모입 박스 생성
-        Long loginUserId = AuthenticationUtil.getCurrentUserId();
-        Box box = new Box(request.getName(), loginUserId, Box.Type.GROUP);
+        Box box = new Box(request.getName(), user.getId(), Box.Type.GROUP);
         boxRepository.save(box);
 
         // 2. 모임주 멤버로 저장
-        User user = userRepository.findById(loginUserId).orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
         boxMemberRepository.save(new BoxMember(box, user, true));
 
         // 3. 박스 잔액 초기화 (한화 + 외화)

@@ -1,5 +1,6 @@
 package com.mo.moyeo.domain.box.controller;
 
+import com.mo.moyeo.domain.auth.security.dto.CustomUserDetails;
 import com.mo.moyeo.domain.box.dto.BoxMemberResponse;
 import com.mo.moyeo.domain.box.dto.BoxMemberUpdatePermissionRequest;
 import com.mo.moyeo.domain.box.service.BoxMemberService;
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,16 +33,17 @@ public class BoxMemberController {
     @PatchMapping("/permissions")
     public ResponseEntity<Void> updateMemberPermissions(
             @PathVariable Long boxId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid  @RequestBody List<@Valid BoxMemberUpdatePermissionRequest> requests
     ) {
-        boxMemberService.updateGroupBoxMemberPermissions(boxId, requests);
+        boxMemberService.updateGroupBoxMemberPermissions(boxId, userDetails.getUser(), requests);
         return ResponseEntity.ok().build();
     }
     
     @Operation(summary = "모임 박스 탈퇴", description = "유저가 특정 모임 박스에서 탈퇴합니다. 모임주는 탈퇴할 수 없습니다.")
     @DeleteMapping("/me")
-    public ResponseEntity<Void> leaveGroupBox(@PathVariable Long boxId) {
-        boxMemberService.leaveGroupBox(boxId);
+    public ResponseEntity<Void> leaveGroupBox(@PathVariable Long boxId, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        boxMemberService.leaveGroupBox(boxId, userDetails.getUser());
         return ResponseEntity.ok().build();
     }
 
