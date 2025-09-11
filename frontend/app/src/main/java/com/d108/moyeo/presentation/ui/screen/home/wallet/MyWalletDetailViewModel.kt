@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home
+package com.d108.moyeo.presentation.ui.screen.home.wallet
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 
 // MyWalletDetailScreen의 UI 상태를 담는 데이터 클래스
 data class MyWalletDetailUiState(
-    val transaction: Transaction? = null, // 로딩 중일 수 있으므로 nullable
+    val transaction: WalletTransaction? = null, // 로딩 중일 수 있으므로 nullable
     val selectedCategory: String = ""
 )
 
@@ -51,9 +51,9 @@ class MyWalletDetailViewModel : ViewModel() {
     이 함수의 내부 로직은 repository.getTransactionFromServer(transactionId) 와 같이
     실제 데이터를 가져오는 코드로 통째로 교체될 것
      */
-    private fun findTransactionById(transactionId: String): Transaction? {
+    private fun findTransactionById(transactionId: String): WalletTransaction? {
         val transactions = List(20) {
-            Transaction(
+            WalletTransaction(
                 id = it.toString(),
                 date = "09.${String.format("%02d", 10 - it)}",
                 description = if (it % 2 == 0) "일본 여행" else "GS25 편의점",

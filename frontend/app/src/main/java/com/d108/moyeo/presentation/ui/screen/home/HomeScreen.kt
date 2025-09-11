@@ -45,6 +45,13 @@ fun HomeScreen(navController: NavController,
                 is HomeNavigationEvent.NavigateToMyWallet -> {
                     navController.navigate(AppScreen.MyWallet.route)
                 }
+
+                is HomeNavigationEvent.NavigateToMyBox -> {  // route에 {boxid}라 된 부분을 파라미터로 교체한 후 라우트
+                    navController.navigate(AppScreen.MyBox.route
+                        .replace("{boxId}", event.boxId)
+                        .replace("{bgColor}", event.bgColor.toString())
+                    )
+                }
             }
         }
     }
@@ -96,7 +103,8 @@ fun HomeScreen(navController: NavController,
                     GroupBoxCard(
                         data = item,
                         onDepositClick = { /* TODO: 입금 */ },
-                        onMoreClick = { /* TODO: 메뉴 */ }
+                        onMoreClick = { /* TODO: 메뉴 */ },
+                        onColumnClick = { viewModel.onGroupBoxClick(item.id) }
                     )
                     Spacer(Modifier.height(24.dp))
                 }
@@ -249,7 +257,8 @@ private fun WalletRow(
 private fun GroupBoxCard(
     data: GroupBox,
     onDepositClick: () -> Unit,
-    onMoreClick: () -> Unit
+    onMoreClick: () -> Unit,
+    onColumnClick: () -> Unit  // 클릭 시 상세 화면으로 이동
 ) {
     Card(
         shape = RoundedCornerShape(20.dp),
@@ -260,8 +269,9 @@ private fun GroupBoxCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-            ) {
-                Text(
+                    .clickable { onColumnClick() }
+            ) {// 이 컬럼 영역을 클릭했을 때 상세 화면으로 이동
+                Text(  // 모여 박스 이름
                     text = data.title,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF4A4A4A),
@@ -269,7 +279,9 @@ private fun GroupBoxCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.height(8.dp))
-                Text(
+
+
+                Text(  // 금액
                     text = data.amount,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
                     color = Color.Black

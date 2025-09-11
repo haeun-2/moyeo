@@ -4,10 +4,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
@@ -16,17 +16,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.theme.button
-import com.d108.moyeo.presentation.theme.onPrimaryLight
 import com.d108.moyeo.presentation.ui.component.home.mywallet.MyWalletCurrencyBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.mywallet.MyWalletFilterBottomSheet
 
@@ -88,32 +86,27 @@ fun MyWalletScreen(
                 onBalanceClick = viewModel::onBalanceClick
             )
 
-            Column(modifier = Modifier.padding(horizontal = Spacing.Medium)) {
+            // 검색 및 필터 바
+            SearchAndFilterBar(
+                searchQuery = uiState.searchQuery,
+                onSearchQueryChange = viewModel::onSearchQueryChanged, // 이벤트 연결
+                filters = uiState.filters,
+                onFilterClick = viewModel::onFilterClick
+            )
 
-                // 검색 및 필터 바
-                SearchAndFilterBar(
-                    searchQuery = uiState.searchQuery,
-                    onSearchQueryChange = viewModel::onSearchQueryChanged, // 이벤트 연결
-                    filters = uiState.filters,
-                    onFilterClick = viewModel::onFilterClick
-                )
-
-                // 거래 내역 목록
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(bottom = Spacing.Medium)
-                ) {
-                    items(uiState.transactions) { transaction ->
-                        TransactionRowItem(
-                            transaction = transaction,
-                            onClick = {
-                                // 클릭된 아이템의 id를 가지고 상세 화면으로 이동.
-                                navController.navigate("my_wallet_detail/${transaction.id}")
-                            })
-                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
-                    }
+            // 거래 내역 목록
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(uiState.transactions) { transaction ->
+                    TransactionRowItem(
+                        transaction = transaction,
+                        onClick = {
+                            // 클릭된 아이템의 id를 가지고 상세 화면으로 이동.
+                            navController.navigate("my_wallet_detail/${transaction.id}")
+                        })
+                    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
                 }
-
             }
         }
     }
@@ -223,7 +216,7 @@ private fun TopWalletInfoSurface(
 private fun SearchAndFilterBar(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
-    filters: FilterOptions,
+    filters: WalletFilterOptions,
     onFilterClick: () -> Unit
 ) {
 

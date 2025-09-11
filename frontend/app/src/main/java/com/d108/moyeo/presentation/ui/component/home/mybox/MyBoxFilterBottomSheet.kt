@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.component.home.mywallet
+package com.d108.moyeo.presentation.ui.component.home.mybox
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -7,20 +7,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import com.d108.moyeo.presentation.theme.Padding.HorizontalSmall
-import com.d108.moyeo.presentation.theme.Padding.VerticalExtraSmall
-import com.d108.moyeo.presentation.theme.Spacing
+import androidx.compose.ui.unit.dp
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.theme.onPrimaryContainerLight
-import com.d108.moyeo.presentation.theme.onSurfaceLight
-import com.d108.moyeo.presentation.theme.primaryContainerLight
-import com.d108.moyeo.presentation.ui.screen.home.wallet.WalletFilterOptions
+import com.d108.moyeo.presentation.ui.screen.home.box.BoxFilterOptions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyWalletFilterBottomSheet(
-    initialFilters: WalletFilterOptions,
-    onConfirm: (WalletFilterOptions) -> Unit,
+fun MyBoxFilterBottomSheet(
+    initialFilters: BoxFilterOptions,
+    onConfirm: (BoxFilterOptions) -> Unit,
     onDismiss: () -> Unit
 ) {
     // 시트 내부에서만 사용할 임시 상태 변수들. 초기값은 외부에서 받아옴.
@@ -37,7 +32,7 @@ fun MyWalletFilterBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = HorizontalSmall, vertical = VerticalExtraSmall)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
             // 가장 위 오른쪽 끝에 확인 버튼
             Row(
@@ -46,14 +41,15 @@ fun MyWalletFilterBottomSheet(
             ) {
                 TextButton(onClick = {
                     // 확인 버튼을 누르면, 임시로 저장했던 상태들로 새로운 FilterOptions 객체를 만들어 전달
-                    onConfirm(WalletFilterOptions(period = tempPeriod, scope = tempScope, sort = tempSort))
+                    onConfirm(BoxFilterOptions(period = tempPeriod, scope = tempScope, sort = tempSort))
                 }) {
                     Text("확인", style = Typography.titleMedium)
                 }
             }
 
-            Spacer(modifier = Modifier.height(Spacing.Medium))
+            Spacer(modifier = Modifier.height(16.dp))
 
+            // 기간
             FilterSection(
                 title = "기간",
                 options = listOf("1개월", "3개월", "6개월", "직접 설정"),
@@ -61,9 +57,9 @@ fun MyWalletFilterBottomSheet(
                 onOptionSelected = { tempPeriod = it }
             )
 
-            Spacer(modifier = Modifier.height(Spacing.Large))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // 유형
+            // 유형 (모여박스에 맞게 옵션 변경)
             FilterSection(
                 title = "유형",
                 options = listOf("전체", "입금만", "출금만"),
@@ -71,7 +67,7 @@ fun MyWalletFilterBottomSheet(
                 onOptionSelected = { tempScope = it }
             )
 
-            Spacer(modifier = Modifier.height(Spacing.Large))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // 정렬
             FilterSection(
@@ -80,7 +76,7 @@ fun MyWalletFilterBottomSheet(
                 selectedOption = tempSort,
                 onOptionSelected = { tempSort = it }
             )
-            Spacer(modifier = Modifier.height(Spacing.Large))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
@@ -95,27 +91,22 @@ private fun FilterSection(
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = title, style = Typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-        Spacer(modifier = Modifier.height(Spacing.SmallMedium)) // 제목과 버튼 사이 간격 조정
+        Spacer(modifier = Modifier.height(12.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             options.forEach { option ->
                 val isSelected = selectedOption == option
-
                 OutlinedButton(
                     onClick = { onOptionSelected(option) },
-                    // 각 항목들이 부모 영역을 등분해서 가짐
                     modifier = Modifier.weight(1f),
-                    // 선택된 버튼에만 색상을 적용
                     colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = if (isSelected) primaryContainerLight else Color.Transparent,
-                        contentColor = if (isSelected) onPrimaryContainerLight else onSurfaceLight
+                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                     ),
-                    // 버튼 내부 패딩을 조절하여 높이를 맞춤
-                    contentPadding = PaddingValues(Spacing.SmallMedium)
+                    contentPadding = PaddingValues(vertical = 12.dp)
                 ) {
-                    // 그리고 버튼 내 글자들은 가운데에 정렬됨
                     Text(option)
                 }
             }
