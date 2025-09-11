@@ -12,9 +12,11 @@ import androidx.navigation.navArgument
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
-import com.d108.moyeo.presentation.ui.screen.home.MyWalletDetailScreen
-import com.d108.moyeo.presentation.ui.screen.home.MyWalletScreen
+import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxScreen
+import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletDetailScreen
+import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletScreen
 import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
+import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxDetailScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChatConsultationScreen
@@ -60,7 +62,7 @@ fun AppNavHost(
             NotificationScreen(navController = navController)
         }
 
-        // 후에 마이 월렛으로 어떤 버튼을 타고 들어왔는지 파라미터 도입...아니다 지금 할까?
+        // 후에 마이 월렛으로 어떤 화폐를 타고 들어왔는지 파라미터 도입...아니다 지금 할까?
         // 고민해보자. 이 주석 절대 지우지 말 것.
         composable(AppScreen.MyWallet.route) {
             MyWalletScreen(navController = navController)
@@ -80,6 +82,36 @@ fun AppNavHost(
                 )
             }
         }
+
+        // 모여 박스에서 클릭
+        composable(
+            route = AppScreen.MyBox.route,
+            arguments = listOf(navArgument("boxId") { type = NavType.StringType },
+                navArgument("bgColor") { type = NavType.IntType }  // Color는 Int로 전달)
+            )
+        ) { backStackEntry ->
+            val boxId = backStackEntry.arguments?.getString("boxId")
+            val bgColor = backStackEntry.arguments?.getInt("bgColor")
+            if (boxId != null && bgColor != null ) {
+                MyBoxScreen(navController = navController, boxId = boxId, bgColor = bgColor)
+            }
+        }
+
+        composable(
+            route = AppScreen.MyBoxDetail.route,
+            // 경로에서 "transactionId"를 어떤 타입으로 받을지 정의합니다.
+            arguments = listOf(navArgument("transactionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            // 뒤로가기 스택에서 "transactionId" 값을 꺼냅니다.
+            val transactionId = backStackEntry.arguments?.getString("transactionId")
+            if (transactionId != null) {
+                MyBoxDetailScreen(
+                    navController = navController,
+                    transactionId = transactionId // 상세 화면에 ID를 전달합니다.
+                )
+            }
+        }
+
 
 
         // 환율 화면
