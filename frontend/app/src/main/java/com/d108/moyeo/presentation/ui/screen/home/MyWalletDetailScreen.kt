@@ -43,13 +43,13 @@ fun MyWalletDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = Spacing.Medium, vertical = Spacing.Large),
+            .padding(Spacing.Large),
         horizontalAlignment = Alignment.CenterHorizontally // 각 요소들은 가운데 정렬
     ) {
         // 클릭해서 들어온 거래 내역의 제목이 맨 위에 있음
         Text(
             text = transaction.description, // 이전 화면에서 전달받을 데이터
-            style = Typography.headlineMedium,
+            style = Typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
 
@@ -93,7 +93,7 @@ fun MyWalletDetailScreen(
         // 호리젠탈 디바이더
         HorizontalDivider()
 
-        // "{들어온 제목}" 검색하기  가장 오른쪾엔 > 아이콘
+        // "{들어온 제목}" 검색하기  가장 오른쪽엔 > 아이콘
         SearchActionRow(text = "\"${transaction.description}\" 검색하기", onClick = { /* TODO */ })
         // 호리젠탈 디바이더
         HorizontalDivider()
@@ -144,7 +144,7 @@ private fun SearchActionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = Spacing.Medium),
+            .padding(vertical = Spacing.Large),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(text = text, style = Typography.bodyLarge, modifier = Modifier.weight(1f))
