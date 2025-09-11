@@ -21,7 +21,7 @@ data class WalletSummary(
     val balances: List<CurrencyBalance>
 )
 
-data class CurrencyBalance(val label: String, val value: String)
+data class CurrencyBalance(val label: String, val value: String, val code: String)
 
 data class GroupBox(
     val id: String,  // 그룹 박스 구분을 위한 아이디 추가
@@ -44,6 +44,8 @@ sealed class HomeNavigationEvent {
 
     // 구체적으로 어디로 가야하는지 알고 싶으면 data class로 선언 및 파라미터 전달
     data class NavigateToMyBox(val boxId: String, val bgColor: Int) : HomeNavigationEvent()
+
+    data class NavigateToSending(val currencyId: String) : HomeNavigationEvent() // 이체 화면 이동
 }
 
 
@@ -61,12 +63,12 @@ class HomeViewModel : ViewModel() {
             title = "일론머스크 딱 대",
             color = Color.Blue, // 임시 대표 색상
             balances = listOf(
-                CurrencyBalance("한국 원", "120,000 KRW"),
-                CurrencyBalance("미국 달러", "20 USD"),
-                CurrencyBalance("일본 엔", "400 JPY"),
-                CurrencyBalance("영국 파운드", "30 GBP"),
-                CurrencyBalance("유럽 유로", "15 EUR"), // 스크롤 테스트를 위해 추가
-                CurrencyBalance("중국 위안", "100 CNY")  // 스크롤 테스트를 위해 추가
+                CurrencyBalance("한국 원", "120,000 KRW", "KRW"),
+                CurrencyBalance("미국 달러", "20 USD", "USD"),
+                CurrencyBalance("일본 엔", "400 JPY", "JPY"),
+                CurrencyBalance("영국 파운드", "30 GBP", "GBP"),
+                CurrencyBalance("유럽 유로", "15 EUR", "EUR"), // 스크롤 테스트를 위해 추가
+                CurrencyBalance("중국 위안", "100 CNY", "CNY")  // 스크롤 테스트를 위해 추가
             )
         )
         val initialGroups = listOf(  // GroupBox의 생성자 변경 및 아이디 추가
@@ -103,7 +105,7 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun onWalletCurrencyClick() {
+    fun onWalletCurrencyClick() {  // 나중에 여기에 파라미터 넣어서 뭘 보이게 할지 해야겠네
         viewModelScope.launch {
             _navigationEvent.emit(HomeNavigationEvent.NavigateToMyWallet)
         }
@@ -118,6 +120,14 @@ class HomeViewModel : ViewModel() {
                 // Color 객체를 Int로 변환하여 전달
                 _navigationEvent.emit(HomeNavigationEvent.NavigateToMyBox(boxId, clickedBox.bg.toArgb()))
             }
+        }
+    }
+
+
+    // 돈 보내는 함수
+    fun onTransferClicked(currencyId: String) {
+        viewModelScope.launch {
+            _navigationEvent.emit(HomeNavigationEvent.NavigateToSending(currencyId))
         }
     }
 }

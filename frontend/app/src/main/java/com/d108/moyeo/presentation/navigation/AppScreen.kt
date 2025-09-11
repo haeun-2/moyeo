@@ -46,7 +46,15 @@ sealed class AppScreen(
     // 모여 박스 화면에서 거래 내역을 클릭했을 때 넘어오는 화면
     object MyBoxDetail : AppScreen(route = "my_box_detail/{transactionId}", title = "내 박스 상세")
 
-
+    // 이체 또는 보내기 버튼을 클릭됐을 때 넘어갈 화면
+    object Sending : AppScreen(route = "sending/{currencyId}", title = "보내기") {
+        /**
+         * '이체' 화면으로 이동할 때 사용할 실제 경로를 만드는 함수입니다.
+         * 이렇게 하면 navigate 호출 시 오타를 방지할 수 있어 안전합니다.
+         * 사용 예: AppScreen.Sending.createRoute("KRW") -> "sending/KRW"
+         */
+        fun createRoute(currencyId: String) = "sending/$currencyId"
+    }
 
     // 환율 스크린 관련
     object Exchange: AppScreen(route = "exchange", title = "환율", iconResId = R.drawable.outline_currency_exchange_24)
