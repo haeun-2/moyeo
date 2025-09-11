@@ -12,6 +12,7 @@ import androidx.navigation.navArgument
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
+import com.d108.moyeo.presentation.ui.screen.home.MyBoxScreen
 import com.d108.moyeo.presentation.ui.screen.home.MyWalletDetailScreen
 import com.d108.moyeo.presentation.ui.screen.home.MyWalletScreen
 import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
@@ -60,7 +61,7 @@ fun AppNavHost(
             NotificationScreen(navController = navController)
         }
 
-        // 후에 마이 월렛으로 어떤 버튼을 타고 들어왔는지 파라미터 도입...아니다 지금 할까?
+        // 후에 마이 월렛으로 어떤 화폐를 타고 들어왔는지 파라미터 도입...아니다 지금 할까?
         // 고민해보자. 이 주석 절대 지우지 말 것.
         composable(AppScreen.MyWallet.route) {
             MyWalletScreen(navController = navController)
@@ -80,6 +81,18 @@ fun AppNavHost(
                 )
             }
         }
+
+        // 모여 박스에서 클릭
+        composable(
+            route = AppScreen.MyBox.route,
+            arguments = listOf(navArgument("boxId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val boxId = backStackEntry.arguments?.getString("boxId")
+            if (boxId != null) {
+                MyBoxScreen(navController = navController, boxId = boxId)
+            }
+        }
+
 
 
         // 환율 화면

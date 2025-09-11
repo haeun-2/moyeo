@@ -18,7 +18,7 @@ import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 
 @Composable
-fun MyWalletDetailScreen(
+fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화면
     navController: NavController,
     transactionId: String,
     viewModel: MyWalletDetailViewModel = viewModel() // ViewModel 주입

@@ -23,6 +23,7 @@ data class WalletSummary(
 data class CurrencyBalance(val label: String, val value: String)
 
 data class GroupBox(
+    val id: String,  // 그룹 박스 구분을 위한 아이디 추가
     val title: String,
     val amount: String,
     val bg: Color
@@ -37,7 +38,11 @@ data class HomeUiState(
 
 // 화면 전환
 sealed class HomeNavigationEvent {
+    // 단순히 이동하고자 하면 object로 선언 가능
     object NavigateToMyWallet : HomeNavigationEvent()
+
+    // 구체적으로 어디로 가야하는지 알고 싶으면 data class로 선언 및 파라미터 전달
+    data class NavigateToMyBox(val boxId: String) : HomeNavigationEvent()
 }
 
 
@@ -63,12 +68,12 @@ class HomeViewModel : ViewModel() {
                 CurrencyBalance("중국 위안", "100 CNY")  // 스크롤 테스트를 위해 추가
             )
         )
-        val initialGroups = listOf(
-            GroupBox("상훈 풍헌 동찬 일본 여행", "50,000 JPY", pink), // 연한 핑크
-            GroupBox("미국 도대체 언제 감", "1,500 USD", brown),    // 브라운
-            GroupBox("오아시스", "1,000 GBP", purple),               // 라일락
-            GroupBox("유럽 갈끄니까", "2,000 EUR", Color.Cyan),     // 스크롤 테스트를 위해 추가
-            GroupBox("중국 출장비", "5,000 CNY", Color.Yellow)   // 스크롤 테스트를 위해 추가
+        val initialGroups = listOf(  // GroupBox의 생성자 변경 및 아이디 추가
+            GroupBox("box_1", "상훈 풍헌 동찬 일본 여행", "50,000 JPY", pink), // 연한 핑크
+            GroupBox("box_2", "미국 도대체 언제 감", "1,500 USD", brown),    // 브라운
+            GroupBox("box_3", "오아시스", "1,000 GBP", purple),               // 라일락
+            GroupBox("box_4", "유럽 갈끄니까", "2,000 EUR", Color.Cyan),     // 스크롤 테스트를 위해 추가
+            GroupBox("box_5", "중국 출장비", "5,000 CNY", Color.Yellow)   // 스크롤 테스트를 위해 추가
         )
 
         _uiState = MutableStateFlow(HomeUiState(wallet = initialWallet, groups = initialGroups))
@@ -100,6 +105,13 @@ class HomeViewModel : ViewModel() {
     fun onWalletCurrencyClick() {
         viewModelScope.launch {
             _navigationEvent.emit(HomeNavigationEvent.NavigateToMyWallet)
+        }
+    }
+
+    // 그룹 박스에서 클릭되었을 때 해당 박스 ID로 이동
+    fun onGroupBoxClick(boxId: String) {
+        viewModelScope.launch {
+            _navigationEvent.emit(HomeNavigationEvent.NavigateToMyBox(boxId))
         }
     }
 }

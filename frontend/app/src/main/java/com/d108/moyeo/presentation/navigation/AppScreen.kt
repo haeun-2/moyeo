@@ -40,6 +40,14 @@ sealed class AppScreen(
     // 월렛에서 상세로 들어가는 화면
     object MyWalletDetail : AppScreen(route = "my_wallet_detail/{transactionId}", title = "월렛 상세")
 
+    // 홈에서 모여 박스를 클릭했을 때 넘어오는 화면
+    object MyBox : AppScreen(route = "my_box/{boxId}", title = "내 박스")
+
+    // 모여 박스 화면에서 거래 내역을 클릭했을 때 넘어오는 화면
+    object MyBoxDetail : AppScreen(route = "my_box_detail/{transactionId}", title = "내 박스 상세")
+
+
+
     // 환율 스크린 관련
     object Exchange: AppScreen(route = "exchange", title = "환율", iconResId = R.drawable.outline_currency_exchange_24)
 
