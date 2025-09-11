@@ -9,7 +9,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Getter
-@Entity(name = "box_history")
+@Entity
+@Table(name = "box_history")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
