@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.update
 
 
 // 임시 데이터 클래스
-data class Transaction(
+data class WalletTransaction(
     val id: String,
     val date: String,
     val description: String,  // 모여 박스로 넣은 거면 박스 이름이 표시되고, 이외의 경우에는 가맹점 정보가 표시됨
@@ -19,7 +19,7 @@ data class Transaction(
 )
 
 //필터 옵션을 위한 데이터 클래스
-data class FilterOptions(
+data class WalletFilterOptions(
     val period: String = "1개월",
     val scope: String = "전체",
     val sort: String = "최신"
@@ -27,11 +27,11 @@ data class FilterOptions(
 
 // MyWalletScreen의 UI 상태
 data class MyWalletUiState(
-    val transactions: List<Transaction> = emptyList(),
+    val transactions: List<WalletTransaction> = emptyList(),
     val walletName: String = "내 통장",
     val totalBalance: String = "123,456,789 원",
     val searchQuery: String = "",
-    val filters: FilterOptions = FilterOptions(),
+    val filters: WalletFilterOptions = WalletFilterOptions(),
 
     // 화폐 단위 선택을 위한 바텀 시트
     val showCurrencySheet: Boolean = false,
@@ -57,14 +57,14 @@ class MyWalletViewModel : ViewModel() {
         // TODO: 검색 쿼리에 따라 거래내역 필터링 로직
     }
 
-    fun onFiltersChanged(newFilters: FilterOptions) {
+    fun onFiltersChanged(newFilters: WalletFilterOptions) {
         _uiState.update { it.copy(filters = newFilters) }
         // TODO: 변경된 필터에 따라 거래내역 다시 불러오기
     }
 
     private fun loadInitialData() {
         val transactions = List(20) {
-            Transaction(
+            WalletTransaction(
                 id = it.toString(),
                 date = "09.${String.format("%02d", 10 - it)}",
                 description = if (it % 2 == 0) "일본 여행" else "GS25 편의점",
@@ -125,7 +125,7 @@ class MyWalletViewModel : ViewModel() {
         _uiState.update { it.copy(showFilterSheet = false) }
     }
 
-    fun onFilterConfirm(newFilters: FilterOptions) {
+    fun onFilterConfirm(newFilters: WalletFilterOptions) {
         _uiState.update { it.copy(filters = newFilters, showFilterSheet = false) }
         // TODO: 변경된 필터에 따라 거래내역 다시 불러오기
     }

@@ -18,11 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.ui.component.home.mywallet.MyWalletCurrencyBottomSheet
@@ -174,7 +172,7 @@ private fun TopWalletInfoCard(
 private fun SearchAndFilterBar(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
-    filters: FilterOptions,
+    filters: WalletFilterOptions,
     onFilterClick: () -> Unit
 ) {
 
@@ -219,7 +217,7 @@ private fun SearchAndFilterBar(
 
 // 거래 내역 한 줄 UI
 @Composable
-private fun TransactionRowItem(transaction: Transaction, onClick: () -> Unit) {
+private fun TransactionRowItem(transaction: WalletTransaction, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

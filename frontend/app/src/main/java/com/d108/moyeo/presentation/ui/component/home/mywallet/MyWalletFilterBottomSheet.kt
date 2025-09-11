@@ -7,7 +7,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.d108.moyeo.presentation.theme.Padding.HorizontalSmall
 import com.d108.moyeo.presentation.theme.Padding.VerticalExtraSmall
 import com.d108.moyeo.presentation.theme.Spacing
@@ -15,13 +14,13 @@ import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.onPrimaryContainerLight
 import com.d108.moyeo.presentation.theme.onSurfaceLight
 import com.d108.moyeo.presentation.theme.primaryContainerLight
-import com.d108.moyeo.presentation.ui.screen.home.FilterOptions
+import com.d108.moyeo.presentation.ui.screen.home.WalletFilterOptions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyWalletFilterBottomSheet(
-    initialFilters: FilterOptions,
-    onConfirm: (FilterOptions) -> Unit,
+    initialFilters: WalletFilterOptions,
+    onConfirm: (WalletFilterOptions) -> Unit,
     onDismiss: () -> Unit
 ) {
     // 시트 내부에서만 사용할 임시 상태 변수들. 초기값은 외부에서 받아옴.
@@ -47,7 +46,7 @@ fun MyWalletFilterBottomSheet(
             ) {
                 TextButton(onClick = {
                     // 확인 버튼을 누르면, 임시로 저장했던 상태들로 새로운 FilterOptions 객체를 만들어 전달
-                    onConfirm(FilterOptions(period = tempPeriod, scope = tempScope, sort = tempSort))
+                    onConfirm(WalletFilterOptions(period = tempPeriod, scope = tempScope, sort = tempSort))
                 }) {
                     Text("확인", style = Typography.titleMedium)
                 }
