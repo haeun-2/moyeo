@@ -51,6 +51,8 @@ sealed class AppScreen(
     // 환율 스크린 관련
     object Exchange: AppScreen(route = "exchange", title = "환율", iconResId = R.drawable.outline_currency_exchange_24)
 
+    object ExchangeKeypadCharge : AppScreen(route = "exchange_keypad/charge", title = "충전하기", icon= null, iconResId = null)
+    object ExchangeKeypadRefund : AppScreen(route = "exchange_keypad/refund", title = "돌려받기", icon= null, iconResId = null)
 
 
     // QR 스크린 관련
