@@ -1,4 +1,4 @@
-package com.mo.moyeo.domain.exchange.exchange_rate.entity;
+package com.mo.moyeo.domain.exchange_rate.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.mo.moyeo.domain.currency.entity.Currency;

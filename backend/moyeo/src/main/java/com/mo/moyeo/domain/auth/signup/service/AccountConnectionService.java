@@ -1,7 +1,6 @@
 package com.mo.moyeo.domain.auth.signup.service;
 
 import com.mo.moyeo.common.util.finance_api.ApiUtil;
-import com.mo.moyeo.common.util.finance_api.HeaderDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

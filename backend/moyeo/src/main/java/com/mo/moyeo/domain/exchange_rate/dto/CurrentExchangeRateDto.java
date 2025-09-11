@@ -1,7 +1,7 @@
-package com.mo.moyeo.domain.exchange.exchange_rate.dto;
+package com.mo.moyeo.domain.exchange_rate.dto;
 
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
-import com.mo.moyeo.domain.exchange.exchange_rate.entity.ExchangeRate;
+import com.mo.moyeo.domain.exchange_rate.entity.ExchangeRate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,6 +13,7 @@ public class CurrentExchangeRateDto {
     private CurrencyType currencyCode;
     private double buyRate;
     private double sellRate;
+    private double originalRate;
     private double minExchange;
     private String countryFlag;
 
@@ -21,6 +22,7 @@ public class CurrentExchangeRateDto {
         this.buyRate = exchangeRate.getBuyRate();
         this.sellRate = exchangeRate.getSellRate();
         this.minExchange = exchangeRate.getExchangeMin();
+        this.originalRate = exchangeRate.getOriginalRate();
         this.countryFlag = currencyCode.getFlagEmoji();
     }
 }
