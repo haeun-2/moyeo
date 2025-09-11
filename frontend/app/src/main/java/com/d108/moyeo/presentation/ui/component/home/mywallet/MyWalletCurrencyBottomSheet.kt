@@ -2,6 +2,7 @@ package com.d108.moyeo.presentation.ui.component.home.mywallet
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,6 +28,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -52,68 +54,13 @@ fun MyWalletCurrencyBottomSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val gridState = rememberLazyGridState()
 
-    // --- BankSelectionBottomSheet에서 참고한 스크롤 제어 로직 ---
-    var isDragging by remember { mutableStateOf(false) }
-    var startAtTop by remember { mutableStateOf(false) }
-    var lockUntilNextGesture by remember { mutableStateOf(false) }
-    var reachedTopThisGesture by remember { mutableStateOf(false) }
-
-    fun isAtTop(): Boolean =
-        gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0
-
-    LaunchedEffect(gridState) {
-        snapshotFlow { gridState.isScrollInProgress }
-            .distinctUntilChanged()
-            .collectLatest { inProgress ->
-                if (inProgress) {
-                    isDragging = true
-                    startAtTop = isAtTop()
-                    reachedTopThisGesture = false
-                } else {
-                    isDragging = false
-                    lockUntilNextGesture = false
-                    startAtTop = false
-                }
-            }
-    }
-
-    LaunchedEffect(gridState, isDragging) {
-        if (!isDragging) return@LaunchedEffect
-        snapshotFlow { isAtTop() }
-            .distinctUntilChanged()
-            .collectLatest { atTop ->
-                if (atTop && !startAtTop && !reachedTopThisGesture) {
-                    reachedTopThisGesture = true
-                    lockUntilNextGesture = true
-                }
-            }
-    }
-
-    val connection = remember(gridState) {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (source != NestedScrollSource.Drag) return Offset.Zero
-                val dy = available.y
-                val atTop = isAtTop()
-                return if (lockUntilNextGesture && atTop && dy > 0f) {
-                    Offset(0f, dy)
-                } else Offset.Zero
-            }
-            override suspend fun onPreFling(available: Velocity): Velocity {
-                val atTop = isAtTop()
-                return if (lockUntilNextGesture && atTop && available.y > 0f) {
-                    available
-                } else Velocity.Zero
-            }
-        }
-    }
-    // --- 스크롤 제어 로직 끝 ---
+    // --- 스크롤 제어 로직이 필요하지 않아 제거함 ---
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState
+        sheetState = sheetState,
+        containerColor = Color.White
     ) {
         Column(
             modifier = Modifier
@@ -123,19 +70,20 @@ fun MyWalletCurrencyBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LazyVerticalGrid(
-                state = gridState,
                 columns = GridCells.Fixed(2), // 2열 그리드
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .nestedScroll(connection),
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
-                verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
+                verticalArrangement = Arrangement.spacedBy(Spacing.Medium),
+                contentPadding = PaddingValues(
+                    vertical = Spacing.Medium
+                ),
             ) {
                 // 맨 처음, 그러니까 0행 0열에는 전체 보기
                 item {
                     CurrencyButton(
                         text = "전체 보기",
-                        onClick = { onItemSelected(null) }
+                        onClick = { onItemSelected(null) },
                     )
                 }
                 // 나머지는 2열 그리드
@@ -165,7 +113,7 @@ private fun CurrencyButton(
             pressedElevation = 4.dp
         ),
         colors = ButtonDefaults.buttonColors(
-            containerColor = surfaceLight,
+            containerColor = Color.White,
             contentColor = onSurfaceLight
         )
     ) {

@@ -2,7 +2,7 @@ package com.d108.moyeo.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
-val primaryLight = Color(0xFF67548E)
+val primaryLight = Color(0xFF9864FF)
 val onPrimaryLight = Color(0xFFFFFFFF)
 val primaryContainerLight = Color(0xFFEADDFF)
 val onPrimaryContainerLight = Color(0xFF4F3D74)
@@ -78,3 +78,4 @@ val surfaceContainerHighestDark = Color(0xFF303637)
 val pink = Color(0xFFFFC9C9)
 val brown = Color(0xFFB89563)
 val purple = Color(0xFFD2B6FF)
+val button = Color(0x26000000)
