@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home
+package com.d108.moyeo.presentation.ui.screen.home.wallet
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
@@ -16,6 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +28,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.theme.button
+import com.d108.moyeo.presentation.theme.onPrimaryLight
 import com.d108.moyeo.presentation.ui.component.home.mywallet.MyWalletCurrencyBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.mywallet.MyWalletFilterBottomSheet
 
@@ -86,26 +91,26 @@ fun MyWalletScreen(
                 onBalanceClick = viewModel::onBalanceClick
             )
 
-            // 검색 및 필터 바
-            SearchAndFilterBar(
-                searchQuery = uiState.searchQuery,
-                onSearchQueryChange = viewModel::onSearchQueryChanged, // 이벤트 연결
-                filters = uiState.filters,
-                onFilterClick = viewModel::onFilterClick
-            )
+            Column(modifier = Modifier.padding(horizontal = Spacing.Medium)) {
+                SearchAndFilterBar(  // 검색 및 필터바
+                    searchQuery = uiState.searchQuery,
+                    onSearchQueryChange = viewModel::onSearchQueryChanged, // 이벤트 연결
+                    filters = uiState.filters,
+                    onFilterClick = viewModel::onFilterClick
+                )
 
-            // 거래 내역 목록
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(uiState.transactions) { transaction ->
-                    TransactionRowItem(
-                        transaction = transaction,
-                        onClick = {
-                            // 클릭된 아이템의 id를 가지고 상세 화면으로 이동.
+                // 거래 내역 목록
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth()
+
+                ) {
+                    // items 함수가 리스트를 받아 각 아이템을 transaction으로 전달해 줌
+                    items(uiState.transactions) { transaction ->
+                        TransactionRowItem(transaction = transaction, onClick = {
                             navController.navigate("my_wallet_detail/${transaction.id}")
                         })
-                    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+                    }
                 }
             }
         }
@@ -261,7 +266,7 @@ private fun SearchAndFilterBar(
 
 // 거래 내역 한 줄 UI
 @Composable
-private fun TransactionRowItem(transaction: Transaction, onClick: () -> Unit) {
+private fun TransactionRowItem(transaction: WalletTransaction, onClick: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
