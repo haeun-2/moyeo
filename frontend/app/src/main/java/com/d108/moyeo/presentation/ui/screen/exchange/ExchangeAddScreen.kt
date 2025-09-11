@@ -172,6 +172,7 @@ fun ExchangeAddScreen(navController: NavController) {
             placeholder = { // 입력 내용 없을 때 보여줄 안내 문구
                 Text(
                     text = "국가명 또는 통화 코드 검색",
+                    // TODO : 화폐명 검색 , DTO 정하기 
                     color = Color.Gray,
                     style = Typography.bodyMedium
                 )
