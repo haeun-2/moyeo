@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home
+package com.d108.moyeo.presentation.ui.screen.home.box
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,12 +18,12 @@ import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 
 @Composable
-fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화면
+fun MyBoxDetailScreen(
     navController: NavController,
     transactionId: String,
-    viewModel: MyWalletDetailViewModel = viewModel() // ViewModel 주입
+    viewModel: MyBoxDetailViewModel = viewModel()
 ) {
-    // ViewModel의 상태를 구독.
+    // ViewModel의 상태를 구독합니다.
     val uiState by viewModel.uiState.collectAsState()
     val transaction = uiState.transaction
 
@@ -46,9 +46,9 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
             .padding(horizontal = Spacing.Medium, vertical = Spacing.Large),
         horizontalAlignment = Alignment.CenterHorizontally // 각 요소들은 가운데 정렬
     ) {
-        // 클릭해서 들어온 거래 내역의 제목이 맨 위에 있음
+        // 클릭해서 들어온 멤버 이름이 맨 위에 있음
         Text(
-            text = transaction.description, // 이전 화면에서 전달받을 데이터
+            text = transaction.description,
             style = Typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
@@ -59,9 +59,6 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         HorizontalDivider()
 
         Spacer(modifier = Modifier.height(Spacing.Large))
-
-        // 네 가지 요소가 있음.
-        // 각 요소들은 가운데를 텅 비워두고 왼쪽 끝에 글자, 오른쪽 끝에 또다른 글자가 있음
 
         // 먼저 카테고리가 있음. Row겠지 그러면? 이 Row 끝엔 카테고리가 있고 제일 오른쪽 끝엔 에딧 버튼이 있음
         DetailInfoRow(
@@ -81,8 +78,8 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
             }
         )
 
-        // 그 다음엔 거래시각
-        DetailInfoRow(label = "거래시각", content = { Text(transaction.timestamp, style = Typography.bodyLarge) })
+        // 거래시각
+        DetailInfoRow(label = "거래시각", content = { Text("2025.09.08 13:42", style = Typography.bodyLarge) }) // TODO: 실제 timestamp로 변경
         // 거래 금액: +- 얼마
         DetailInfoRow(label = "거래 금액", content = { Text(transaction.amount, style = Typography.bodyLarge, color = MaterialTheme.colorScheme.primary) })
         // 거래 잔액: 얼마
@@ -93,22 +90,20 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         // 호리젠탈 디바이더
         HorizontalDivider()
 
-        // "{들어온 제목}" 검색하기  가장 오른쪾엔 > 아이콘
-        SearchActionRow(text = "\"${transaction.description}\" 검색하기", onClick = { /* TODO */ })
+        // "{들어온 제목}" 검색하기
+        SearchActionRow(text = "\"${transaction.description}\" 입금 내역 검색하기", onClick = { /* TODO */ })
         // 호리젠탈 디바이더
         HorizontalDivider()
         // "{저장된 카테고리}" 검색하기 가장 오른쪽엔 > 아이콘
         SearchActionRow(text = "\"${uiState.selectedCategory}\" 검색하기", onClick = { /* TODO */ })
 
+
         // 그냥 여백
         Spacer(modifier = Modifier.weight(1f))
 
-        // 제일 아래쪽엔 확인 버튼이 있어서 누르면 카테고리 변경 사항을 저장함.
+        // 제일 아래쪽엔 확인 버튼
         Button(
-            onClick = {
-                viewModel.saveChanges() // 변경된 카테고리 저장 로직
-                navController.popBackStack() // 이전 화면으로 돌아가기
-            },
+            onClick = { navController.popBackStack() }, // 이전 화면으로 돌아가기
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("확인")

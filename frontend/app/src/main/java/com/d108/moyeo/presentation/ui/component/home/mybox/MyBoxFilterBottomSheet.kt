@@ -7,11 +7,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.ui.screen.home.BoxFilterOptions
+import com.d108.moyeo.presentation.ui.screen.home.box.BoxFilterOptions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

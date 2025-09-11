@@ -14,7 +14,7 @@ import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.onPrimaryContainerLight
 import com.d108.moyeo.presentation.theme.onSurfaceLight
 import com.d108.moyeo.presentation.theme.primaryContainerLight
-import com.d108.moyeo.presentation.ui.screen.home.WalletFilterOptions
+import com.d108.moyeo.presentation.ui.screen.home.wallet.WalletFilterOptions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

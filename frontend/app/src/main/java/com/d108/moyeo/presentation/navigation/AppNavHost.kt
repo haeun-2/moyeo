@@ -12,10 +12,11 @@ import androidx.navigation.navArgument
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
-import com.d108.moyeo.presentation.ui.screen.home.MyBoxScreen
-import com.d108.moyeo.presentation.ui.screen.home.MyWalletDetailScreen
-import com.d108.moyeo.presentation.ui.screen.home.MyWalletScreen
+import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxScreen
+import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletDetailScreen
+import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletScreen
 import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
+import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxDetailScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChatConsultationScreen
@@ -90,6 +91,21 @@ fun AppNavHost(
             val boxId = backStackEntry.arguments?.getString("boxId")
             if (boxId != null) {
                 MyBoxScreen(navController = navController, boxId = boxId)
+            }
+        }
+
+        composable(
+            route = AppScreen.MyBoxDetail.route,
+            // 경로에서 "transactionId"를 어떤 타입으로 받을지 정의합니다.
+            arguments = listOf(navArgument("transactionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            // 뒤로가기 스택에서 "transactionId" 값을 꺼냅니다.
+            val transactionId = backStackEntry.arguments?.getString("transactionId")
+            if (transactionId != null) {
+                MyBoxDetailScreen(
+                    navController = navController,
+                    transactionId = transactionId // 상세 화면에 ID를 전달합니다.
+                )
             }
         }
 

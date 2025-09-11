@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home
+package com.d108.moyeo.presentation.ui.screen.home.wallet
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
