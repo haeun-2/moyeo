@@ -13,5 +13,4 @@ public class CurrencyListDto {
     private String countryName;
     private String currencyUnit;
     private String countryFlag;
-    private double exchangeMin;
 }

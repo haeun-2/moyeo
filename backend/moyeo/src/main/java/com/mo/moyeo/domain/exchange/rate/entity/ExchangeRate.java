@@ -1,4 +1,4 @@
-package com.mo.moyeo.domain.exchange_rate.entity;
+package com.mo.moyeo.domain.exchange.rate.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.mo.moyeo.domain.currency.entity.Currency;
@@ -32,9 +32,6 @@ public class ExchangeRate {
 
     @Column(name = "sell_rate")
     private Double sellRate;
-
-    @Column(name = "exchange_min")
-    private Double exchangeMin;
 
     @Column(name = "original_rate")
     private Double originalRate;

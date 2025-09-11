@@ -76,4 +76,5 @@ public class BoxMemberService {
 
         return BoxMemberResponse.from(boxMember, ownerId);
     }
+
 }

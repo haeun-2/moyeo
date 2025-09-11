@@ -43,4 +43,8 @@ public class BoxHistoryService {
         transaction.update(request.getMemo(), category);
     }
 
+    public void saveHistory(BoxHistory boxHistory){
+        boxHistoryRepository.save(boxHistory);
+    }
+
 }
