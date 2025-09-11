@@ -2,7 +2,6 @@ package com.mo.moyeo.domain.box.service;
 
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
-import com.mo.moyeo.domain.auth.security.util.AuthenticationUtil;
 import com.mo.moyeo.domain.box.dto.BoxInviteDto;
 import com.mo.moyeo.domain.box.dto.BoxInviteInfoResponse;
 import com.mo.moyeo.domain.box.dto.BoxInviteResponse;
@@ -12,7 +11,6 @@ import com.mo.moyeo.domain.box.entity.BoxMember;
 import com.mo.moyeo.domain.box.repository.BoxMemberRepository;
 import com.mo.moyeo.domain.box.repository.BoxRepository;
 import com.mo.moyeo.domain.user.entity.User;
-import com.mo.moyeo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -30,7 +28,6 @@ import java.util.UUID;
 public class BoxInviteService {
 
     private final BoxRepository boxRepository;
-    private final UserRepository userRepository;
     private final BoxMemberRepository boxMemberRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -39,8 +36,9 @@ public class BoxInviteService {
     @Value("${moyeo.server.base_url}")
     private String baseUrl;
 
-    public BoxInviteResponse createBoxInviteLink(Long boxId) {
+    public BoxInviteResponse createBoxInviteLink(Long boxId, User user) {
         Box box = boxRepository.findById(boxId).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
+        boxMemberRepository.findByBoxIdAndUserId(boxId, user.getId()).orElseThrow(() -> new CustomException(ErrorCode.ACCESS_DENIED)); // 모임 멤버인지 확인
 
         // 1. UUID로 초대코드 생성
         String inviteCode = UUID.randomUUID().toString();
@@ -55,7 +53,7 @@ public class BoxInviteService {
     }
 
     @Transactional
-    public BoxJoinResponse joinBoxByInviteLink(String code) {
+    public BoxJoinResponse joinBoxByInviteLink(String code, User user) {
         // 1. redis에서 초대 정보 조회
         BoxInviteDto boxInviteDto = (BoxInviteDto) redisTemplate.opsForValue().get(BOX_INVITE_KEY + code);
         if (boxInviteDto == null) {
@@ -63,9 +61,7 @@ public class BoxInviteService {
         }
 
         // 2. 모임에 가입
-        Long loginUserId = AuthenticationUtil.getCurrentUserId();
-
-        Optional<BoxMember> existingMember = boxMemberRepository.findByBoxIdAndUserId(boxInviteDto.getBoxId(), loginUserId);
+        Optional<BoxMember> existingMember = boxMemberRepository.findByBoxIdAndUserId(boxInviteDto.getBoxId(), user.getId());
         // 이전 가입 이력이 있는 경우
         if (existingMember.isPresent()) {
             BoxMember boxMember = existingMember.get();
@@ -73,7 +69,6 @@ public class BoxInviteService {
         } 
         // 새로운 가입
         else {
-            User user = userRepository.getReferenceById(loginUserId);
             Box box = boxRepository.findById(boxInviteDto.getBoxId()).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
 
             BoxMember boxMember = new BoxMember(box, user);

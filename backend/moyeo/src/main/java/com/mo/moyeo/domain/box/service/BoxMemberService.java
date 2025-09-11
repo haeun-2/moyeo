@@ -2,12 +2,12 @@ package com.mo.moyeo.domain.box.service;
 
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
-import com.mo.moyeo.domain.auth.security.util.AuthenticationUtil;
 import com.mo.moyeo.domain.box.dto.BoxMemberResponse;
 import com.mo.moyeo.domain.box.dto.BoxMemberUpdatePermissionRequest;
 import com.mo.moyeo.domain.box.entity.BoxMember;
 import com.mo.moyeo.domain.box.repository.BoxMemberRepository;
 import com.mo.moyeo.domain.box.repository.BoxRepository;
+import com.mo.moyeo.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,12 +32,11 @@ public class BoxMemberService {
     }
 
     @Transactional
-    public void updateGroupBoxMemberPermissions(Long boxId, List<BoxMemberUpdatePermissionRequest> requests) {
+    public void updateGroupBoxMemberPermissions(Long boxId, User user, List<BoxMemberUpdatePermissionRequest> requests) {
         // 0. 수정할 수 있는지 확인
         // 모임주만 권한을 수정할 수 있음 - 유저가 모임주가 아니라면 수정 불가
         Long ownerId = boxRepository.findOwnerIdByBoxId(boxId).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
-        Long loginUserId = AuthenticationUtil.getCurrentUserId();
-        if (!ownerId.equals(loginUserId)) {
+        if (!ownerId.equals(user.getId())) {
             throw new CustomException(ErrorCode.ACCESS_DENIED, "모임주만 멤버 권한을 수정할 수 있습니다.");
         }
 
@@ -59,12 +58,11 @@ public class BoxMemberService {
     }
 
     @Transactional
-    public void leaveGroupBox(Long boxId) {
+    public void leaveGroupBox(Long boxId, User user) {
         Long ownerId = boxRepository.findOwnerIdByBoxId(boxId).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
-        Long loginUserId = AuthenticationUtil.getCurrentUserId();
-        BoxMember boxMember = boxMemberRepository.findByBoxIdAndUserId(boxId, loginUserId).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+        BoxMember boxMember = boxMemberRepository.findByBoxIdAndUserId(boxId, user.getId()).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
         // 모임주는 탈퇴할 수 없음
-        if (ownerId.equals(loginUserId)) {
+        if (ownerId.equals(user.getId())) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "모임주는 모임을 탈퇴할 수 없습니다.");
         }
         boxMember.leave();
