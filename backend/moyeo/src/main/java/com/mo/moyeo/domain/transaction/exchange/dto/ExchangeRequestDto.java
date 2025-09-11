@@ -1,6 +1,7 @@
 package com.mo.moyeo.domain.transaction.exchange.dto;
 
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
+import com.mo.moyeo.domain.exchange.reservation.entity.ReservedExchange;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -22,4 +23,11 @@ public class ExchangeRequestDto {
     @NotEmpty(message = "금액을 입력해 주세요.")
     @Min(value = 0, message = "0보다 큰 수를 입력해주세요.")
     private Double amount;
+
+    public ExchangeRequestDto (ReservedExchange reservedExchange){
+        this.fromBoxId = reservedExchange.getBox().getId();
+        this.fromCurrency = reservedExchange.getFromCurrency().getCode();
+        this.toCurrency = reservedExchange.getToCurrency().getCode();
+        this.amount = reservedExchange.getAmount();
+    }
 }

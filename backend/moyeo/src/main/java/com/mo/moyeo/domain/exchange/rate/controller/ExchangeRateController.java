@@ -1,10 +1,10 @@
-package com.mo.moyeo.domain.exchange_rate.controller;
+package com.mo.moyeo.domain.exchange.rate.controller;
 
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
-import com.mo.moyeo.domain.exchange_rate.dto.CurrentExchangeRateDto;
-import com.mo.moyeo.domain.exchange_rate.dto.ExchangeRateHistoryDto;
-import com.mo.moyeo.domain.exchange_rate.service.ExchangeRateCacheService;
-import com.mo.moyeo.domain.exchange_rate.service.ExchangeRateService;
+import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
+import com.mo.moyeo.domain.exchange.rate.dto.ExchangeRateHistoryDto;
+import com.mo.moyeo.domain.exchange.rate.service.ExchangeRateCacheService;
+import com.mo.moyeo.domain.exchange.rate.service.ExchangeRateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -62,7 +62,7 @@ public class Transaction {
     }
 
     public enum Type {
-        EXCHANGE, PAYMENT, DEPOSIT, WITHDRAW, TRANSFER
+        EXCHANGE, PAYMENT, DEPOSIT, WITHDRAW, TRANSFER, EXCHANGE_RESERVATION
     }
 
 }

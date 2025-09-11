@@ -1,7 +1,7 @@
-package com.mo.moyeo.domain.exchange_rate.service;
+package com.mo.moyeo.domain.exchange.rate.service;
 
-import com.mo.moyeo.domain.exchange_rate.dto.CurrentExchangeRateDto;
-import com.mo.moyeo.domain.exchange_rate.entity.ExchangeRate;
+import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
+import com.mo.moyeo.domain.exchange.rate.entity.ExchangeRate;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;

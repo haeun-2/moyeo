@@ -1,0 +1,191 @@
+package com.mo.moyeo.domain.exchange.reservation.service;
+
+import com.mo.moyeo.common.exception.CustomException;
+import com.mo.moyeo.common.exception.ErrorCode;
+import com.mo.moyeo.domain.box.entity.Box;
+import com.mo.moyeo.domain.box.entity.BoxBalance;
+import com.mo.moyeo.domain.box.service.BoxBalanceService;
+import com.mo.moyeo.domain.box.service.BoxMemberService;
+import com.mo.moyeo.domain.box.service.BoxService;
+import com.mo.moyeo.domain.currency.entity.Currency;
+import com.mo.moyeo.domain.currency.entity.CurrencyType;
+import com.mo.moyeo.domain.currency.service.CurrencyService;
+import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
+import com.mo.moyeo.domain.exchange.rate.service.ExchangeRateCacheService;
+import com.mo.moyeo.domain.exchange.reservation.dto.ExchangeReserveDto;
+import com.mo.moyeo.domain.exchange.reservation.dto.ExchangeReserveListDto;
+import com.mo.moyeo.domain.exchange.reservation.entity.ReservedExchange;
+import com.mo.moyeo.domain.exchange.reservation.repository.ReservedExchangeRepository;
+import com.mo.moyeo.domain.transaction.exchange.dto.ExchangeRequestDto;
+import com.mo.moyeo.domain.transaction.exchange.service.ExchangeService;
+import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
+import com.mo.moyeo.domain.transaction.history.service.BoxHistoryService;
+import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
+import com.mo.moyeo.domain.transaction.transaction.service.TransactionService;
+import com.mo.moyeo.domain.user.entity.User;
+import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
+@Service
+@RequiredArgsConstructor
+public class ReservedExchangeService {
+    private final ReservedExchangeRepository reservedExchangeRepository;
+    private final BoxService boxService;
+    private final CurrencyService currencyService;
+    private final BoxBalanceService boxBalanceService;
+    private final BoxHistoryService boxHistoryService;
+    private final TransactionService transactionService;
+    private final BoxMemberService boxMemberService;
+    private final ExchangeService exchangeService;
+    private final ExchangeRateCacheService exchangeRateCacheService;
+
+    @Transactional
+    public void reserveExchange(User user, ExchangeReserveDto exchangeReserveDto) {
+        Box box = boxService.getBoxById(exchangeReserveDto.boxId());
+        Currency fromCurrency = currencyService.getReferenceByType(exchangeReserveDto.fromCurrency());
+        Currency toCurrency = currencyService.getReferenceByType(exchangeReserveDto.toCurrency());
+        validateCondition(user, exchangeReserveDto, box);
+
+        //예약 환전 저장
+        ReservedExchange reservedExchange =
+                ReservedExchange.builder()
+                        .box(box)
+                        .fromCurrency(fromCurrency)
+                        .toCurrency(toCurrency)
+                        .targetRate(exchangeReserveDto.targetRate())
+                        .amount(exchangeReserveDto.amount())
+                        .expiresAt(exchangeReserveDto.expiresAt()).build();
+        reservedExchangeRepository.save(reservedExchange);
+
+        //예상 금액 차감
+        Double amount = reservedExchange.getTargetRate() * reservedExchange.getAmount();
+        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(box, exchangeReserveDto.fromCurrency());
+        if(fromBoxBalance.getBalance() < amount)
+            throw new CustomException(ErrorCode.BAD_REQUEST, "환전에 필요한 금액이 부족합니다.");
+        fromBoxBalance.decreaseBalance(amount);
+
+        //트랜잭션 및 내역 저장
+        Transaction transaction = transactionService.makeExchangeReservationTransaction(box, user);
+        BoxHistory boxHistory = BoxHistory.builder()
+                .box(box)
+                .transaction(transaction)
+                .amount(amount)
+                .currencyCode(exchangeReserveDto.fromCurrency())
+                .totalAmount(fromBoxBalance.getBalance())
+                .title("예약 환전")
+                .type(Transaction.Type.EXCHANGE_RESERVATION)
+                .build();
+
+        boxHistoryService.saveHistory(boxHistory);
+    }
+
+    private void validateCondition(User user, ExchangeReserveDto exchangeReserveDto, Box box) {
+        if (exchangeReserveDto.fromCurrency() != CurrencyType.KRW && exchangeReserveDto.toCurrency() != CurrencyType.KRW)
+            throw new CustomException(ErrorCode.BAD_REQUEST, "외화 간 환전은 예약이 지원되지 않습니다.");
+
+        if (box.isPersonal() && !box.getOwnerId().equals(user.getId()))//개인 통장이면 주인인지 체크
+            throw new CustomException(ErrorCode.ACCESS_DENIED, "권한이 없습니다.");
+
+        if (!box.isPersonal() && !boxMemberService.getMyPermission(box.getId(), user.getId()).getCanExchange())//모임 통장이면 환전 권한 있는지
+            throw new CustomException(ErrorCode.ACCESS_DENIED, "권한이 없습니다.");
+
+        if (exchangeReserveDto.amount() % 10 != 0)
+            throw new CustomException(ErrorCode.BAD_REQUEST, "10 단위로만 환전 가능합니다.");
+
+        double minExchange = 100.0;
+        if (minExchange > exchangeReserveDto.amount())
+            throw new CustomException(ErrorCode.BAD_REQUEST, "최소 환전금액보다 작게 환전할 수 없습니다. " + minExchange);
+    }
+
+    public List<ExchangeReserveListDto> getReservations(User user, Long boxId) {
+        //멤버인지 체크하기
+        boxMemberService.getMyPermission(boxId, user.getId());
+        return reservedExchangeRepository.findReservationList(boxId);
+    }
+
+    @Transactional
+    public void cancelReservation(User user, Long reservationId) {
+        ReservedExchange reservedExchange = getReservationById(reservationId);
+        boxMemberService.getMyPermission(reservedExchange.getBox().getId(), user.getId());
+
+        reservedExchange.cancelReservation();
+
+        //차감 금액 복원
+        Double amount = reservedExchange.getTargetRate() * reservedExchange.getAmount();
+        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(reservedExchange.getBox(), reservedExchange.getFromCurrency().getCode());
+        fromBoxBalance.increaseBalance(amount);
+
+        //트랜잭션 및 내역 저장
+        Transaction transaction = transactionService.makeExchangeReservationTransaction(reservedExchange.getBox(), user);
+        BoxHistory boxHistory = BoxHistory.builder()
+                .box(reservedExchange.getBox())
+                .transaction(transaction)
+                .amount(amount)
+                .currencyCode(reservedExchange.getFromCurrency().getCode())
+                .totalAmount(fromBoxBalance.getBalance())
+                .title("예약 환전 취소")
+                .type(Transaction.Type.EXCHANGE_RESERVATION)
+                .build();
+        boxHistoryService.saveHistory(boxHistory);
+    }
+
+    public ReservedExchange getReservationById(Long reservationId) {
+        return reservedExchangeRepository.findById(reservationId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+    }
+
+    private List<ReservedExchange> getWaitingReservation() {
+        return reservedExchangeRepository.findWaitingReservation();
+    }
+
+
+    @Transactional
+    public void checkReservation() {
+        Map<String, CurrentExchangeRateDto> currentExchangeRate = exchangeRateCacheService.getCurrentExchangeRate();
+
+        List<ReservedExchange> reservations = getWaitingReservation();
+        for (ReservedExchange reservedExchange : reservations) {
+            //한->외 사는거
+            if (reservedExchange.getFromCurrency().getCode() == CurrencyType.KRW) {
+                if (currentExchangeRate.get(reservedExchange.getFromCurrency().getCode().name()).getBuyRate() >= reservedExchange.getTargetRate()) {
+                    completeReservation(reservedExchange);
+                }
+            } else {//외->한 파는거
+                if (currentExchangeRate.get(reservedExchange.getFromCurrency().getCode().name()).getSellRate() <= reservedExchange.getTargetRate()) {
+                    completeReservation(reservedExchange);
+                }
+            }
+        }
+    }
+
+    private void completeReservation(ReservedExchange reservedExchange) {
+        //완성 처리
+        reservedExchange.completeReservation();
+
+        //차감 금액 복원
+        Double amount = reservedExchange.getTargetRate() * reservedExchange.getAmount();
+        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(reservedExchange.getBox(), reservedExchange.getFromCurrency().getCode());
+        fromBoxBalance.increaseBalance(amount);
+
+        exchangeService.exchange(reservedExchange.getUser(), new ExchangeRequestDto(reservedExchange));
+    }
+
+    // 매일 0시 1분에 실행
+    @Scheduled(cron = "0 1 0 * * *")
+    @Transactional
+    public void deleteOldExchangeRates() {
+        LocalDate now = LocalDate.now();
+        List<ReservedExchange> reservations = getWaitingReservation();
+        for (ReservedExchange reservedExchange : reservations) {
+            if(now.isAfter(reservedExchange.getExpiresAt())){
+                reservedExchange.expire();
+            }
+        }
+    }
+}

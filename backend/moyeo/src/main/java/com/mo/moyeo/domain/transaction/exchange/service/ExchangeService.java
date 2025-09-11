@@ -11,8 +11,8 @@ import com.mo.moyeo.domain.box.service.BoxMemberService;
 import com.mo.moyeo.domain.box.service.BoxService;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.service.CurrencyService;
-import com.mo.moyeo.domain.exchange_rate.dto.CurrentExchangeRateDto;
-import com.mo.moyeo.domain.exchange_rate.service.ExchangeRateCacheService;
+import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
+import com.mo.moyeo.domain.exchange.rate.service.ExchangeRateCacheService;
 import com.mo.moyeo.domain.transaction.exchange.dto.ExchangeRequestDto;
 import com.mo.moyeo.domain.transaction.exchange.entity.ExchangeTransaction;
 import com.mo.moyeo.domain.transaction.exchange.repository.ExchangeRepository;
@@ -80,6 +80,8 @@ public class ExchangeService {
         BoxBalance toBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(box, exchangeRequestDto.getToCurrency());
 
         toBoxBalance.increaseBalance(toAmount);
+        if(fromBoxBalance.getBalance() < fromAmount)
+            throw new CustomException(ErrorCode.BAD_REQUEST, "환전에 필요한 금액이 부족합니다.");
         fromBoxBalance.decreaseBalance(fromAmount);
 
         BoxHistory boxHistory1 = BoxHistory.builder()
@@ -169,18 +171,16 @@ public class ExchangeService {
     }
 
     private void validateCondition(User user, ExchangeRequestDto exchangeRequestDto, Box box) {
-        //TODO : userId로 대체
         if (box.isPersonal() && !box.getOwnerId().equals(user.getId()))//개인 통장이면 주인인지 체크
             throw new CustomException(ErrorCode.ACCESS_DENIED, "권한이 없습니다.");
 
-        //TODO : userId로 대체
         if (!box.isPersonal() && !boxMemberService.getMyPermission(box.getId(), user.getId()).getCanExchange())//모임 통장이면 환전 권한 있는지
             throw new CustomException(ErrorCode.ACCESS_DENIED, "권한이 없습니다.");
 
         if (exchangeRequestDto.getAmount() % 10 != 0)
             throw new CustomException(ErrorCode.BAD_REQUEST, "10 단위로만 환전 가능합니다.");
 
-        Double minExchange = exchangeRateCacheService.getCurrentExchangeRate().get(exchangeRequestDto.getFromCurrency().name()).getMinExchange();
+        double minExchange = 100.0;
         if (minExchange > exchangeRequestDto.getAmount())
             throw new CustomException(ErrorCode.BAD_REQUEST, "최소 환전금액보다 작게 환전할 수 없습니다. " + minExchange);
     }
