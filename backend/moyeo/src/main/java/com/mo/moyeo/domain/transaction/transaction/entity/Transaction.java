@@ -1,8 +1,10 @@
 package com.mo.moyeo.domain.transaction.transaction.entity;
 
 import com.mo.moyeo.domain.box.entity.Box;
+import com.mo.moyeo.domain.transaction.category.entity.Category;
 import com.mo.moyeo.domain.user.entity.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -12,6 +14,8 @@ import java.time.LocalDateTime;
 @Getter
 @Table(name = "transactions")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Transaction {
 
     @Id
@@ -41,9 +45,22 @@ public class Transaction {
     @Column(name = "memo", length = 255)
     private String memo;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    public void update(String memo, Category category) {
+        if (memo != null) {
+            this.memo = memo;
+        }
+        if (category != null) {
+            this.category = category;
+        }
+    }
 
     public enum Type {
         EXCHANGE, PAYMENT, DEPOSIT, WITHDRAW, TRANSFER
