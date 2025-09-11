@@ -1,4 +1,4 @@
-package com.mo.moyeo.domain.exchange.exchange_rate.service;
+package com.mo.moyeo.domain.exchange_rate.service;
 
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
@@ -8,11 +8,11 @@ import com.mo.moyeo.common.util.finance_api.ApiUtil;
 import com.mo.moyeo.domain.currency.entity.Currency;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.repository.CurrencyRepository;
-import com.mo.moyeo.domain.exchange.exchange_rate.dto.CurrentExchangeRateDto;
-import com.mo.moyeo.domain.exchange.exchange_rate.dto.ExchangeRateHistoryDto;
-import com.mo.moyeo.domain.exchange.exchange_rate.dto.ExchangeRateResponse;
-import com.mo.moyeo.domain.exchange.exchange_rate.entity.ExchangeRate;
-import com.mo.moyeo.domain.exchange.exchange_rate.repository.ExchangeRateRepository;
+import com.mo.moyeo.domain.exchange_rate.dto.CurrentExchangeRateDto;
+import com.mo.moyeo.domain.exchange_rate.dto.ExchangeRateHistoryDto;
+import com.mo.moyeo.domain.exchange_rate.dto.ExchangeRateResponse;
+import com.mo.moyeo.domain.exchange_rate.entity.ExchangeRate;
+import com.mo.moyeo.domain.exchange_rate.repository.ExchangeRateRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -36,7 +36,7 @@ public class ExchangeRateService {
     private final CurrencyRepository currencyRepository;
     private final BatchInsert batchInsert;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    @Value("${exchange.rate.get}")
+    @Value("${EXCHANGE_RATE_GET}")
     private String exchangeRateUrl;
     private final ExchangeRateRepository exchangeRateRepository;
     private final ExchangeRateCacheService exchangeRateCacheService;

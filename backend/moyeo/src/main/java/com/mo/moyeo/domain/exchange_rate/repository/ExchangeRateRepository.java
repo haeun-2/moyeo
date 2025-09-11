@@ -1,8 +1,8 @@
-package com.mo.moyeo.domain.exchange.exchange_rate.repository;
+package com.mo.moyeo.domain.exchange_rate.repository;
 
 import com.mo.moyeo.domain.currency.entity.Currency;
-import com.mo.moyeo.domain.exchange.exchange_rate.dto.ExchangeRateHistoryDto;
-import com.mo.moyeo.domain.exchange.exchange_rate.entity.ExchangeRate;
+import com.mo.moyeo.domain.exchange_rate.dto.ExchangeRateHistoryDto;
+import com.mo.moyeo.domain.exchange_rate.entity.ExchangeRate;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,11 +14,10 @@ import java.util.List;
 
 @Repository
 public interface ExchangeRateRepository extends JpaRepository<ExchangeRate, Long> {
-    @Transactional
-    int deleteByRecordedAtBefore(LocalDateTime dateTime);
+    void deleteByRecordedAtBefore(LocalDateTime dateTime);
 
     @Query("""
-            select new com.mo.moyeo.domain.exchange.exchange_rate.dto.ExchangeRateHistoryDto(
+            select new com.mo.moyeo.domain.exchange_rate.dto.ExchangeRateHistoryDto(
                 er.buyRate, er.sellRate, er.originalRate, er.recordedAt
             )
             from exchange_rates er

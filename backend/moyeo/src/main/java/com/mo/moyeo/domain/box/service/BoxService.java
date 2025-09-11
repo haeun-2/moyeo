@@ -92,4 +92,8 @@ public class BoxService {
         return BoxCreateResponse.from(box);
     }
 
+    public Box getBoxById(Long boxId){
+        return boxRepository.findById(boxId)
+                .orElseThrow(()-> new CustomException(ErrorCode.BOX_NOT_FOUND));
+    }
 }

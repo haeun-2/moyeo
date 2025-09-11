@@ -4,7 +4,6 @@ import com.mo.moyeo.domain.box.entity.Box;
 import com.mo.moyeo.domain.transaction.category.entity.Category;
 import com.mo.moyeo.domain.user.entity.User;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -13,9 +12,9 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Table(name = "transactions")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Transaction {
 
     @Id
