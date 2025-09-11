@@ -32,6 +32,7 @@ import com.d108.moyeo.presentation.ui.component.home.mybox.MyBoxFilterBottomShee
 fun MyBoxScreen(
     navController: NavController,
     boxId: String,
+    bgColor: Int?,  // 배경색을 위한 파라미터
     viewModel: MyBoxViewModel = viewModel()
 ) {
 
@@ -71,6 +72,7 @@ fun MyBoxScreen(
         TopBoxInfoCard(
             boxName = uiState.boxName,
             totalAmount = uiState.totalAmount,
+            backgroundColor = Color(bgColor!!),
             onAmountClick = viewModel::onAmountClick
         )
 
@@ -104,13 +106,15 @@ fun MyBoxScreen(
 private fun TopBoxInfoCard(
     boxName: String,
     totalAmount: String,
+    backgroundColor: Color,
     onAmountClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(200.dp),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
         Column(
             modifier = Modifier

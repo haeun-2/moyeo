@@ -86,11 +86,14 @@ fun AppNavHost(
         // 모여 박스에서 클릭
         composable(
             route = AppScreen.MyBox.route,
-            arguments = listOf(navArgument("boxId") { type = NavType.StringType })
+            arguments = listOf(navArgument("boxId") { type = NavType.StringType },
+                navArgument("bgColor") { type = NavType.IntType }  // Color는 Int로 전달)
+            )
         ) { backStackEntry ->
             val boxId = backStackEntry.arguments?.getString("boxId")
-            if (boxId != null) {
-                MyBoxScreen(navController = navController, boxId = boxId)
+            val bgColor = backStackEntry.arguments?.getInt("bgColor")
+            if (boxId != null && bgColor != null ) {
+                MyBoxScreen(navController = navController, boxId = boxId, bgColor = bgColor)
             }
         }
 

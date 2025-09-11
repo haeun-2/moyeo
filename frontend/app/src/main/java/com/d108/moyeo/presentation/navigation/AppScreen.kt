@@ -41,7 +41,7 @@ sealed class AppScreen(
     object MyWalletDetail : AppScreen(route = "my_wallet_detail/{transactionId}", title = "월렛 상세")
 
     // 홈에서 모여 박스를 클릭했을 때 넘어오는 화면
-    object MyBox : AppScreen(route = "my_box/{boxId}", title = "내 박스")
+    object MyBox : AppScreen(route = "my_box/{boxId}/{bgColor}", title = "내 박스")
 
     // 모여 박스 화면에서 거래 내역을 클릭했을 때 넘어오는 화면
     object MyBoxDetail : AppScreen(route = "my_box_detail/{transactionId}", title = "내 박스 상세")

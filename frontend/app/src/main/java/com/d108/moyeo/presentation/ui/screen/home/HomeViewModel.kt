@@ -1,6 +1,7 @@
 package com.d108.moyeo.presentation.ui.screen.home
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.presentation.theme.brown
@@ -42,7 +43,7 @@ sealed class HomeNavigationEvent {
     object NavigateToMyWallet : HomeNavigationEvent()
 
     // 구체적으로 어디로 가야하는지 알고 싶으면 data class로 선언 및 파라미터 전달
-    data class NavigateToMyBox(val boxId: String) : HomeNavigationEvent()
+    data class NavigateToMyBox(val boxId: String, val bgColor: Int) : HomeNavigationEvent()
 }
 
 
@@ -111,7 +112,12 @@ class HomeViewModel : ViewModel() {
     // 그룹 박스에서 클릭되었을 때 해당 박스 ID로 이동
     fun onGroupBoxClick(boxId: String) {
         viewModelScope.launch {
-            _navigationEvent.emit(HomeNavigationEvent.NavigateToMyBox(boxId))
+            // 클릭된 ID에 해당하는 박스를 찾아 색상 정보도 함께 이벤트에 담아 전송
+            val clickedBox = _uiState.value.groups.find { it.id == boxId }
+            if (clickedBox != null) {
+                // Color 객체를 Int로 변환하여 전달
+                _navigationEvent.emit(HomeNavigationEvent.NavigateToMyBox(boxId, clickedBox.bg.toArgb()))
+            }
         }
     }
 }
