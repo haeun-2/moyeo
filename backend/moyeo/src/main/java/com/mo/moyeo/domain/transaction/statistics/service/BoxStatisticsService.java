@@ -1,7 +1,10 @@
 package com.mo.moyeo.domain.transaction.statistics.service;
 
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
+import com.mo.moyeo.domain.merchant.entity.Merchant;
+import com.mo.moyeo.domain.merchant.repository.MerchantRepository;
 import com.mo.moyeo.domain.transaction.history.repository.BoxHistoryRepository;
+import com.mo.moyeo.domain.transaction.statistics.dto.MerchantLocationResponse;
 import com.mo.moyeo.domain.transaction.statistics.dto.BoxStatisticsResponse;
 import com.mo.moyeo.domain.transaction.statistics.dto.CategoryStatisticsDto;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +20,17 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class BoxStatisticsService {
 
+    private final MerchantRepository merchantRepository;
     private final BoxHistoryRepository boxHistoryRepository;
 
     public BoxStatisticsResponse getCategoryStatistics(Long boxId, LocalDate startDate, LocalDate endDate, CurrencyType currency) {
         List<CategoryStatisticsDto> dtoList = boxHistoryRepository.findCategoryStatistics(boxId, startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX), currency);
         return BoxStatisticsResponse.from(dtoList);
+    }
+
+    public List<MerchantLocationResponse> getPaidMerchantLocation(Long boxId) {
+        List<Merchant> merchantList = merchantRepository.findPaidMerchantsByBoxId(boxId);
+        return MerchantLocationResponse.from(merchantList);
     }
 
 }
