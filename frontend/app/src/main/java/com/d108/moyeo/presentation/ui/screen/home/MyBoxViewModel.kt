@@ -1,0 +1,4 @@
+package com.d108.moyeo.presentation.ui.screen.home
+
+class MyBoxViewModel {
+}
