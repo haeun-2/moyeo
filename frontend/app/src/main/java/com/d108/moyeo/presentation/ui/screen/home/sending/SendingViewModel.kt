@@ -87,18 +87,26 @@ class SendingViewModel(
     }
 
     /**
-     * 사용자가 보낼 금액을 입력할 때마다 호출됩니다.
+     * 사용자가 보낼 금액을 입력할 때마다 호출.
      */
-    fun onAmountChanged(amount: String) {
-        // TODO: 숫자만 입력 가능하도록 유효성 검사 로직을 추가할 수 있습니다.
-        _uiState.update { currentState ->
-            currentState.copy(howMuch = amount)
+    fun onMoneyDigitInput(digit: String) {
+        val currentAmount = _uiState.value.howMuch
+        if (currentAmount == "0" && digit != "00") {
+            _uiState.update { it.copy(howMuch = digit) }
+            return
         }
+        if (currentAmount.isEmpty() && digit == "00") return
+//        if ((currentAmount + digit).length > 10) return // 최대 10자리 제한
+
+        _uiState.update { it.copy(howMuch = currentAmount + digit) }
     }
 
-    fun onPinChanged(pin: String) {
-        // TODO: 6자리 등 PIN 길이에 대한 유효성 검사 추가 가능
-        _uiState.update { it.copy(pin = pin) }
+    fun onMoneyBackspace() {
+        _uiState.update { it.copy(howMuch = it.howMuch.dropLast(1)) }
+    }
+
+    fun onMoneyClear() {
+        _uiState.update { it.copy(howMuch = "") }
     }
 
     // 생체 인증에 성공
@@ -115,6 +123,18 @@ class SendingViewModel(
         // PIN 입력 단계로 이동합니다.
         _uiState.update { it.copy(currentStep = SendingStep.PIN) }
     }
+
+
+    /**
+     * 핀 입력 검사
+     **/
+
+    fun onPinChanged(pin: String) {
+        // TODO: 6자리 등 PIN 길이에 대한 유효성 검사 추가 가능
+        _uiState.update { it.copy(pin = pin) }
+    }
+
+
 
     fun onPinSucceeded() {
         // TODO: 실제 서버에 이체 요청 API 호출
