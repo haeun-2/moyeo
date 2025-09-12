@@ -122,4 +122,17 @@ public class AuthService {
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
+
+    public LoginResponse tempLogin(Long userId) {
+        GeneratedTokenDTO tokens = jwtUtil.generateToken(userId, User.Role.USER.name());
+
+        // Redis에 refresh token 저장
+        jwtRedisService.saveRefreshToken(userId, tokens.getRefreshToken());
+
+        return LoginResponse.builder()
+                .accessToken(tokens.getAccessToken())
+                .refreshToken(tokens.getRefreshToken())
+                .build();
+    }
+
 }
