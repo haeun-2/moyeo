@@ -105,10 +105,6 @@ class SendingViewModel(
         _uiState.update { it.copy(howMuch = it.howMuch.dropLast(1)) }
     }
 
-    fun onMoneyClear() {
-        _uiState.update { it.copy(howMuch = "") }
-    }
-
     // 생체 인증에 성공
     fun onBiometricsSucceeded() {
         // TODO: 실제 서버에 이체 요청 API 호출
@@ -170,9 +166,8 @@ class SendingViewModel(
                     _uiState.update { it.copy(currentStep = SendingStep.PIN) }
                 }
             }
-            SendingStep.BIOMETRIC -> {
-                // 이 단계에서는 보통 하단 '다음' 버튼이 없거나 'PIN으로 인증' 같은 버튼이 있습니다.
-                // skipBiometrics() 함수가 그 역할을 대신합니다.
+            SendingStep.BIOMETRIC -> {  // 이 버튼은 사용자가 다 실패하면 뜸
+                skipBiometrics()  // 스킵하고 핀 인증
             }
             SendingStep.PIN -> {
                 // TODO: 입력된 PIN(_uiState.value.pin)이 올바른지 검증

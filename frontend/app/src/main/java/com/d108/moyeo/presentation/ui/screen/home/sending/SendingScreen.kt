@@ -66,11 +66,16 @@ fun SendingScreen(navController: NavController,
                             },
                             onError = { errorCode, errString ->
                                 // 사용자가 'PIN으로 인증하기' 버튼을 눌렀을 때 (취소했을 때)
-                                if (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
-                                    viewModel.skipBiometrics() // ViewModel에 건너뛰었음을 알림
-                                } else {
-                                    // 그 외 다른 에러들은 토스트 메시지를 보여줍니다.
-                                    Toast.makeText(context, "인증 오류: $errString", Toast.LENGTH_SHORT).show()
+                                when(errorCode) {
+                                    BiometricPrompt.ERROR_NEGATIVE_BUTTON,
+                                    BiometricPrompt.ERROR_LOCKOUT,
+                                    BiometricPrompt.ERROR_LOCKOUT_PERMANENT -> {
+                                        viewModel.skipBiometrics() // ViewModel에 건너뛰었음을 알림
+                                    }
+                                    else -> {
+                                        // 그 외 다른 에러들은 토스트 메시지를 보여줍니다.
+                                        Toast.makeText(context, "인증 오류: $errString", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             },
                             onFailed = {
@@ -144,6 +149,7 @@ fun SendingScreen(navController: NavController,
             val buttonText = when(uiState.currentStep) {
                 SendingStep.FINISH -> "확인"
                 SendingStep.HOW_MUCH -> "보내기"
+                SendingStep.BIOMETRIC -> "PIN으로 인증하기"  // 어차피 가려지니까 이렇게 하면 될듯
                 SendingStep.PIN -> "인증하기"
                 else -> "다음"
             }
