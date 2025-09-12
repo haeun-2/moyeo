@@ -99,4 +99,9 @@ public class BoxService {
         return boxRepository.findById(boxId)
                 .orElseThrow(()-> new CustomException(ErrorCode.BOX_NOT_FOUND));
     }
+
+    public Box getBoxByUserId(Long userId){
+        return boxRepository.selectPersonalBoxByOwnerId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
+    }
 }
