@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/boxes/{boxId}/transactions")
+@RequestMapping("/api/boxes/{boxId}/transactions/histories")
 @Tag(name = "BoxHistoryController", description = "박스 거래내역 조회 및 수정 API")
 public class BoxHistoryController {
 
@@ -31,12 +31,12 @@ public class BoxHistoryController {
     }
 
     @Operation(summary = "박스 거래내역 수정", description = "특정 거래내역의 메모, 카테고리를 수정합니다.")
-    @PatchMapping("/{transactionId}")
-    public void updateTransactionCategory(
-            @PathVariable Long transactionId,
+    @PatchMapping("/{historyId}")
+    public void updateTransaction(
+            @PathVariable Long historyId,
             @Valid @RequestBody TransactionUpdateRequest request
     ) {
-        boxHistoryService.updateTransactionCategory(transactionId, request);
+        boxHistoryService.updateTransaction(historyId, request);
     }
 
 }

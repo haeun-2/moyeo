@@ -35,9 +35,8 @@ public class BoxHistoryRepositoryCustomImpl implements BoxHistoryRepositoryCusto
         // 쿼리 실행
         List<BoxHistory> result = jpaQueryFactory
                 .selectFrom(boxHistory)
-                .leftJoin(boxHistory.transaction)
                 .where(whereCondition(boxId, condition))
-                .orderBy(order(condition), boxHistory.id.desc())
+                .orderBy(order(condition.getSortDir()), boxHistory.id.desc())
                 .offset(pageable.getOffset())
                 .limit(size + 1)
                 .fetch();
@@ -92,15 +91,15 @@ public class BoxHistoryRepositoryCustomImpl implements BoxHistoryRepositoryCusto
     }
 
     private BooleanExpression categoryEq(Long categoryId) {
-        return categoryId != null ? boxHistory.transaction.category.id.eq(categoryId) : null;
+        return categoryId != null ? boxHistory.category.id.eq(categoryId) : null;
     }
 
     private BooleanExpression currencyEq(CurrencyType currency) {
         return currency != null ? boxHistory.currencyCode.eq(currency) : null;
     }
 
-    private static OrderSpecifier<?> order(TransactionSearchCondition condition) {
-        return condition.getSortDir() == TransactionSearchCondition.SortDirection.ASC
+    private static OrderSpecifier<?> order(TransactionSearchCondition.SortDirection sortDirection) {
+        return sortDirection == TransactionSearchCondition.SortDirection.ASC
                 ? boxHistory.createdAt.asc()
                 : boxHistory.createdAt.desc();
     }

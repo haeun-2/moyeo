@@ -2,6 +2,7 @@ package com.mo.moyeo.domain.transaction.history.entity;
 
 import com.mo.moyeo.domain.box.entity.Box;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
+import com.mo.moyeo.domain.transaction.category.entity.Category;
 import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import jakarta.persistence.*;
 import lombok.*;
@@ -48,5 +49,21 @@ public class BoxHistory {
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     private Transaction.Type type;
+
+    @Column(name = "memo", length = 255)
+    private String memo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    public void update(String memo, Category category) {
+        if (memo != null) {
+            this.memo = memo;
+        }
+        if (category != null) {
+            this.category = category;
+        }
+    }
 
 }

@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 public class TransactionResponse {
 
-    private Long transactionId;
+    private Long historyId;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime datetime;
     private String title;
@@ -23,7 +23,7 @@ public class TransactionResponse {
 
     public static TransactionResponse from(BoxHistory boxHistory) {
         return TransactionResponse.builder()
-                .transactionId(boxHistory.getTransaction().getId())
+                .historyId(boxHistory.getId())
                 .datetime(boxHistory.getCreatedAt())
                 .title(boxHistory.getTitle())
                 .amount(boxHistory.getAmount())
