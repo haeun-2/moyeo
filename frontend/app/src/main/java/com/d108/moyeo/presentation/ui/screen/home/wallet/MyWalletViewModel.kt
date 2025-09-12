@@ -61,6 +61,7 @@ data class MyWalletUiState(
 
 sealed class WalletNavigationEvent {
     data class NavigateToSending(val currencyCode: String) : WalletNavigationEvent()
+    data object NavigateToCharging : WalletNavigationEvent() // 충전 화면 이동 이벤트 추가
 }
 
 class MyWalletViewModel : ViewModel() {
@@ -168,6 +169,14 @@ class MyWalletViewModel : ViewModel() {
         // 이 코드를 가지고 SendingScreen으로 진입해야 함
         viewModelScope.launch {
             _navigationEvent.emit(WalletNavigationEvent.NavigateToSending(code))
+        }
+    }
+
+
+    // 충전 플로팅 버튼 클릭 시 호출
+    fun onChargingClick() {
+        viewModelScope.launch {
+            _navigationEvent.emit(WalletNavigationEvent.NavigateToCharging)
         }
     }
 
