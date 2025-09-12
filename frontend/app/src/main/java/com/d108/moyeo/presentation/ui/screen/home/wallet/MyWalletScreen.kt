@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
+import android.R.attr.onClick
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.button
@@ -40,6 +42,19 @@ fun MyWalletScreen(
 ) {
     // ViewModel의 상태를 구독합니다.
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(key1 = true) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is WalletNavigationEvent.NavigateToSending -> {
+                    // "보내기" 이벤트가 오면, currencyCode를 가지고 SendingScreen으로 이동합니다.
+                    navController.navigate(
+                        AppScreen.Sending.route.replace("{currencyId}", event.currencyCode)  // 라우트 확인
+                    )
+                }
+            }
+        }
+    }
 
 
     // 잔액 클릭 시 열릴 바텀 시트
@@ -89,7 +104,8 @@ fun MyWalletScreen(
                 walletName = uiState.walletName,
                 totalBalance = uiState.totalBalance,
                 onBalanceClick = viewModel::onBalanceClick,
-                onBackClick = { /* TODO: 뒤로가기 로직 추가 */ }
+                onBackClick = { /* TODO: 뒤로가기 로직 추가 */ },
+                onSendingClick = viewModel::onSendingClick
             )
 
             Column(modifier = Modifier.padding(horizontal = Spacing.Medium)) {
@@ -129,7 +145,8 @@ private fun TopWalletInfoSurface(
     walletName: String,
     totalBalance: String,
     onBalanceClick: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onSendingClick:() -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -199,7 +216,7 @@ private fun TopWalletInfoSurface(
                 // !!그리고 이 버튼들이 너무 크다. 좀 작아진 다음에 좌우와 간격이 있으면 좋겠는데. !!
             ) {
                 Button(
-                    onClick = { /*TODO*/ },
+                        onClick = onSendingClick, // !! 이 버튼이랑 연결되어야 함
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
                         contentColor = onPrimaryLight
