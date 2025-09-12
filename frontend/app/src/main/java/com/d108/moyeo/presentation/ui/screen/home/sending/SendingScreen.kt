@@ -112,7 +112,10 @@ fun SendingScreen(navController: NavController,
                     selectedCurrency = uiState.currency,
                     onCurrencySelect = viewModel::onCurrencySelected
                 )
-                SendingStep.TARGET_BOX -> TargetBoxContent() // TODO: 구현 필요
+                SendingStep.TARGET_BOX -> TargetBoxContent(
+                    selectedBoxId = uiState.targetBox,
+                    onBoxSelect = viewModel::onTargetBoxSelected
+                )
                 SendingStep.HOW_MUCH -> HowMuchContent() // TODO: 구현 필요
                 SendingStep.BIOMETRIC -> BiometricContent() // TODO: 구현 필요
                 SendingStep.PIN -> PinContent() // TODO: 구현 필요
