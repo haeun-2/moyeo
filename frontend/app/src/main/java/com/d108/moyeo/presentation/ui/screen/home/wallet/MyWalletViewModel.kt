@@ -1,7 +1,9 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
 import androidx.lifecycle.ViewModel
-import com.d108.moyeo.presentation.ui.component.home.mywallet.Currency
+import com.d108.moyeo.presentation.ui.component.home.FilterOptions
+import com.d108.moyeo.presentation.ui.component.home.WalletFilterOptionsAdp
+import com.d108.moyeo.presentation.ui.component.home.Currency
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -25,10 +27,19 @@ data class WalletFilterOptions(
     val sort: String = "최신"
 )
 
+// 변환 확장 함수
+fun WalletFilterOptions.toAdapter(): WalletFilterOptionsAdp =
+    WalletFilterOptionsAdp(period, scope, sort)
+
+fun FilterOptions.toWallet(): WalletFilterOptions = when (this) {
+    is WalletFilterOptionsAdp -> WalletFilterOptions(period, scope, sort)
+    else -> error("Wallet 화면에서 처리할 수 없는 FilterOptions 타입: $this")
+}
+
 // MyWalletScreen의 UI 상태
 data class MyWalletUiState(
     val transactions: List<WalletTransaction> = emptyList(),
-    val walletName: String = "내 통장",
+    val walletName: String = "내 통장", // TODO:월렛 이름 반영
     val totalBalance: String = "123,456,789 원",
     val searchQuery: String = "",
     val filters: WalletFilterOptions = WalletFilterOptions(),
@@ -84,7 +95,12 @@ class MyWalletViewModel : ViewModel() {
             Currency("CAD", "캐나다 달러"),
             Currency("AUD", "호주 달러")
         )
-        _uiState.update { it.copy(transactions = transactions, currencies = sampleCurrencies) }
+        _uiState.update {
+            it.copy(
+                transactions = transactions,
+                currencies = sampleCurrencies
+            )
+        }
     }
 
 

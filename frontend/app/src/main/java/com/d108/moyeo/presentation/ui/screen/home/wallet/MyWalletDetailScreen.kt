@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -50,7 +49,6 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         Text(
             text = transaction.description, // 이전 화면에서 전달받을 데이터
             style = Typography.titleLarge,
-            fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.height(Spacing.Medium))
@@ -98,7 +96,7 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         // 호리젠탈 디바이더
         HorizontalDivider()
         // "{저장된 카테고리}" 검색하기 가장 오른쪽엔 > 아이콘
-        SearchActionRow(text = "\"${uiState.selectedCategory}\" 검색하기", onClick = { /* TODO */ })
+        SearchActionRow(text = "\"${uiState.selectedCategory}\" 카테고리 검색하기", onClick = { /* TODO */ })
 
         // 그냥 여백
         Spacer(modifier = Modifier.weight(1f))

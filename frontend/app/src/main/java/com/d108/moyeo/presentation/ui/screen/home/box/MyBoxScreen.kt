@@ -4,10 +4,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -15,6 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -23,8 +25,11 @@ import androidx.navigation.NavController
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.ui.component.home.mybox.MyBoxCurrencyBottomSheet
-import com.d108.moyeo.presentation.ui.component.home.mybox.MyBoxFilterBottomSheet
+import com.d108.moyeo.presentation.theme.button
+import com.d108.moyeo.presentation.theme.onPrimaryLight
+import com.d108.moyeo.presentation.ui.component.home.CommonFilterBottomSheet
+import com.d108.moyeo.presentation.ui.component.home.CurrencyBottomSheet
+import com.d108.moyeo.presentation.ui.component.home.FilterOptions
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,7 +40,6 @@ fun MyBoxScreen(
     bgColor: Int?,  // 배경색을 위한 파라미터
     viewModel: MyBoxViewModel = viewModel()
 ) {
-
     // ViewModel의 상태를 구독
     val uiState by viewModel.uiState.collectAsState()
 
@@ -46,7 +50,7 @@ fun MyBoxScreen(
 
     // 잔액 클릭 시 열림
     if (uiState.showCurrencySheet) {
-        MyBoxCurrencyBottomSheet(
+        CurrencyBottomSheet(
             currencies = uiState.currencies,
             onItemSelected = viewModel::onCurrencySelected,
             onDismiss = viewModel::onCurrencySheetDismiss
@@ -55,100 +59,151 @@ fun MyBoxScreen(
 
     // 필터 클릭 시 열릴 바텀 시트
     if (uiState.showFilterSheet) {
-        MyBoxFilterBottomSheet(
-            initialFilters = uiState.filters,
-            onConfirm = viewModel::onFilterConfirm,
+        CommonFilterBottomSheet(
+            initialFilters = uiState.filters.toAdapter(),             // Box -> Adapter
+            onConfirm = { updated: FilterOptions ->
+                viewModel.onFilterConfirm(updated.toBox())           // Adapter -> Box
+            },
             onDismiss = viewModel::onFilterSheetDismiss
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = Spacing.Medium),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // 상단 정보 카드
-        TopBoxInfoCard(
-            boxName = uiState.boxName,
-            totalAmount = uiState.totalAmount,
-            backgroundColor = Color(bgColor!!),
-            onAmountClick = viewModel::onAmountClick
-        )
+    Scaffold { innerPadding ->
+        val layoutDir = LocalLayoutDirection.current
 
-        // 검색 및 필터 바 (MyWalletScreen의 구조 재사용)
-        SearchAndFilterBar(
-            searchQuery = uiState.searchQuery,
-            onSearchQueryChange = viewModel::onSearchQueryChanged,
-            filters = uiState.filters,
-            onFilterClick = viewModel::onFilterClick
-        )
-
-        // 거래 내역 목록
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    start = innerPadding.calculateLeftPadding(layoutDir),
+                    end = innerPadding.calculateRightPadding(layoutDir),
+                    bottom = innerPadding.calculateBottomPadding()
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            items(uiState.transactions) { transaction ->
-                BoxTransactionRowItem(transaction = transaction,
-                    onClick = {
-                        // AppScreen에 정의된 경로를 사용하여, 클릭된 transaction의 id를 전달합니다.
-                        navController.navigate(
-                            AppScreen.MyBoxDetail.route.replace("{transactionId}", transaction.id)
+            // 상단 정보 카드
+            TopBoxInfoSurface(
+                boxName = uiState.boxName,
+                totalAmount = uiState.totalAmount,
+                backgroundColor = Color(bgColor!!),
+                onAmountClick = viewModel::onAmountClick,
+                onBackClick = { /* TODO: 뒤로가기 로직 추가 */ }
+            )
+
+            // 검색 및 필터 바 (MyWalletScreen의 구조 재사용)
+            Column (
+                modifier = Modifier.padding(horizontal = Spacing.Medium)
+            ) {
+                SearchAndFilterBar(
+                    searchQuery = uiState.searchQuery,
+                    onSearchQueryChange = viewModel::onSearchQueryChanged,
+                    filters = uiState.filters,
+                    onFilterClick = viewModel::onFilterClick
+                )
+
+                // 거래 내역 목록
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(uiState.transactions) { transaction ->
+                        BoxTransactionRowItem(
+                            transaction = transaction,
+                            onClick = {
+                                // AppScreen에 정의된 경로를 사용하여, 클릭된 transaction의 id를 전달합니다.
+                                navController.navigate(
+                                    AppScreen.MyBoxDetail.route.replace("{transactionId}", transaction.id)
+                                )
+                            }
                         )
-                    })
-                HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+                    }
+                }
             }
+
         }
     }
 }
 // 상단 정보 카드 UI
 @Composable
-private fun TopBoxInfoCard(
+private fun TopBoxInfoSurface(
     boxName: String,
     totalAmount: String,
     backgroundColor: Color,
-    onAmountClick: () -> Unit
+    onAmountClick: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+            .height(300.dp),
+        tonalElevation = 0.dp,
+        color = backgroundColor,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(Spacing.Medium),
-            horizontalAlignment = Alignment.CenterHorizontally,
+//            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = boxName,
-                style = Typography.titleLarge,
-            )
-
-            Row(
-                modifier = Modifier.clickable { onAmountClick() },
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier.fillMaxWidth()
             ) {
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "뒤로가기"
+                    )
+                }
+
                 Text(
-                    text = totalAmount,
-                    style = Typography.displaySmall,
-                    fontWeight = FontWeight.Bold,
-                )
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = "화폐 선택"
+                    text = boxName,
+                    style = Typography.titleLarge,
+                    modifier = Modifier.align(Alignment.Center)
                 )
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Row (
+                    modifier = Modifier
+                        .clickable(
+                            role = Role.Button,
+                            onClick = onAmountClick,
+                        )
+                        .padding(Spacing.Small),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = totalAmount,
+                        style = Typography.displayLarge,
+                    )
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "화폐 선택"
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .align(Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(32.dp)
             ) {
                 Button(
                     onClick = { /*TODO*/ },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = button,
+                        contentColor = onPrimaryLight
+                    ),
                     modifier = Modifier.weight(1f),
                 ) {
                     Text("모으기") // 버튼 텍스트 수정
@@ -156,12 +211,18 @@ private fun TopBoxInfoCard(
 
                 Button(
                     onClick = { /*TODO*/ },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = button,
+                        contentColor = onPrimaryLight
+                    ),
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("정산하기") // 버튼 텍스트 수정
+
                 }
             }
         }
+
     }
 }
 
@@ -186,6 +247,7 @@ private fun SearchAndFilterBar(
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = Spacing.Small),
+            placeholder = { Text("검색", style = Typography.bodySmall) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { /* TODO: 검색 로직 */ }),
@@ -211,24 +273,34 @@ private fun SearchAndFilterBar(
 
 // 거래 내역 한 줄 UI
 @Composable
-private fun BoxTransactionRowItem(transaction: BoxTransaction, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = Spacing.Medium)
-            .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically
+private fun BoxTransactionRowItem(
+    transaction: BoxTransaction,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
+        color =  Color.Transparent,
+        tonalElevation = 0.dp,
     ) {
-        Text(transaction.date, style = Typography.bodyMedium, color = Color.Gray)
-        Spacer(modifier = Modifier.width(Spacing.Medium))
-        Text(
-            text = transaction.description,
-            style = Typography.bodyLarge,
-            modifier = Modifier.weight(1f)
-        )
-        Column(horizontalAlignment = Alignment.End) {
-            Text(transaction.amount, style = Typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-            Text(transaction.balance, style = Typography.bodySmall, color = Color.Gray)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Spacing.Large),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(transaction.date, style = Typography.bodyMedium, color = Color.Gray)
+            Spacer(modifier = Modifier.width(Spacing.Medium))
+            Text(
+                text = transaction.description,
+                style = Typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
+            Column(horizontalAlignment = Alignment.End) {
+                Text(transaction.amount, style = Typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                Text(transaction.balance, style = Typography.bodySmall, color = Color.Gray)
+            }
         }
+
     }
 }

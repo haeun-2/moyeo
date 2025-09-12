@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -21,17 +20,16 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.button
 import com.d108.moyeo.presentation.theme.onPrimaryLight
-import com.d108.moyeo.presentation.ui.component.home.mywallet.MyWalletCurrencyBottomSheet
-import com.d108.moyeo.presentation.ui.component.home.mywallet.MyWalletFilterBottomSheet
+import com.d108.moyeo.presentation.ui.component.home.CommonFilterBottomSheet
+import com.d108.moyeo.presentation.ui.component.home.CurrencyBottomSheet
+import com.d108.moyeo.presentation.ui.component.home.FilterOptions
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,7 +44,7 @@ fun MyWalletScreen(
 
     // 잔액 클릭 시 열릴 바텀 시트
     if (uiState.showCurrencySheet) {
-        MyWalletCurrencyBottomSheet(
+        CurrencyBottomSheet(
             currencies = uiState.currencies,
             onItemSelected = viewModel::onCurrencySelected,
             onDismiss = viewModel::onCurrencySheetDismiss
@@ -55,9 +53,11 @@ fun MyWalletScreen(
 
     // 필터 클릭 시 열릴 바텀 시트
     if (uiState.showFilterSheet) {
-        MyWalletFilterBottomSheet(
-            initialFilters = uiState.filters,
-            onConfirm = viewModel::onFilterConfirm,
+        CommonFilterBottomSheet(
+            initialFilters = uiState.filters.toAdapter(),                 // Wallet -> Adapter
+            onConfirm = { updated: FilterOptions ->
+                viewModel.onFilterConfirm(updated.toWallet())            // Adapter -> Wallet
+            },
             onDismiss = viewModel::onFilterSheetDismiss
         )
     }
@@ -88,7 +88,8 @@ fun MyWalletScreen(
             TopWalletInfoSurface(
                 walletName = uiState.walletName,
                 totalBalance = uiState.totalBalance,
-                onBalanceClick = viewModel::onBalanceClick
+                onBalanceClick = viewModel::onBalanceClick,
+                onBackClick = { /* TODO: 뒤로가기 로직 추가 */ }
             )
 
             Column(modifier = Modifier.padding(horizontal = Spacing.Medium)) {
@@ -106,9 +107,14 @@ fun MyWalletScreen(
                 ) {
                     // items 함수가 리스트를 받아 각 아이템을 transaction으로 전달해 줌
                     items(uiState.transactions) { transaction ->
-                        TransactionRowItem(transaction = transaction, onClick = {
-                            navController.navigate("my_wallet_detail/${transaction.id}")
-                        })
+                        TransactionRowItem(
+                            transaction = transaction,
+                            onClick = {
+                                navController.navigate(
+                                    "my_wallet_detail/${transaction.id}"
+                                )
+                            }
+                        )
                         HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
                     }
                 }
@@ -122,7 +128,9 @@ fun MyWalletScreen(
 private fun TopWalletInfoSurface(
     walletName: String,
     totalBalance: String,
-    onBalanceClick: () -> Unit) {
+    onBalanceClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -140,7 +148,7 @@ private fun TopWalletInfoSurface(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 IconButton(
-                    onClick = {/* TODO */},
+                    onClick = onBackClick,
                     modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     Icon(
@@ -236,7 +244,7 @@ private fun SearchAndFilterBar(
         // 남은 공간에는 검색용 인풋텍스트
         OutlinedTextField(
             value = searchQuery,
-            onValueChange = { onSearchQueryChange },
+            onValueChange = onSearchQueryChange,
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = Spacing.Small),
@@ -266,7 +274,10 @@ private fun SearchAndFilterBar(
 
 // 거래 내역 한 줄 UI
 @Composable
-private fun TransactionRowItem(transaction: WalletTransaction, onClick: () -> Unit) {
+private fun TransactionRowItem(
+    transaction: WalletTransaction,
+    onClick: () -> Unit
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,

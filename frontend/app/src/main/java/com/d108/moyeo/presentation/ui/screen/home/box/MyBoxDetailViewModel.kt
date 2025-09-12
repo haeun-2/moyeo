@@ -53,7 +53,9 @@ class MyBoxDetailViewModel : ViewModel() {
                 date = "09.${String.format("%02d", 15 - it)}",
                 description = if (it % 3 == 0) "김상훈" else if (it % 3 == 1) "이풍헌" else "박동찬",
                 amount = "+ 50,${String.format("%03d", it * 100)} JPY",
-                balance = "11${5 - it},${String.format("%03d", it * 100)} JPY"
+                balance = "11${5 - it},${String.format("%03d", it * 100)} JPY",
+                timestamp = "2025.09.${String.format("%02d", 10 - it)} 13:42",
+                category = if (it % 2 == 0) "여행" else "식/음료"
             )
         }
         return transactions.find { it.id == transactionId }
