@@ -16,3 +16,16 @@ services:
     container_name: moyeo-redis
     ports:
       - "6379:6379"
+
+  mysql:
+    image: mysql:latest
+    container_name: moyeo-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql               # 데이터 영구 저장
