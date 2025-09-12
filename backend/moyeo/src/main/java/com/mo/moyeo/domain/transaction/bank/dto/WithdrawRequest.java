@@ -7,5 +7,5 @@ import lombok.Getter;
 public class WithdrawRequest {
 
     @NotNull(message = "입금 금액은 필수입니다.")
-    private Long balance;
+    private Double balance;
 }

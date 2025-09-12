@@ -7,7 +7,8 @@ import lombok.Getter;
 @Getter
 @Builder
 @AllArgsConstructor
-public class DepositResponse {
+public class BankTransactionResponse {
 
     private Boolean isSuccess;
+    private String errorMessage;
 }

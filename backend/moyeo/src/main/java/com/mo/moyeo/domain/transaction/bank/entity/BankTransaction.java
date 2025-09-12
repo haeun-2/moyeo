@@ -37,8 +37,15 @@ public class BankTransaction {
     @Column(name = "status")
     private Status status = Status.PENDING;
 
+    @Column(name = "error_code")
+    private String errorCode;
+
     public void updateStatus(Status status) {
         this.status = status;
+    }
+
+    public void updateErrorCode(String errorCode) {
+        this.errorCode = errorCode;
     }
 
     public enum Status {

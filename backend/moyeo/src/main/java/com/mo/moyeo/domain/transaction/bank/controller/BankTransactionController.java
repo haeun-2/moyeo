@@ -23,17 +23,17 @@ public class BankTransactionController {
 
     @PostMapping("/deposit")
     @Operation(summary = "모여머니 충전", description = "연결계좌에서 출금하여 모여머니를 충전합니다.")
-    public ResponseEntity<DepositResponse> deposit(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody DepositRequest request) {
+    public ResponseEntity<BankTransactionResponse> deposit(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody DepositRequest request) {
 
-        DepositResponse response = bankTransactionService.charge(userDetails.getUser(), request);
+        BankTransactionResponse response = bankTransactionService.charge(userDetails.getUser(), request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/withdrawal")
     @Operation(summary = "모여머니 현금화", description = "박스에서 출금하여 연결계좌로 입금합니다.")
-    public ResponseEntity<WithdrawResponse> deposit(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody WithdrawRequest request) {
+    public ResponseEntity<BankTransactionResponse> deposit(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody WithdrawRequest request) {
 
-        WithdrawResponse response = bankTransactionService.discharge(userDetails.getUser(), request);
+        BankTransactionResponse response = bankTransactionService.discharge(userDetails.getUser(), request);
         return ResponseEntity.ok(response);
     }
 }
