@@ -12,6 +12,7 @@ import com.mo.moyeo.domain.transaction.bank.dto.WithdrawRequest;
 import com.mo.moyeo.domain.transaction.bank.entity.BankTransaction;
 import com.mo.moyeo.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BankApiService {
@@ -47,11 +49,14 @@ public class BankApiService {
     private String MOYEO_USER_KEY;
 
     private final String ENDPOINT = "updateDemandDepositAccountTransfer";
+    private final String FOREIGN_CURRENCY_URL = "foreignCurrency/";
+    private final String FOREIGN_CURRENCY_WITHDRAWAL_ENDPOINT = "updateForeignCurrencyDemandDepositAccountDeposit";
+    private final String FOREIGN_CURRENCY_DEPOSIT_ENDPOINT = "updateForeignCurrencyDemandDepositAccountWithdrawal";
 
     /**
      * 박스로 입금 (연결 계좌 -> 법인 계좌 -> 박스)
      */
-    public void deposit(User user, DepositRequest request, BankTransaction bankTransaction) {
+    public void deposit(User user, Double amount, BankTransaction bankTransaction) {
         String userKey = encryptionService.decrypt(user.getConnectedBankKey());
 
         BankTransferDTO dto = BankTransferDTO.builder()
@@ -59,7 +64,7 @@ public class BankApiService {
                 .depositTransactionSummary(String.format("user: %s", user.getName()))
                 .withdrawalAccountNo(user.getConnectedBankAccount())
                 .withdrawalTransactionSummary("모여")
-                .transactionBalance(request.getBalance())
+                .transactionBalance(amount)
                 .userKey(userKey)
                 .build();
 
@@ -69,13 +74,13 @@ public class BankApiService {
     /**
      * 박스에서 출금 (박스 -> 법인 계좌 -> 연결 계좌)
      */
-    public void withdraw(User user, WithdrawRequest request, BankTransaction bankTransaction) {
+    public void withdraw(User user, Double amount, BankTransaction bankTransaction) {
         BankTransferDTO transferRequestBody = BankTransferDTO.builder()
                 .depositAccountNo(user.getConnectedBankAccount())
                 .depositTransactionSummary("모여")
                 .withdrawalAccountNo(MOYEO_ACCOUNT)
                 .withdrawalTransactionSummary(String.format("user: %s", user.getName()))
-                .transactionBalance(request.getBalance())
+                .transactionBalance(amount)
                 .userKey(MOYEO_USER_KEY)
                 .build();
 
@@ -93,7 +98,6 @@ public class BankApiService {
 
         try {
             restTemplate.postForEntity(url, apiRequest, Map.class);
-            transaction.updateStatus(BankTransaction.Status.COMPLETED);
         } catch (HttpClientErrorException e) {
             // HTTP 4xx 에러의 응답 body 추출
             handleHttpClientError(e);
@@ -101,6 +105,49 @@ public class BankApiService {
             // HTTP 5xx 에러 처리
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "서버 오류: " + e.getStatusCode());
         } catch (Exception e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "거래 실패: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 법인 외화 계좌 입금
+     */
+    public void foreignCurrencyDeposit(String account, Double amount) {
+        executeForeignCurrencyTransfer(FOREIGN_CURRENCY_DEPOSIT_ENDPOINT, account, amount);
+    }
+
+    /**
+     * 법인 외화 계좌 출금
+     */
+    public void foreignCurrencyWithdraw(String account, Double amount) {
+        executeForeignCurrencyTransfer(FOREIGN_CURRENCY_WITHDRAWAL_ENDPOINT, account, amount);
+    }
+
+    /**
+     * 법인 외화 계좌 입/출금 작업
+     */
+    public void executeForeignCurrencyTransfer(String endpoint, String account, Double amount) {
+        String url = BASE_URL + DEMAND_DEPOSIT_URL + FOREIGN_CURRENCY_URL + endpoint;
+
+        Map<String, Object> requestBody = createApiRequestBody(endpoint, MOYEO_USER_KEY);
+        requestBody.put("accountNo", account);
+        requestBody.put("transactionBalance", amount);
+        requestBody.put("transactionSummary", "외화 <-> 외화");
+
+        HttpEntity<Map<String, Object>> apiRequest = createHttpEntity(requestBody);
+
+        try {
+            restTemplate.postForEntity(url, apiRequest, Map.class);
+        } catch (HttpClientErrorException e) {
+            // HTTP 4xx 에러의 응답 body 추출
+            log.debug(e.getMessage());
+            handleHttpClientError(e);
+        } catch (HttpServerErrorException e) {
+            // HTTP 5xx 에러 처리
+            log.debug(e.getMessage());
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "서버 오류: " + e.getStatusCode());
+        } catch (Exception e) {
+            log.debug(e.getMessage());
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "거래 실패: " + e.getMessage());
         }
     }

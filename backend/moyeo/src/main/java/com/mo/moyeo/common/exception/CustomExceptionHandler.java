@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
@@ -62,6 +63,13 @@ public class CustomExceptionHandler {
         return ErrorResponse.toResponseEntity(errorCode);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    protected ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException e, HttpServletRequest request) {
+
+        CustomException customException = new CustomException(ErrorCode.BAD_REQUEST, "잘못된 JSON 형식입니다");
+        return handleCustomException(customException, request);
+    }
+
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ErrorResponse> handleException(Exception e, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
@@ -70,8 +78,6 @@ public class CustomExceptionHandler {
         log.error("예외 타입: {}", e.getClass().getSimpleName());
         log.error("예외 메시지: {}", e.getMessage(), e);
         log.error("요청 URL: {}", requestURI);
-
-        ErrorCode errorCode;
 
         return ErrorResponse.toResponseEntity(ErrorCode.INTERNAL_SERVER_ERROR);
     }

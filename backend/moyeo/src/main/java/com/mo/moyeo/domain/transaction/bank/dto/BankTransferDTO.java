@@ -11,7 +11,7 @@ public class BankTransferDTO {
 
     private String depositAccountNo;
     private String depositTransactionSummary;
-    private Long transactionBalance;
+    private Double transactionBalance;
     private String withdrawalAccountNo;
     private String withdrawalTransactionSummary;
     private String userKey;
