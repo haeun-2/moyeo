@@ -24,7 +24,7 @@ public class BoxHistoryController {
     @GetMapping
     public ResponseEntity<PageResponse<TransactionResponse>> getTransactions(
             @PathVariable Long boxId,
-            @RequestParam TransactionSearchCondition request
+            @Valid @ModelAttribute TransactionSearchCondition request
     ) {
         PageResponse<TransactionResponse> response = boxHistoryService.getTransactions(boxId, request);
         return ResponseEntity.ok(response);

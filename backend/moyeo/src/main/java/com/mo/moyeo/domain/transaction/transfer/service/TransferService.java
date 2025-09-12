@@ -11,6 +11,7 @@ import com.mo.moyeo.domain.box.service.BoxService;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.service.CurrencyService;
 import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
+import com.mo.moyeo.domain.transaction.history.service.BoxHistoryService;
 import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import com.mo.moyeo.domain.transaction.transaction.service.TransactionService;
 import com.mo.moyeo.domain.transaction.transfer.dto.TransferRequest;
@@ -35,6 +36,7 @@ public class TransferService {
     private final CurrencyService currencyService;
     private final BoxBalanceService boxBalanceService;
     private final BatchInsert batchInsert;
+    private final BoxHistoryService boxHistoryService;
 
     public void transfer(User user, TransferRequest request) {
         // 요청 검증
@@ -74,6 +76,7 @@ public class TransferService {
                 .totalAmount(fromBoxBalance.getBalance())
                 .title(toBox.getBoxName())
                 .type(Transaction.Type.TRANSFER)
+                .createdAt(transaction.getCreatedAt())
                 .build();
 
         BoxHistory toHistory = BoxHistory.builder()
@@ -84,9 +87,11 @@ public class TransferService {
                 .totalAmount(toBoxBalance.getBalance())
                 .title(fromBox.getBoxName())
                 .type(Transaction.Type.TRANSFER)
+                .createdAt(transaction.getCreatedAt())
                 .build();
 
-        batchInsert.saveBatch(List.of(fromHistory, toHistory));
+        boxHistoryService.saveHistory(fromHistory);
+        boxHistoryService.saveHistory(toHistory);
     }
 
     private void validatePermission(User user, Box box) {
