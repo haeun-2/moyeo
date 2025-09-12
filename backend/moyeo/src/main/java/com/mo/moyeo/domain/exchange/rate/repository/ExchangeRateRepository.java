@@ -1,6 +1,7 @@
 package com.mo.moyeo.domain.exchange.rate.repository;
 
 import com.mo.moyeo.domain.currency.entity.Currency;
+import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.exchange.rate.dto.ExchangeRateHistoryDto;
 import com.mo.moyeo.domain.exchange.rate.entity.ExchangeRate;
 import io.lettuce.core.dynamic.annotation.Param;
@@ -15,13 +16,16 @@ import java.util.List;
 public interface ExchangeRateRepository extends JpaRepository<ExchangeRate, Long> {
     void deleteByRecordedAtBefore(LocalDateTime dateTime);
 
-    @Query("""
-            select new com.mo.moyeo.domain.exchange.rate.dto.ExchangeRateHistoryDto(
-                er.buyRate, er.sellRate, er.originalRate, er.recordedAt
-            )
-            from exchange_rates er
-            where er.currency= :currency
-            order by er.recordedAt asc
-            """)
-    List<ExchangeRateHistoryDto> getExchangeRateByCurrency(@Param("currency") Currency currency);
+    @Query(value = """
+        SELECT
+            DATE_FORMAT(er.recorded_at, :timeFormat) AS period,
+            AVG(er.buy_rate) AS buyRate,
+            AVG(er.sell_rate) AS sellRate,
+            AVG(er.original_rate) AS originalRate
+        FROM exchange_rates er
+        WHERE er.currency_code = :currencyType
+        GROUP BY DATE_FORMAT(er.recorded_at, :timeFormat)
+        ORDER BY period
+    """, nativeQuery = true)
+    List<ExchangeRateProjection> getExchangeRateStatisticsByCurrency(String timeFormat,  CurrencyType currencyType);
 }

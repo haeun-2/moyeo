@@ -115,8 +115,26 @@ public class ExchangeRateService {
         return restTemplate.postForObject(exchangeRateUrl, requestEntity, ExchangeRateResponse.class);
     }
 
-    public List<ExchangeRateHistoryDto> getHistory(CurrencyType currencyType) {
-        Currency currency = currencyRepository.getReferenceById(currencyType);
-        return exchangeRateRepository.getExchangeRateByCurrency(currency);
+    public List<ExchangeRateHistoryDto> getHistory(String unit, CurrencyType currencyType) {
+        String timeFormat;
+        if ("10m".equals(unit)) {
+            timeFormat = "%Y-%m-%d %H:%i";
+        } else if ("1h".equals(unit)) {
+            timeFormat = "%Y-%m-%d %H:00:00";
+        } else if ("1d".equals(unit)) {
+            timeFormat = "%Y-%m-%d";
+        } else {
+            timeFormat = "%Y-%m-%d %H:%i";
+        }
+
+        return exchangeRateRepository.getExchangeRateStatisticsByCurrency(timeFormat, currencyType)
+                .stream()
+                .map(proj -> new ExchangeRateHistoryDto(
+                        proj.getBuyRate(),
+                        proj.getSellRate(),
+                        proj.getOriginalRate(),
+                        proj.getPeriod()
+                ))
+                .toList();
     }
 }
