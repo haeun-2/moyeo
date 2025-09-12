@@ -14,8 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.errorLight
+import com.d108.moyeo.presentation.theme.primaryLight
 import com.d108.moyeo.presentation.ui.component.CustomKeypad
 import com.d108.moyeo.presentation.ui.component.KeyMode
 import com.d108.moyeo.presentation.ui.component.KeypadKey
@@ -97,14 +99,14 @@ private fun PinContentLayout(
 // PIN 입력 상태를 보여주는 6개의 점
 @Composable
 private fun PinDisplay(pinLength: Int) {
-    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.Medium)) {
         repeat(6) { index ->
             val isFilled = index < pinLength
             Box(
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(Spacing.Large)
                     .background(
-                        color = if (isFilled) MaterialTheme.colorScheme.primary else Color.Gray.copy(alpha = 0.3f),
+                        color = if (isFilled) primaryLight else Color.Gray.copy(alpha = 0.3f),
                         shape = CircleShape
                     )
             )

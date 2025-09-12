@@ -3,6 +3,7 @@ package com.d108.moyeo.presentation.ui.screen.home.sending
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -23,7 +24,12 @@ data class SendingUiState(
     val currency: String = "",
     val targetBox: String = "",
     val howMuch: String = "",
-    val pin: String = ""
+    val pin: String = "",
+
+    // PIN 검증을 위한 상태
+    val pinFailureCount: Int = 0,
+    val isPinLocked: Boolean = false,
+    val pinError: String? = null
 )
 
 sealed class SendingNavEvent {
@@ -36,6 +42,10 @@ class SendingViewModel(
     // NavHost에서 전달해준 파라미터('currencyId')를 받기 위해 SavedStateHandle를 사용
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    // TODO: 임시 정답 핀을 찐핀으로 바꾸기
+    // 임시 정답 PIN 추가
+    private val correctPin = "111111"
 
 
     private val _uiState = MutableStateFlow(SendingUiState())
@@ -51,6 +61,12 @@ class SendingViewModel(
      */
     private val _navigationEvent = MutableSharedFlow<SendingNavEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
+
+    // TODO: (1/2) ViewModel이 생성될 때, DataStore를 확인하여
+    //  - 현재 PIN이 잠금 상태인지,
+    //  - 잠겼다면 남은 시간은 몇 초인지 확인하는 로직이 필요합니다.
+    //  - val remainingLockTime = checkPinLockStatusUseCase()
+    //  - if (remainingLockTime > 0) { _uiState.update { it.copy(isPinLocked = true, ...) } }
 
     // ViewModel이 처음 생성될 때 실행되는 초기화 블록
     init {
@@ -125,12 +141,53 @@ class SendingViewModel(
      * 핀 입력 검사
      **/
 
-    fun onPinChanged(pin: String) {
-        // TODO: 6자리 등 PIN 길이에 대한 유효성 검사 추가 가능
-        _uiState.update { it.copy(pin = pin) }
+    // TODO: 실제 핀이랑 일치하는지 여부 및 5회 틀리면 잠금 기능 추가. 임시데이터로 비교해보자.
+    fun onPinInput(digit: String) {
+        if (_uiState.value.pin.length < 6) {
+            _uiState.update { it.copy(pin = it.pin + digit) }
+        }
     }
 
+    fun onPinBackspace() {
+        _uiState.update { it.copy(pin = it.pin.dropLast(1)) }
+    }
 
+    fun onPinClear() {
+        _uiState.update { it.copy(pin = "") }
+    }
+
+    private fun checkPin() {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState.pin == correctPin) {
+                // PIN 검증 성공
+                _uiState.update { it.copy(pinFailureCount = 0, pinError = null) }
+                onPinSucceeded()
+            } else {
+                // PIN 검증 실패
+                val newFailureCount = currentState.pinFailureCount + 1
+                if (newFailureCount >= 3) {
+                    // 3회 이상 실패 시 잠금
+                    _uiState.update {
+                        it.copy(
+                            isPinLocked = true,
+                            pinError = "PIN 3회 오류로 잠겼습니다.",
+                            pin = ""
+                        )
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            pinFailureCount = newFailureCount,
+                            pinError = "PIN이 일치하지 않습니다. (남은 횟수: ${3 - newFailureCount}회)"
+                        )
+                    }
+                    delay(1000L) // 1초 후 입력 필드 초기화
+                    onPinClear()
+                }
+            }
+        }
+    }
 
     fun onPinSucceeded() {
         // TODO: 실제 서버에 이체 요청 API 호출
@@ -170,10 +227,9 @@ class SendingViewModel(
                 skipBiometrics()  // 스킵하고 핀 인증
             }
             SendingStep.PIN -> {
-                // TODO: 입력된 PIN(_uiState.value.pin)이 올바른지 검증
-                // PIN 검증 성공 시, 실제 서버에 이체 요청 API 호출
-                // API 호출 성공 시 FINISH 단계로 이동
-                _uiState.update { it.copy(currentStep = SendingStep.FINISH) }
+                if (!_uiState.value.isPinLocked) {
+                    checkPin() // PIN 검증 로직 호출
+                }
             }
             SendingStep.FINISH -> {
                 // 완료 화면에서 버튼을 누르면 화면 닫기
