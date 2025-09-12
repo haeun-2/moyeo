@@ -32,6 +32,9 @@ public class SwaggerConfig {
                 .components(new Components().addSecuritySchemes("Bearer Token", securityScheme)) // 모든 API에 토큰을 적용
                 .servers(List.of(
                         new io.swagger.v3.oas.models.servers.Server()
+                                .url("http://j13d108.p.ssafy.io:8080")
+                                .description("Server (HTTP)"),
+                        new io.swagger.v3.oas.models.servers.Server()
                                 .url("http://localhost:8080")
                                 .description("Localhost (HTTP)")
                 ));
