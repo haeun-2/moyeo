@@ -27,6 +27,17 @@ public class TransactionService {
         return transactionRepository.save(transaction);
     }
 
+    public Transaction makeExchangeReservationTransaction(Box box, User user){
+        Transaction transaction = Transaction.builder()
+                .toBox(box)
+                .fromBox(box)
+                .user(user)
+                .transactionType(Transaction.Type.EXCHANGE_RESERVATION)
+                .uuid(UUID.randomUUID().toString().replace("-", "").substring(0, 20))
+                .build();
+        return transactionRepository.save(transaction);
+    }
+
     public Transaction makeTransferTransaction(Box fromBox, Box toBox, User user){
         Transaction transaction = Transaction.builder()
                 .toBox(toBox)
