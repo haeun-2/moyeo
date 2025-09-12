@@ -116,7 +116,7 @@ fun SendingScreen(navController: NavController,
                     selectedBoxId = uiState.targetBox,
                     onBoxSelect = viewModel::onTargetBoxSelected
                 )
-                SendingStep.HOW_MUCH -> HowMuchContent() // TODO: 구현 필요
+                SendingStep.HOW_MUCH -> HowMuchContent(viewModel = viewModel)
                 SendingStep.BIOMETRIC -> BiometricContent() // TODO: 구현 필요
                 SendingStep.PIN -> PinContent() // TODO: 구현 필요
                 SendingStep.FINISH -> FinishContent() // TODO: 구현 필요
