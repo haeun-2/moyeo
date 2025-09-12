@@ -19,8 +19,7 @@ public interface BoxHistoryRepository extends JpaRepository<BoxHistory, Long>, B
             abs(sum(bh.amount))
         )
         FROM BoxHistory bh
-        JOIN bh.transaction t
-        JOIN t.category c
+        JOIN bh.category c
         WHERE bh.box.id = :boxId
           AND bh.amount < 0
           AND bh.currencyCode = :currencyCode

@@ -2,7 +2,6 @@ package com.mo.moyeo.domain.transaction.transfer.service;
 
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
-import com.mo.moyeo.common.util.batch.BatchInsert;
 import com.mo.moyeo.domain.box.entity.Box;
 import com.mo.moyeo.domain.box.entity.BoxBalance;
 import com.mo.moyeo.domain.box.service.BoxBalanceService;
@@ -22,8 +21,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -35,7 +32,6 @@ public class TransferService {
     private final TransactionService transactionService;
     private final CurrencyService currencyService;
     private final BoxBalanceService boxBalanceService;
-    private final BatchInsert batchInsert;
     private final BoxHistoryService boxHistoryService;
 
     public void transfer(User user, TransferRequest request) {

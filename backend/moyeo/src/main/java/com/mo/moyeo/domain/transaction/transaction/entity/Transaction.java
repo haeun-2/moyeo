@@ -41,25 +41,9 @@ public class Transaction {
     @Column(name = "transaction_type", nullable = false)
     private Type transactionType;
 
-    @Column(name = "memo", length = 255)
-    private String memo;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    public void update(String memo, Category category) {
-        if (memo != null) {
-            this.memo = memo;
-        }
-        if (category != null) {
-            this.category = category;
-        }
-    }
 
     public enum Type {
         EXCHANGE, PAYMENT, DEPOSIT, WITHDRAW, TRANSFER, EXCHANGE_RESERVATION

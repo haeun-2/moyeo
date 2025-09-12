@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/boxes/{boxId}/stats")
+@RequestMapping("/api/boxes/{boxId}/transactions/stats")
 @Tag(name = "BoxStatisticsController", description = "박스 통계 조회 API")
 public class BoxStatisticsController {
 
@@ -26,8 +26,8 @@ public class BoxStatisticsController {
     @GetMapping("/categories")
     public ResponseEntity<BoxStatisticsResponse> getCategoryStatistics(
             @PathVariable Long boxId,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
             @RequestParam CurrencyType currency
     ) {
         BoxStatisticsResponse response = boxStatisticsService.getCategoryStatistics(boxId, startDate, endDate, currency);

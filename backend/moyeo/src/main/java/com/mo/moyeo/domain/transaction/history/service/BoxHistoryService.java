@@ -5,13 +5,11 @@ import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.common.paging.PageResponse;
 import com.mo.moyeo.domain.transaction.category.entity.Category;
 import com.mo.moyeo.domain.transaction.category.repository.CategoryRepository;
-import com.mo.moyeo.domain.transaction.history.dto.TransactionUpdateRequest;
-import com.mo.moyeo.domain.transaction.history.dto.TransactionSearchCondition;
 import com.mo.moyeo.domain.transaction.history.dto.TransactionResponse;
+import com.mo.moyeo.domain.transaction.history.dto.TransactionSearchCondition;
+import com.mo.moyeo.domain.transaction.history.dto.TransactionUpdateRequest;
 import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
 import com.mo.moyeo.domain.transaction.history.repository.BoxHistoryRepository;
-import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
-import com.mo.moyeo.domain.transaction.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -23,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class BoxHistoryService {
 
     private final BoxHistoryRepository boxHistoryRepository;
-    private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
 
     public PageResponse<TransactionResponse> getTransactions(Long boxId, TransactionSearchCondition request) {
@@ -32,15 +29,14 @@ public class BoxHistoryService {
     }
 
     @Transactional
-    public void updateTransactionCategory(Long transactionId, TransactionUpdateRequest request) {
-        Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND, "거래내역을 찾을 수 없습니다."));
-
+    public void updateTransaction(Long historyId, TransactionUpdateRequest request) {
         Category category = null;
         if (request.getCategoryId() != null) {
             category = categoryRepository.findById(request.getCategoryId()).orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST, "잘못된 카테고리 입니다."));
         }
 
-        transaction.update(request.getMemo(), category);
+        BoxHistory boxHistory = boxHistoryRepository.findById(historyId).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+        boxHistory.update(request.getMemo(), category);
     }
 
     public void saveHistory(BoxHistory boxHistory){
