@@ -19,14 +19,14 @@ public class UserController {
     private final AuthService authService;
 
     @PostMapping("/test")
-    @Operation(summary = "유저 2번 access token발급", description = "스웨거 테스트용 기능입니다.")
+    @Operation(summary = "유저 3번 access token발급", description = "스웨거 테스트용 기능입니다.")
     public ResponseEntity<?> test() {
-        return ResponseEntity.ok(authService.tempLogin(2L));
+        return ResponseEntity.ok(authService.tempLogin(3L));
     }
 
     @PostMapping("/test2")
-    @Operation(summary = "유저 3번 access token발급", description = "스웨거 테스트용 기능입니다.")
+    @Operation(summary = "유저 4번 access token발급", description = "스웨거 테스트용 기능입니다.")
     public ResponseEntity<?> test2() {
-        return ResponseEntity.ok(authService.tempLogin(3L));
+        return ResponseEntity.ok(authService.tempLogin(4L));
     }
 }
