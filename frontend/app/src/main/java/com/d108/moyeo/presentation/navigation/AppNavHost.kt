@@ -18,6 +18,7 @@ import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletDetailScreen
 import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletScreen
 import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxDetailScreen
+import com.d108.moyeo.presentation.ui.screen.home.charging.ChargingScreen
 import com.d108.moyeo.presentation.ui.screen.home.sending.SendingScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
@@ -126,6 +127,11 @@ fun AppNavHost(
             // SendingViewModel은 hiltViewModel() 또는 viewModel()을 통해
             // 자동으로 SavedStateHandle을 주입받아 currencyId를 꺼내 사용
             SendingScreen(navController = navController)
+        }
+
+        // 페이머니 충전 화면
+        composable(route = AppScreen.Charging.route) {
+            ChargingScreen(navController = navController)
         }
 
 

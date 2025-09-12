@@ -56,6 +56,11 @@ sealed class AppScreen(
         fun createRoute(currencyId: String) = "sending/$currencyId"
     }
 
+    // 충전화 관련된 화면
+    object Charging: AppScreen(route = "charging", title = "충전")
+
+
+
     // 환율 스크린 관련
     object Exchange: AppScreen(route = "exchange", title = "환율", iconResId = R.drawable.outline_currency_exchange_24)
 

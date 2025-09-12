@@ -52,6 +52,9 @@ fun MyWalletScreen(
                         AppScreen.Sending.route.replace("{currencyId}", event.currencyCode)  // 라우트 확인
                     )
                 }
+                is WalletNavigationEvent.NavigateToCharging -> {
+                    navController.navigate(AppScreen.Charging.route)
+                }
             }
         }
     }
@@ -80,7 +83,7 @@ fun MyWalletScreen(
     Scaffold(
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { /* TODO: 충전하기 로직 */ },
+                onClick = viewModel::onChargingClick,  // 여기에서 충전하기 화면으로 이동
                 icon = { Icon(Icons.Default.Add, "충전 아이콘") },
                 text = { Text(text = "충전") }
             )
