@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/banks")
+@RequestMapping("/api/banks/info")
 @Tag(name = "BankController", description = "은행 관련 기능을 제공합니다.")
 public class BankController {
 

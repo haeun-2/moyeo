@@ -1,8 +1,6 @@
 package com.mo.moyeo.domain.transaction.transaction.service;
 
 import com.mo.moyeo.domain.box.entity.Box;
-import com.mo.moyeo.domain.currency.service.CurrencyService;
-import com.mo.moyeo.domain.transaction.exchange.dto.ExchangeRequestDto;
 import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import com.mo.moyeo.domain.transaction.transaction.repository.TransactionRepository;
 import com.mo.moyeo.domain.user.entity.User;
@@ -27,18 +25,18 @@ public class TransactionService {
         return transactionRepository.save(transaction);
     }
 
-    public Transaction makeExchangeReservationTransaction(Box box, User user){
+    public Transaction makeDepositTransaction(Box box, User user) {
         Transaction transaction = Transaction.builder()
                 .toBox(box)
-                .fromBox(box)
                 .user(user)
-                .transactionType(Transaction.Type.EXCHANGE_RESERVATION)
+                .transactionType(Transaction.Type.DEPOSIT)
                 .uuid(UUID.randomUUID().toString().replace("-", "").substring(0, 20))
                 .build();
         return transactionRepository.save(transaction);
     }
 
     public Transaction makeTransferTransaction(Box fromBox, Box toBox, User user){
+
         Transaction transaction = Transaction.builder()
                 .toBox(toBox)
                 .fromBox(fromBox)
@@ -48,7 +46,18 @@ public class TransactionService {
                 .build();
         return transactionRepository.save(transaction);
     }
-    
+
+    public Transaction makeWithdrawalTransaction(Box box, User user) {
+        Transaction transaction = Transaction.builder()
+                .fromBox(box)
+                .user(user)
+                .transactionType(Transaction.Type.WITHDRAW)
+                .uuid(UUID.randomUUID().toString().replace("-", "").substring(0, 20))
+                .build();
+
+        return transactionRepository.save(transaction);
+    }
+
     public Transaction makeExchangeReservationTransaction(Box box, User user){
         Transaction transaction = Transaction.builder()
                 .toBox(box)
@@ -59,5 +68,4 @@ public class TransactionService {
                 .build();
         return transactionRepository.save(transaction);
     }
-
 }

@@ -22,13 +22,13 @@ public class AccountConnectionService {
     @Value("${moyeo.api.base_url}")
     private String BASE_URL;
 
-    @Value("${moyeo.api.user_search_endpoint}")
+    @Value("${moyeo.api.endpoint.user_search}")
     private String USER_SEARCH_ENDPOINT;
 
-    @Value("${moyeo.api.open_auth_endpoint}")
+    @Value("${moyeo.api.endpoint.open_auth}")
     private String OPEN_AUTH_ENDPOINT;
 
-    @Value("${moyeo.api.check_auth_endpoint}")
+    @Value("${moyeo.api.endpoint.check_auth}")
     private String CHECK_AUTH_ENDPOINT;
 
     private final RestTemplate restTemplate;
