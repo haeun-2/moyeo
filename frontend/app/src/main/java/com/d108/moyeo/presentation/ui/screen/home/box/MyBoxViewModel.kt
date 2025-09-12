@@ -2,7 +2,9 @@ package com.d108.moyeo.presentation.ui.screen.home.box
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.d108.moyeo.presentation.ui.component.home.mywallet.Currency
+import com.d108.moyeo.presentation.ui.component.home.BoxFilterOptionsAdp
+import com.d108.moyeo.presentation.ui.component.home.FilterOptions
+import com.d108.moyeo.presentation.ui.component.home.Currency
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -14,7 +16,9 @@ data class BoxTransaction(
     val date: String,
     val description: String,
     val amount: String,
-    val balance: String
+    val balance: String,
+    val timestamp: String,
+    val category: String
 )
 
 //필터 옵션을 위한 데이터 클래스
@@ -23,6 +27,15 @@ data class BoxFilterOptions(
     val scope: String = "전체",
     val sort: String = "최신"
 )
+
+// 변환 확장 함수
+fun BoxFilterOptions.toAdapter(): BoxFilterOptionsAdp =
+    BoxFilterOptionsAdp(period, scope, sort)
+
+fun FilterOptions.toBox(): BoxFilterOptions = when (this) {
+    is BoxFilterOptionsAdp -> BoxFilterOptions(period, scope, sort)
+    else -> error("Box 화면에서 처리할 수 없는 FilterOptions 타입: $this")
+}
 
 // MyBoxScreen의 UI 상태를 담는 데이터 클래스
 data class MyBoxUiState(
@@ -72,7 +85,9 @@ class MyBoxViewModel : ViewModel() {
                 date = "09.${String.format("%02d", 15 - it)}",
                 description = if (it % 3 == 0) "김상훈" else if (it % 3 == 1) "이풍헌" else "박동찬",
                 amount = "+ 50,${String.format("%03d", it * 100)} JPY",
-                balance = "11${5 - it},${String.format("%03d", it * 100)} JPY"
+                balance = "11${5 - it},${String.format("%03d", it * 100)} JPY",
+                timestamp = "2025.09.${String.format("%02d", 10 - it)} 13:42",
+                category = if (it % 2 == 0) "여행" else "식/음료"
             )
         }
 
