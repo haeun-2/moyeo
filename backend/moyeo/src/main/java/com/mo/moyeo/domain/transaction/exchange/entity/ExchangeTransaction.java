@@ -19,7 +19,7 @@ public class ExchangeTransaction {
     @Column(name = "exchange_transaction_id")
     private Long id;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_id")
     private Transaction transaction;
 
