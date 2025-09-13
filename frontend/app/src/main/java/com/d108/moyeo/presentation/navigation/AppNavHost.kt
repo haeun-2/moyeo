@@ -18,6 +18,7 @@ import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletDetailScreen
 import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletScreen
 import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxDetailScreen
+import com.d108.moyeo.presentation.ui.screen.home.box.collecting.CollectingScreen
 import com.d108.moyeo.presentation.ui.screen.home.charging.ChargingScreen
 import com.d108.moyeo.presentation.ui.screen.home.sending.SendingScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
@@ -134,7 +135,23 @@ fun AppNavHost(
             ChargingScreen(navController = navController)
         }
 
-
+        // 모으기 화면
+        composable(
+            route = AppScreen.Collecting.route,
+            arguments = listOf(
+                navArgument("boxId") { type = NavType.StringType },
+                // currencyCode는 null일 수 있는 선택적 인자임을 정의
+                navArgument("currencyCode") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = "KRW"
+                }
+            )
+        ) { backStackEntry ->
+            // CollectingScreen은 ViewModel에서 SavedStateHandle을 통해 boxId를 직접 받으므로,
+            // 여기서 따로 전달해 줄 필요는 없습니다.
+            CollectingScreen(navController = navController)
+        }
 
         // 환율 화면
         composable(AppScreen.Exchange.route) {

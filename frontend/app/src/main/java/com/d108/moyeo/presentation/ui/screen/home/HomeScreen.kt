@@ -56,6 +56,10 @@ fun HomeScreen(navController: NavController,
                 is HomeNavigationEvent.NavigateToSending -> {
                     navController.navigate(AppScreen.Sending.createRoute(event.currencyId))
                 }
+
+                is HomeNavigationEvent.NavigateToCollecting -> {
+                    navController.navigate(AppScreen.Collecting.createRoute(event.BoxId, event.currencyId))
+                }
             }
         }
     }
@@ -106,7 +110,7 @@ fun HomeScreen(navController: NavController,
                 items(uiState.groups) { item ->
                     GroupBoxCard(
                         data = item,
-                        onDepositClick = { /* TODO: 입금 */ },
+                        onDepositClick = { viewModel.onDepositClick(item.id) },
                         onMoreClick = { /* TODO: 메뉴 */ },
                         onColumnClick = { viewModel.onGroupBoxClick(item.id) }
                     )

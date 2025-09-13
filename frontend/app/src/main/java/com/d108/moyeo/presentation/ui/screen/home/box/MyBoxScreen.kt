@@ -48,6 +48,16 @@ fun MyBoxScreen(
         viewModel.loadBoxDetails(boxId)
     }
 
+    LaunchedEffect(key1 = true) {  // 내비게이션 이벤트 구독 및 처리
+        viewModel.navigationEvent.collect { event ->
+            when(event) {
+                is MyBoxNavigationEvent.NavigateToCollecting -> {
+                    navController.navigate(AppScreen.Collecting.createRoute(event.boxId, event.currencyCode)) // 원하는 currency 전달
+                }
+            }
+        }
+    }
+
     // 잔액 클릭 시 열림
     if (uiState.showCurrencySheet) {
         CurrencyBottomSheet(
@@ -87,7 +97,8 @@ fun MyBoxScreen(
                 totalAmount = uiState.totalAmount,
                 backgroundColor = Color(bgColor!!),
                 onAmountClick = viewModel::onAmountClick,
-                onBackClick = { /* TODO: 뒤로가기 로직 추가 */ }
+                onBackClick = { /* TODO: 뒤로가기 로직 추가 */ },
+                onCollectingClick = viewModel::onCollectingClick
             )
 
             // 검색 및 필터 바 (MyWalletScreen의 구조 재사용)
@@ -131,6 +142,7 @@ private fun TopBoxInfoSurface(
     backgroundColor: Color,
     onAmountClick: () -> Unit,
     onBackClick: () -> Unit,
+    onCollectingClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -199,7 +211,7 @@ private fun TopBoxInfoSurface(
                 horizontalArrangement = Arrangement.spacedBy(32.dp)
             ) {
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = onCollectingClick,  // 이 모으기 버튼 클릭했을 때 할 일을 할 거야
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
                         contentColor = onPrimaryLight
