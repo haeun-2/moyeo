@@ -35,6 +35,7 @@ public class BoxHistoryRepositoryCustomImpl implements BoxHistoryRepositoryCusto
         // 쿼리 실행
         List<BoxHistory> result = jpaQueryFactory
                 .selectFrom(boxHistory)
+                .join(boxHistory.transaction).fetchJoin()  // 🚀 fetch join 추가
                 .where(whereCondition(boxId, condition))
                 .orderBy(order(condition.getSortDir()), boxHistory.id.desc())
                 .offset(pageable.getOffset())

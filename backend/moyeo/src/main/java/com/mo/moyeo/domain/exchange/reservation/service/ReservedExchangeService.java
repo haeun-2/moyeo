@@ -53,9 +53,11 @@ public class ReservedExchangeService {
         validateCondition(user, exchangeReserveDto, box);
 
         //예약 환전 저장
+        Transaction transaction = transactionService.makeExchangeReservationTransaction(box, user);
         ReservedExchange reservedExchange =
                 ReservedExchange.builder()
                         .box(box)
+                        .transaction(transaction)
                         .fromCurrency(fromCurrency)
                         .toCurrency(toCurrency)
                         .targetRate(exchangeReserveDto.targetRate())
@@ -71,7 +73,6 @@ public class ReservedExchangeService {
         fromBoxBalance.decreaseBalance(amount);
 
         //트랜잭션 및 내역 저장
-        Transaction transaction = transactionService.makeExchangeReservationTransaction(box, user);
         BoxHistory boxHistory = BoxHistory.builder()
                 .box(box)
                 .transaction(transaction)
@@ -80,6 +81,7 @@ public class ReservedExchangeService {
                 .totalAmount(fromBoxBalance.getBalance())
                 .title("예약 환전")
                 .type(Transaction.Type.EXCHANGE_RESERVATION)
+                .createdAt(transaction.getCreatedAt())
                 .build();
 
         boxHistoryService.saveHistory(boxHistory);
@@ -131,6 +133,7 @@ public class ReservedExchangeService {
                 .totalAmount(fromBoxBalance.getBalance())
                 .title("예약 환전 취소")
                 .type(Transaction.Type.EXCHANGE_RESERVATION)
+                .createdAt(transaction.getCreatedAt())
                 .build();
         boxHistoryService.saveHistory(boxHistory);
     }

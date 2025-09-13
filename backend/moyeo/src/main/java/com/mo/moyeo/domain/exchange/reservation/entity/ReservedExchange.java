@@ -2,6 +2,7 @@ package com.mo.moyeo.domain.exchange.reservation.entity;
 
 import com.mo.moyeo.domain.box.entity.Box;
 import com.mo.moyeo.domain.currency.entity.Currency;
+import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import com.mo.moyeo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -58,6 +59,10 @@ public class ReservedExchange {
     @Column(name = "status")
     @Builder.Default
     private Status status = Status.WAITING;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_id", nullable = false)
+    private Transaction transaction;
 
     public void cancelReservation() {
         this.status = Status.CANCELLED;

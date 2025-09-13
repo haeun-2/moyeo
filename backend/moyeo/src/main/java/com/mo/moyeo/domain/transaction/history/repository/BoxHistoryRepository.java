@@ -3,12 +3,14 @@ package com.mo.moyeo.domain.transaction.history.repository;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
 import com.mo.moyeo.domain.transaction.statistics.dto.CategoryStatisticsDto;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface BoxHistoryRepository extends JpaRepository<BoxHistory, Long>, BoxHistoryRepositoryCustom {
 
@@ -32,5 +34,8 @@ public interface BoxHistoryRepository extends JpaRepository<BoxHistory, Long>, B
             @Param("endDate") LocalDateTime endDate,
             @Param("currencyCode") CurrencyType currencyCode
     );
+
+    @EntityGraph(attributePaths = "transaction")
+    Optional<BoxHistory> findWithTransactionById(Long id);
 
 }

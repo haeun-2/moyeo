@@ -46,7 +46,22 @@ public class Transaction {
     private LocalDateTime createdAt;
 
     public enum Type {
-        EXCHANGE, PAYMENT, DEPOSIT, WITHDRAW, TRANSFER, EXCHANGE_RESERVATION
+        EXCHANGE("환전"),
+        PAYMENT("결제"),
+        DEPOSIT("입금"),
+        WITHDRAW("출금"),
+        TRANSFER("이체"),
+        EXCHANGE_RESERVATION("환전 예약");
+
+        private final String label;
+
+        Type(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return this.label;
+        }
     }
 
 }

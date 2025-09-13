@@ -6,7 +6,7 @@ public enum CategoryType {
     EXCHANGE("환전"),
     TRANSPORTATION("교통"),
     ACCOMMODATION("숙박"),
-    FOOD("식음료"),
+    FOOD("음식"),
     TOUR_ACTIVITY("관광/액티비티"),
     SHOPPING("쇼핑"),
     OTHER("기타");

@@ -92,6 +92,7 @@ public class ExchangeService {
                 .totalAmount(fromBoxBalance.getBalance())
                 .title("환전")
                 .type(Transaction.Type.EXCHANGE)
+                .createdAt(transaction.getCreatedAt())
                 .build();
 
         BoxHistory boxHistory2 = BoxHistory.builder()
@@ -102,6 +103,7 @@ public class ExchangeService {
                 .totalAmount(toBoxBalance.getBalance())
                 .title("환전")
                 .type(Transaction.Type.EXCHANGE)
+                .createdAt(transaction.getCreatedAt())
                 .build();
 
         batchInsert.saveBatch(List.of(boxHistory1, boxHistory2));
@@ -185,5 +187,8 @@ public class ExchangeService {
             throw new CustomException(ErrorCode.BAD_REQUEST, "최소 환전금액보다 작게 환전할 수 없습니다. " + minExchange);
     }
 
+    public List<ExchangeTransaction> getExchangeTransactions(Long transactionId) {
+        return exchangeRepository.findAllByTransactionId(transactionId);
+    }
 
 }

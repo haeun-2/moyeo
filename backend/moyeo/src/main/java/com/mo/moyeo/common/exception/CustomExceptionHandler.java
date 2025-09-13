@@ -4,11 +4,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -80,5 +83,26 @@ public class CustomExceptionHandler {
         log.error("요청 URL: {}", requestURI);
 
         return ErrorResponse.toResponseEntity(ErrorCode.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<?> handleValidationExceptions(BindException e, HttpServletRequest request) {
+        String requestURI = request.getRequestURI();
+
+        log.error("=== Validation Error 발생 ===");
+        log.error("요청 URL: {}", requestURI);
+        e.getBindingResult().getFieldErrors().forEach(fieldError -> {
+            log.error("예외 필드: {}", fieldError.getField());
+            log.error("예외 메시지: {}", fieldError.getDefaultMessage());
+        });
+
+
+        return ErrorResponse.toResponseEntity(ErrorCode.BAD_REQUEST,
+                e.hasFieldErrors() ? e.getFieldError().getDefaultMessage() : e.getGlobalError().getDefaultMessage());
+    }
+
+    @ExceptionHandler({NoHandlerFoundException.class, HttpRequestMethodNotSupportedException.class})
+    public ResponseEntity<ErrorResponse> handleNoHandlerFound(Exception e, HttpServletRequest request) {
+        return ErrorResponse.toResponseEntity(ErrorCode.RESOURCE_NOT_FOUND, "잘못된 요청 경로 혹은 요청 메서드입니다.");
     }
 }
