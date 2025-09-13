@@ -70,6 +70,17 @@ sealed class AppScreen(
         }
     }
 
+    // 정산하기와 관련된 화면
+    object Calculating: AppScreen(route="calculating/{boxId}?currencyCode={currencyCode}", title = "정산하기") {
+        fun createRoute(boxId: String, currencyCode: String? = null): String {
+            return if (currencyCode != null) {
+                "calculating/$boxId?currencyCode=$currencyCode"
+            } else {
+                "calculating/$boxId"
+            }
+        }
+    }
+
     // 환율 스크린 관련
     object Exchange: AppScreen(route = "exchange", title = "환율", iconResId = R.drawable.outline_currency_exchange_24)
 

@@ -54,6 +54,9 @@ fun MyBoxScreen(
                 is MyBoxNavigationEvent.NavigateToCollecting -> {
                     navController.navigate(AppScreen.Collecting.createRoute(event.boxId, event.currencyCode)) // 원하는 currency 전달
                 }
+                is MyBoxNavigationEvent.NavigateToCalculating -> {
+                    navController.navigate(AppScreen.Calculating.createRoute(event.boxId, event.currencyCode)) // 원하는 currency 전달
+                }
             }
         }
     }
@@ -98,7 +101,8 @@ fun MyBoxScreen(
                 backgroundColor = Color(bgColor!!),
                 onAmountClick = viewModel::onAmountClick,
                 onBackClick = { /* TODO: 뒤로가기 로직 추가 */ },
-                onCollectingClick = viewModel::onCollectingClick
+                onCollectingClick = viewModel::onCollectingClick,
+                onCalculatingClick = viewModel::onCalculatingClick,
             )
 
             // 검색 및 필터 바 (MyWalletScreen의 구조 재사용)
@@ -142,7 +146,8 @@ private fun TopBoxInfoSurface(
     backgroundColor: Color,
     onAmountClick: () -> Unit,
     onBackClick: () -> Unit,
-    onCollectingClick: () -> Unit
+    onCollectingClick: () -> Unit,
+    onCalculatingClick:() -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -222,7 +227,7 @@ private fun TopBoxInfoSurface(
                 }
 
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = onCalculatingClick,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
                         contentColor = onPrimaryLight

@@ -61,6 +61,7 @@ data class MyBoxUiState(
 
 sealed class MyBoxNavigationEvent {
     data class NavigateToCollecting(val boxId: String, val currencyCode: String = "KRW") : MyBoxNavigationEvent()
+    data class NavigateToCalculating(val boxId: String, val currencyCode: String = "KRW") : MyBoxNavigationEvent()
 }
 
 
@@ -181,6 +182,16 @@ class MyBoxViewModel : ViewModel() {
         viewModelScope.launch {
             // 현재 상태에 저장된 boxId를 가지고 이벤트를 발생시킴
             _navigationEvent.emit(MyBoxNavigationEvent.NavigateToCollecting(
+                uiState.value.boxId,
+                uiState.value.selectedCurrency)        // 현재 선택된 화폐 사용
+            )
+        }
+    }
+
+    fun onCalculatingClick() {
+        viewModelScope.launch {
+            // 현재 상태에 저장된 boxId를 가지고 이벤트를 발생시킴
+            _navigationEvent.emit(MyBoxNavigationEvent.NavigateToCalculating(
                 uiState.value.boxId,
                 uiState.value.selectedCurrency)        // 현재 선택된 화폐 사용
             )
