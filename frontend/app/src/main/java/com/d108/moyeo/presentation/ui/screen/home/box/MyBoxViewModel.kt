@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.presentation.ui.component.home.BoxFilterOptionsAdp
 import com.d108.moyeo.presentation.ui.component.home.FilterOptions
 import com.d108.moyeo.presentation.ui.component.home.Currency
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -39,6 +41,7 @@ fun FilterOptions.toBox(): BoxFilterOptions = when (this) {
 
 // MyBoxScreen의 UI 상태를 담는 데이터 클래스
 data class MyBoxUiState(
+    val boxId: String = "", // 현재 보고 있는 박스의 ID를 상태에 저장
     val transactions: List<BoxTransaction> = emptyList(),  // 거래 내역 리스트
     val boxName: String = "", // 초기값은 비워둠
     val totalAmount: String = "", // 초기값은 비워둠
@@ -49,15 +52,26 @@ data class MyBoxUiState(
     val showCurrencySheet: Boolean = false,
     val currencies: List<Currency> = emptyList(),
 
+    // 선택된 화폐 단위
+    val selectedCurrency: String = "KRW",
+
     // 필터링을 위한 바텀 시트
     val showFilterSheet: Boolean = false
 )
+
+sealed class MyBoxNavigationEvent {
+    data class NavigateToCollecting(val boxId: String, val currencyCode: String = "KRW") : MyBoxNavigationEvent()
+}
 
 
 class MyBoxViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(MyBoxUiState())
     val uiState = _uiState.asStateFlow()
+
+    private val _navigationEvent = MutableSharedFlow<MyBoxNavigationEvent>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
+
 
 
     // 화면이 생성될 때 boxId를 받아와 상세 정보를 로드.
@@ -67,6 +81,7 @@ class MyBoxViewModel : ViewModel() {
             val boxData = findBoxDataById(boxId)  // 해당 박스 아이디에 해당하는 것을 찾음
             _uiState.update {
                 it.copy(
+                    boxId = boxId,
                     boxName = boxData.boxName,
                     totalAmount = boxData.totalAmount,
                     transactions = boxData.transactions,
@@ -145,7 +160,8 @@ class MyBoxViewModel : ViewModel() {
                 else -> "50,000 JPY"
             }
         }
-        _uiState.update { it.copy(totalAmount = newAmount, showCurrencySheet = false) }
+        _uiState.update { it.copy(totalAmount = newAmount, showCurrencySheet = false,
+            selectedCurrency = currency?.code ?: "KRW")}
     }
 
     fun onFilterClick() {
@@ -159,6 +175,16 @@ class MyBoxViewModel : ViewModel() {
     fun onFilterConfirm(newFilters: BoxFilterOptions) {
         _uiState.update { it.copy(filters = newFilters, showFilterSheet = false) }
         // TODO: 변경된 필터에 따라 거래내역 다시 불러오기
+    }
+
+    fun onCollectingClick() {
+        viewModelScope.launch {
+            // 현재 상태에 저장된 boxId를 가지고 이벤트를 발생시킴
+            _navigationEvent.emit(MyBoxNavigationEvent.NavigateToCollecting(
+                uiState.value.boxId,
+                uiState.value.selectedCurrency)        // 현재 선택된 화폐 사용
+            )
+        }
     }
 
 }

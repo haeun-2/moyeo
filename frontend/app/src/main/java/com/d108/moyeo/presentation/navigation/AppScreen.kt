@@ -59,7 +59,16 @@ sealed class AppScreen(
     // 충전화 관련된 화면
     object Charging: AppScreen(route = "charging", title = "충전")
 
-
+    // 모으기와 관련된 화면
+    object Collecting : AppScreen(route = "collecting/{boxId}?currencyCode={currencyCode}", title = "모으기") {
+        fun createRoute(boxId: String, currencyCode: String? = null): String {
+            return if (currencyCode != null) {
+                "collecting/$boxId?currencyCode=$currencyCode"
+            } else {
+                "collecting/$boxId"
+            }
+        }
+    }
 
     // 환율 스크린 관련
     object Exchange: AppScreen(route = "exchange", title = "환율", iconResId = R.drawable.outline_currency_exchange_24)

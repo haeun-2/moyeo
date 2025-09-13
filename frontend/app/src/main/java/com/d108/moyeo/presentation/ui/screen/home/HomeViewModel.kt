@@ -46,6 +46,9 @@ sealed class HomeNavigationEvent {
     data class NavigateToMyBox(val boxId: String, val bgColor: Int) : HomeNavigationEvent()
 
     data class NavigateToSending(val currencyId: String) : HomeNavigationEvent() // 이체 화면 이동
+
+    // 기본적으로 한화 디폴트
+    data class NavigateToCollecting(val BoxId: String, val currencyId: String = "KRW"): HomeNavigationEvent()
 }
 
 
@@ -123,6 +126,13 @@ class HomeViewModel : ViewModel() {
         }
     }
 
+    // 모여박스에서 돈 입금 버튼
+    fun onDepositClick(boxId: String) {
+        viewModelScope.launch {
+            _navigationEvent.emit(HomeNavigationEvent.NavigateToCollecting(boxId))
+        }
+    }
+
 
     // 돈 보내는 함수
     fun onTransferClicked(currencyId: String) {
@@ -130,4 +140,5 @@ class HomeViewModel : ViewModel() {
             _navigationEvent.emit(HomeNavigationEvent.NavigateToSending(currencyId))
         }
     }
+
 }
