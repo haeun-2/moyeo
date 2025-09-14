@@ -84,6 +84,11 @@ public enum ErrorCode {
     INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "BANK_400_03", "잔액이 부족합니다."),
 
     /**
+     *
+     */
+    LOCK_ACQUISITION_FAILED(HttpStatus.CONFLICT, "LOCK_409_01", "일시적 오류입니다. 잠시 후 다시 시도해주세요."),
+
+    /**
      * 500 INTERNAL_SERVER_ERROR - 서버 공통 오류
      */
     BANK_TRANSFER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "BANK_500_01", "거래에 실패하였습니다.");
