@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -46,7 +47,7 @@ fun ExchangeRateList(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = Color.Gray.copy(alpha = 0.3f),
+                color = MaterialTheme.colorScheme.surfaceVariant,
                 shape = RoundedCornerShape(8.dp)
             )
             .padding(horizontal = 8.dp, vertical = 12.dp)
@@ -81,7 +82,7 @@ private fun ExchangeRateItem(
             modifier = Modifier
                 .size(40.dp)
                 .background(
-                    color = Color.White,
+                    color = Color.Gray,
                     shape = RoundedCornerShape(4.dp)
                 ),
             contentAlignment = Alignment.Center
