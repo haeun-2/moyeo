@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.screen.home
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,15 +22,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.*
 import com.d108.moyeo.presentation.ui.component.home.WalletEditBottomSheet
 
+private val TAG = "HomeScreen"
 @Composable
 fun HomeScreen(navController: NavController,
-               viewModel: HomeViewModel = viewModel()) {
+               viewModel: HomeViewModel = hiltViewModel()) {
 
     // ViewModel의 상태를 구독합니다.
     val uiState by viewModel.uiState.collectAsState()
