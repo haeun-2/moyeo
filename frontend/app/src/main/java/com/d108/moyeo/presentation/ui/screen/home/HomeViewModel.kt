@@ -1,18 +1,23 @@
 package com.d108.moyeo.presentation.ui.screen.home
 
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.domain.model.Token
+import com.d108.moyeo.domain.repository.AuthRepository
 import com.d108.moyeo.presentation.theme.brown
 import com.d108.moyeo.presentation.theme.pink
 import com.d108.moyeo.presentation.theme.purple
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 // TODO: 이 데이터 클래스들은 domain/model 패키지로 이동해야 합니다.
 data class WalletSummary(
@@ -34,7 +39,7 @@ data class GroupBox(
 data class HomeUiState(
     val wallet: WalletSummary,
     val groups: List<GroupBox> = emptyList(),
-    val showWalletEditSheet: Boolean = false
+    val showWalletEditSheet: Boolean = false,
 )
 
 // 화면 전환
@@ -51,8 +56,10 @@ sealed class HomeNavigationEvent {
     data class NavigateToCollecting(val BoxId: String, val currencyId: String = "KRW"): HomeNavigationEvent()
 }
 
-
-class HomeViewModel : ViewModel() {
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+    ) : ViewModel() {
 
     private val _uiState: MutableStateFlow<HomeUiState>
 
@@ -61,6 +68,18 @@ class HomeViewModel : ViewModel() {
     val navigationEvent = _navigationEvent.asSharedFlow()
 
     init {
+        viewModelScope.launch {
+            authRepository.accessToken.collect { token ->
+                Log.d("TOKEN_CHECK", "현재 AccessToken: $token")
+            }
+        }
+
+        viewModelScope.launch {
+            authRepository.refreshToken.collect { token ->
+                Log.d("TOKEN_CHECK", "현재 RefreshToken: $token")
+            }
+        }
+
         // 샘플 데이터 (이미지와 동일한 분위기/텍스트)
         val initialWallet = WalletSummary(
             title = "일론머스크 딱 대",

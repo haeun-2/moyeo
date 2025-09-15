@@ -14,15 +14,16 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Padding
@@ -30,7 +31,28 @@ import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 
 @Composable
-fun FirstScreen(navController: NavHostController) {  // 로그아웃 or 앱 최초 설치 후 보이는 화면
+fun FirstScreen(navController: NavHostController,
+                viewModel: FirstViewModel = hiltViewModel()) {
+    // 로그아웃 or 앱 최초 설치 후 보이는 화면
+
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(key1 = true) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is FirstNavEvent.NavigateToHome -> {
+                    // 홈으로 이동하라는 이벤트가 오면, 실제 내비게이션을 수행합니다.
+                    navController.navigate(AppScreen.Home.route) {
+                        // FirstScreen으로 다시 돌아올 수 없도록 백스택에서 제거합니다.
+                        popUpTo(AppScreen.First.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -99,60 +121,21 @@ fun FirstScreen(navController: NavHostController) {  // 로그아웃 or 앱 최�
                     Text("이미 회원이신가요?")
                 }
 
-                TextButton(onClick = {
-                   navController.navigate(AppScreen.Home.route)
-                }) {
-                    Text("디버깅용 즉시 홈으로 이동")
+                TextButton(
+                    onClick = viewModel::onDebugLoginClick3, // ViewModel 함수와 연결합니다
+                    enabled = !uiState.isLoading // 로딩 중에는 버튼 비활성화
+                ) {
+                    Text("디버깅용 3번 로그인")
+                }
+
+                TextButton(
+                    onClick = viewModel::onDebugLoginClick4, // ViewModel 함수와 연결합니다
+                    enabled = !uiState.isLoading // 로딩 중에는 버튼 비활성화
+                ) {
+                    Text("디버깅용 4번 로그인")
                 }
 
             }
-        }
-    }
-}
-
-
-@Composable
-fun NameInputScreen() {
-    // 이름 입력값을 저장할 상태 변수
-    var name by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = Padding.HorizontalMedium, vertical = Padding.VerticalLarge),
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = "이름을\n입력해주세요.",
-                style = Typography.titleLarge,
-                textAlign = TextAlign.Left
-            )
-        }
-
-        Spacer(modifier = Modifier.height(Spacing.ExtraLarge))
-
-        // --- 이름 입력 필드 ---
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            placeholder = { Text("박보검") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        // 이 Spacer가 버튼을 화면 하단으로 밀어냅니다.
-        Spacer(modifier = Modifier.weight(1f))
-
-        // --- 하단 '다음' 버튼 ---
-        Button(
-            onClick = { /* TODO: ViewModel의 onNextClicked() 호출 */ },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = name.isNotBlank() // 이름이 입력되었을 때만 버튼 활성화
-        ) {
-            Text("다음")
         }
     }
 }

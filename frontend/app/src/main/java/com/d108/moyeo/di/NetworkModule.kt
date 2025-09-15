@@ -1,11 +1,16 @@
 package com.d108.moyeo.di
 
+import android.content.Context
+import com.d108.moyeo.data.local.UserDataManager
+import com.d108.moyeo.data.remote.api.AuthService
 import com.d108.moyeo.data.remote.api.BankService
 import com.d108.moyeo.data.remote.api.SignUpService
+import com.d108.moyeo.data.remote.interceptor.AuthInterceptor
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -19,15 +24,25 @@ object NetworkModule {  // 여러 부품을 조립해서 새로운 것을 '만�
 
     private const val BASE_URL = "http://j13d108.p.ssafy.io:8080/"
 
+    //
+    @Provides
+    @Singleton
+    fun provideUserDataManager(@ApplicationContext context: Context): UserDataManager {
+        return UserDataManager(context)
+    }
+
     @Provides  // Hilt에게 "OkHttpClient 타입의 객체가 필요하면, 이 함수를 실행해서 만들어" 라고 알려주는 어노테이션
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
-        // 서버와 통신하는 과정을 로그로 보기 쉽게 해주는 Interceptor
-        val logger = HttpLoggingInterceptor().apply {  // 서버와 통신하는 모든 내용을 로그캣에 자세히 보여줌.
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor // 인터셉터 등록
+    ): OkHttpClient {
+        val logger = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
+
         return OkHttpClient.Builder()
             .addInterceptor(logger)
+            .addInterceptor(authInterceptor) // 모든 요청이 이 인터셉터를 통과하도록 등록
             .build()
     }
 
@@ -54,5 +69,15 @@ object NetworkModule {  // 여러 부품을 조립해서 새로운 것을 '만�
     @Singleton
     fun provideBankService(retrofit: Retrofit): BankService {
         return retrofit.create(BankService::class.java)
+    }
+
+
+    /*
+    * 로그인과 관련된 서비스
+     */
+    @Provides
+    @Singleton
+    fun provideAuthService(retrofit: Retrofit): AuthService {
+        return retrofit.create(AuthService::class.java)
     }
 }
