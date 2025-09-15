@@ -70,7 +70,21 @@ public enum ErrorCode {
      * Box Error Code
      */
     BOX_NOT_FOUND(HttpStatus.NOT_FOUND, "BOX_404_01", "요청한 박스를 찾을 수 없습니다."),
+    
+    // ======================================
+    // FCM 알림
+    // ======================================
 
+    /**
+     * 404 NOT_FOUND - 리소스 없음
+     */
+    FCM_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "FCM_404_01", "해당 유저의 FCM 토큰이 존재하지 않습니다."),
+
+    /**
+     * 500 INTERNAL_SERVER_ERROR - FCM 서버 오류
+     */
+    FCM_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FCM_500_01", "FCM 메시지 전송 중 오류가 발생했습니다."),
+    
 
     // ======================================
     // BANK TRANSACTION (은행 입/출금)
