@@ -68,4 +68,15 @@ public class TransactionService {
                 .build();
         return transactionRepository.save(transaction);
     }
+
+    public Transaction makePaymentTransaction(Box box, User user){
+        Transaction transaction = Transaction.builder()
+                .user(user)
+                .toBox(box)
+                .fromBox(box)
+                .transactionType(Transaction.Type.PAYMENT)
+                .uuid(UUID.randomUUID().toString().replace("-", "").substring(0, 20))
+                .build();
+        return transactionRepository.save(transaction);
+    }
 }

@@ -36,6 +36,7 @@ public class TransferService {
     private final BoxBalanceService boxBalanceService;
     private final BoxHistoryService boxHistoryService;
 
+    @Transactional
     public void transfer(User user, TransferRequest request) {
         // 요청 검증
         if (request.getFromBoxId().equals(request.getToBoxId())) {

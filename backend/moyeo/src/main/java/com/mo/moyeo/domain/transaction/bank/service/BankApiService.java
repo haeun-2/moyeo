@@ -4,11 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
+import com.mo.moyeo.common.util.finance_api.AccountUtil;
+import com.mo.moyeo.common.util.finance_api.ApiType;
 import com.mo.moyeo.common.util.finance_api.ApiUtil;
 import com.mo.moyeo.domain.auth.signup.service.EncryptionService;
+import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.transaction.bank.dto.BankTransferDTO;
 import com.mo.moyeo.domain.transaction.bank.entity.BankTransaction;
 import com.mo.moyeo.domain.user.entity.User;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,6 +54,8 @@ public class BankApiService {
     private final String FOREIGN_CURRENCY_WITHDRAWAL_ENDPOINT = "updateForeignCurrencyDemandDepositAccountDeposit";
     private final String FOREIGN_CURRENCY_DEPOSIT_ENDPOINT = "updateForeignCurrencyDemandDepositAccountWithdrawal";
 
+    @Value("${FOREIGN_CURRENCY_TRANSFER_ENDPOINT}")
+    private String FOREIGN_CURRENCY_TRANSFER;
     /**
      * 박스로 입금 (연결 계좌 -> 법인 계좌 -> 박스)
      */
@@ -65,7 +71,7 @@ public class BankApiService {
                 .userKey(userKey)
                 .build();
 
-        executeTransfer(dto, bankTransaction);
+        executeTransfer(dto);
     }
 
     /**
@@ -81,13 +87,13 @@ public class BankApiService {
                 .userKey(MOYEO_USER_KEY)
                 .build();
 
-        executeTransfer(transferRequestBody, bankTransaction);
+        executeTransfer(transferRequestBody);
     }
 
     /**
      * 은행 이체 실행
      */
-    private void executeTransfer(BankTransferDTO transferRequestBody, BankTransaction transaction) {
+    public void executeTransfer(BankTransferDTO transferRequestBody) {
         String url = BASE_URL + DEMAND_DEPOSIT_URL + ENDPOINT;
 
         Map<String, Object> requestBody = createTransferRequestBody(transferRequestBody);
@@ -229,5 +235,36 @@ public class BankApiService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         return new HttpEntity<>(body, headers);
+    }
+
+    public void paymentTransfer(@NotNull CurrencyType currencyType, BankTransferDTO bankTransferDTO) {
+
+        if(currencyType == CurrencyType.KRW){
+            executeTransfer(bankTransferDTO);
+        }else {
+            Map<String, Object> requestBody = createApiRequestBody(ApiType.updateForeignCurrencyDemandDepositAccountTransfer.name(), MOYEO_USER_KEY);
+            requestBody.put("depositAccountNo", bankTransferDTO.getDepositAccountNo());
+            requestBody.put("depositTransactionSummary", bankTransferDTO.getDepositTransactionSummary());
+            requestBody.put("transactionBalance", bankTransferDTO.getTransactionBalance());
+            requestBody.put("withdrawalAccountNo", bankTransferDTO.getWithdrawalAccountNo());
+            requestBody.put("withdrawalTransactionSummary", bankTransferDTO.getWithdrawalTransactionSummary());
+            HttpEntity<Map<String, Object>> apiRequest = createHttpEntity(requestBody);
+            log.debug("{}", requestBody);
+
+            try {
+                restTemplate.postForEntity(FOREIGN_CURRENCY_TRANSFER, apiRequest, Map.class);
+            } catch (HttpClientErrorException e) {
+                // HTTP 4xx 에러의 응답 body 추출
+                log.debug(e.getMessage());
+                throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "입력 오류: " + e.getStatusCode());
+            } catch (HttpServerErrorException e) {
+                // HTTP 5xx 에러 처리
+                log.debug(e.getMessage());
+                throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "서버 오류: " + e.getStatusCode());
+            } catch (Exception e) {
+                log.debug(e.getMessage());
+                throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, "거래 실패: " + e.getMessage());
+            }
+        }
     }
 }

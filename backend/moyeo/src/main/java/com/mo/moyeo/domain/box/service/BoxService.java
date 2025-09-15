@@ -104,4 +104,8 @@ public class BoxService {
         return boxRepository.selectPersonalBoxByOwnerId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
     }
+
+    public Box getReferenceById(Long boxId){
+        return boxRepository.getReferenceById(boxId);
+    }
 }
