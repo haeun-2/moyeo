@@ -3,7 +3,6 @@ package com.d108.moyeo.presentation.ui.screen.exchange
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.DragScope
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,7 +28,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItemDefaults.contentColor
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -58,7 +56,7 @@ fun ExchangeScreen(navController: NavController) {
     var isEditMode by remember { mutableStateOf(false) }
     var draggedItem by remember {mutableStateOf<Int?>(null)}
 
-    // 편집 가능한 샘플 데이터
+    // 샘플 데이터
     var ratesList by remember {
         mutableStateOf(listOf(
             ExchangeRateData("🇯🇵", "보스니아 헤르체고비나", "927 JPY = 1,000 KRW", "6.15 (+0.59%)", true),
@@ -107,7 +105,7 @@ fun ExchangeScreen(navController: NavController) {
                     color = Color.White,
                     style = Typography.bodyLarge
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Spacing.Small))
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowRight,
                     contentDescription = null,
@@ -116,7 +114,7 @@ fun ExchangeScreen(navController: NavController) {
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
 
         // 환율 리스트 (편집 모드에 따라 다르게 표시)
         Box(
@@ -127,10 +125,10 @@ fun ExchangeScreen(navController: NavController) {
                     color = if (isEditMode) Color.Gray.copy(alpha = 0.5f) else Color.Gray.copy(alpha = 0.3f),
                     shape = RoundedCornerShape(8.dp)
                 )
-                .padding(horizontal = 8.dp, vertical = 12.dp)
+                .padding(horizontal = Spacing.Small, vertical = Spacing.SmallMedium)
         ) {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
             ) {
                 itemsIndexed(ratesList) { index, rate ->
                     if (isEditMode) {
@@ -166,17 +164,17 @@ fun ExchangeScreen(navController: NavController) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp),
+                .padding(vertical = Spacing.Medium),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             // 추가 버튼
             TextButton(
                 onClick = {
-                    Toast.makeText(context, "추가 버튼 눌렀습니다", Toast.LENGTH_SHORT).show()
+                    navController.navigate("exchange_add")
                 },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.textButtonColors(
-                contentColor = Color.Gray
+                    contentColor = Color.Gray
                 )
             ) {
                 Icon(
@@ -185,7 +183,7 @@ fun ExchangeScreen(navController: NavController) {
                     modifier = Modifier.size(20.dp),
                     tint = Color.Gray
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(Spacing.ExtraSmall))
                 Text("추가", color = Color.Gray)
             }
 
@@ -205,7 +203,7 @@ fun ExchangeScreen(navController: NavController) {
                     modifier = Modifier.size(20.dp),
                     tint = Color.Gray
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(Spacing.ExtraSmall))
                 Text(if (isEditMode) "완료" else "수정")
             }
         }
@@ -254,7 +252,7 @@ private fun NormalRateItem(
             Text(text = rate.countryFlag)
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(Spacing.SmallMedium))
 
         // 은행명과 환율
         Column(modifier = Modifier.weight(1f)) {
@@ -282,7 +280,7 @@ private fun NormalRateItem(
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(Spacing.Small))
 
         // 화살표
         Icon(
@@ -326,9 +324,7 @@ private fun EditModeRateItem(
                             onDragStart()
                         },
                         onDragEnd = {
-                            // 드래그가 끝났을 때의 위치를 계산하여 새로운 인덱스 결정
-                            // 실제 구현에서는 더 정교한 계산이 필요할 수 있습니다
-                            onDragEnd(0) // 임시로 0으로 설정
+                            onDragEnd(0) // 임시로 0 설정
                         }
                     ) { _, _ ->
                         // 드래그 중 처리
@@ -336,7 +332,7 @@ private fun EditModeRateItem(
                 }
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(Spacing.SmallMedium))
 
         // 국기 박스
         Box(
@@ -351,7 +347,7 @@ private fun EditModeRateItem(
             Text(text = rate.countryFlag)
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(Spacing.SmallMedium))
 
         // 은행명과 환율
         Column(modifier = Modifier.weight(1f)) {
@@ -367,7 +363,7 @@ private fun EditModeRateItem(
             )
         }
 
-        // 변동률 (상승/하락에 따라 색상 변경)
+        // 변동률 (상승/하락 따라 색상 변경)
         Column(horizontalAlignment = Alignment.End) {
             val isPositive = rate.change.contains("+")
             val changeColor = if (isPositive) Color.Red else Color.Blue
@@ -380,7 +376,7 @@ private fun EditModeRateItem(
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(Spacing.Small))
 
         // 삭제 버튼
         IconButton(

@@ -9,6 +9,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeAddScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeKeypadScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
@@ -181,6 +182,10 @@ fun AppNavHost(
         }
         composable("exchange_keypad/refund") {
             ExchangeKeypadScreen(navController, "refund")
+        }
+        // 환율의 추가 버튼을 누르면 이동
+        composable("exchange_add") {
+            ExchangeAddScreen(navController)
         }
 
         // QR 화면

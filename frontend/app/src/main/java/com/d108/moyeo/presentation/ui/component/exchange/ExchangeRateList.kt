@@ -24,7 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.theme.surfaceVariantLight
 
 // 1. 환율 데이터 클래스
 data class ExchangeRateData(
@@ -46,13 +48,13 @@ fun ExchangeRateList(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = Color.Gray.copy(alpha = 0.3f),
+                color = surfaceVariantLight,
                 shape = RoundedCornerShape(8.dp)
             )
-            .padding(horizontal = 8.dp, vertical = 12.dp)
+            .padding(horizontal = Spacing.Small, vertical = Spacing.SmallMedium)
     ) {
         LazyColumn( // 스크롤 가능한 리스트
-            verticalArrangement = Arrangement.spacedBy(16.dp) // 항목간 간격 16dp
+            verticalArrangement = Arrangement.spacedBy(Spacing.Medium) // 항목간 간격 16dp
         ) {
             items(rates) { rate ->
                 ExchangeRateItem(
@@ -81,7 +83,7 @@ private fun ExchangeRateItem(
             modifier = Modifier
                 .size(40.dp)
                 .background(
-                    color = Color.White,
+                    color = Color.Gray,
                     shape = RoundedCornerShape(4.dp)
                 ),
             contentAlignment = Alignment.Center
@@ -89,7 +91,7 @@ private fun ExchangeRateItem(
             Text(text = rate.countryFlag)
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(Spacing.SmallMedium))
 
         // 은행명과 환율
         Column(modifier = Modifier.weight(1f)) {
@@ -114,7 +116,7 @@ private fun ExchangeRateItem(
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(Spacing.Small))
 
         // 화살표
         Icon(

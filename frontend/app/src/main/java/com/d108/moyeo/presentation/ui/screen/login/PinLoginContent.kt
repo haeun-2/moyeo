@@ -76,7 +76,7 @@ private fun PinDisplay(pinLength: Int) {
                 modifier = Modifier
                     .size(Spacing.Large)
                     .background(
-                        color = if (isFilled) MaterialTheme.colorScheme.primary else Color.Gray.copy(alpha = 0.3f),
+                        color = if (isFilled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                         shape = CircleShape
                     )
             )
