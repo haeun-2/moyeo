@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -37,6 +38,7 @@ import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.surfaceVariantLight
+import com.d108.moyeo.presentation.theme.primaryLight
 
 @Composable
 fun CurrencySelectionScreen(
@@ -108,8 +110,8 @@ fun CurrencySelectionScreen(
                 .height(56.dp),
             shape = RoundedCornerShape(28.dp),
             // 나라 선택시 확인 버튼 색 변경
-            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = if (uiState.selectedCurrency != null) Color(0xFF7C4DFF) else Color.Gray,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (uiState.selectedCurrency != null) primaryLight else Color.Gray,
                 contentColor = Color.White,
                 disabledContainerColor = Color.Gray.copy(alpha = 0.3f),
                 disabledContentColor = Color.Gray
@@ -138,7 +140,7 @@ private fun CurrencyCard(
             .fillMaxWidth()
             .height(100.dp)
             .background(
-                color = if (isSelected) Color(0xFF7C4DFF) else surfaceVariantLight,
+                color = if (isSelected) primaryLight else surfaceVariantLight,
                 shape = RoundedCornerShape(12.dp)
             )
             .clickable { onClick() }
