@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -21,8 +22,8 @@ public class TransactionResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime datetime;
     private String title;
-    private Double amount;
-    private Double balance;
+    private BigDecimal amount;
+    private BigDecimal balance;
     private CurrencyType currency;
     private String memo;
     private String category;
@@ -43,7 +44,7 @@ public class TransactionResponse {
                                 .map(CategoryType::getLabel)
                                 .orElse("")
                 )
-                .transactionType(boxHistory.getTransaction().getTransactionType().getLabel())
+                .transactionType(boxHistory.getType().name())
                 .build();
     }
 

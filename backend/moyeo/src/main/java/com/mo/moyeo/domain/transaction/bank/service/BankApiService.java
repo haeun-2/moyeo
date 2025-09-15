@@ -7,8 +7,6 @@ import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.common.util.finance_api.ApiUtil;
 import com.mo.moyeo.domain.auth.signup.service.EncryptionService;
 import com.mo.moyeo.domain.transaction.bank.dto.BankTransferDTO;
-import com.mo.moyeo.domain.transaction.bank.dto.DepositRequest;
-import com.mo.moyeo.domain.transaction.bank.dto.WithdrawRequest;
 import com.mo.moyeo.domain.transaction.bank.entity.BankTransaction;
 import com.mo.moyeo.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -17,14 +15,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -56,7 +53,7 @@ public class BankApiService {
     /**
      * 박스로 입금 (연결 계좌 -> 법인 계좌 -> 박스)
      */
-    public void deposit(User user, Double amount, BankTransaction bankTransaction) {
+    public void deposit(User user, BigDecimal amount, BankTransaction bankTransaction) {
         String userKey = encryptionService.decrypt(user.getConnectedBankKey());
 
         BankTransferDTO dto = BankTransferDTO.builder()
@@ -74,7 +71,7 @@ public class BankApiService {
     /**
      * 박스에서 출금 (박스 -> 법인 계좌 -> 연결 계좌)
      */
-    public void withdraw(User user, Double amount, BankTransaction bankTransaction) {
+    public void withdraw(User user, BigDecimal amount, BankTransaction bankTransaction) {
         BankTransferDTO transferRequestBody = BankTransferDTO.builder()
                 .depositAccountNo(user.getConnectedBankAccount())
                 .depositTransactionSummary("모여")

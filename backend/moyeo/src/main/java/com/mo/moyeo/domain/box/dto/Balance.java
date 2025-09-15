@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 @Getter
 public class Balance {
     private CurrencyType currency;
-    private Double balance;
+    private BigDecimal balance;
 
     public static Balance from(BoxBalance boxBalance) {
         return Balance.builder()

@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Getter
@@ -13,7 +15,7 @@ import java.util.List;
 @ToString
 public class BoxStatisticsResponse {
 
-    private Double totalAmount;
+    private BigDecimal totalAmount;
     private List<CategoryStatistics> content;
 
     @ToString
@@ -23,28 +25,31 @@ public class BoxStatisticsResponse {
     public static class CategoryStatistics {
         private Long categoryId;
         private String category;
-        private Double amount;
-        private Double ratio;
+        private BigDecimal amount;
+        private BigDecimal ratio;
 
-        public static CategoryStatistics from(CategoryStatisticsDto dto, Double totalAmount) {
+        public static CategoryStatistics from(CategoryStatisticsDto dto, BigDecimal totalAmount) {
             return CategoryStatistics.builder()
                     .categoryId(dto.getCategoryId())
                     .category(dto.getCategory().getLabel())
                     .amount(dto.getAmount())
-                    .ratio(dto.getAmount() / totalAmount)
+                    .ratio(dto.getAmount().divide(totalAmount, 4, RoundingMode.HALF_UP)) // BigDecimal 나눗셈
                     .build();
         }
     }
 
     public static BoxStatisticsResponse from(List<CategoryStatisticsDto> dtoList) {
-        Double totalAmount = dtoList.stream()
+        BigDecimal totalAmount = dtoList.stream()
                 .map(CategoryStatisticsDto::getAmount)
-                .reduce(0d, Double::sum);
+                .reduce(BigDecimal.ZERO, BigDecimal::add); // BigDecimal 합산
 
         return BoxStatisticsResponse.builder()
                 .totalAmount(totalAmount)
-                .content(dtoList.stream().map(dto -> CategoryStatistics.from(dto, totalAmount)).toList())
+                .content(dtoList.stream()
+                        .map(dto -> CategoryStatistics.from(dto, totalAmount))
+                        .toList())
                 .build();
     }
 
 }
+
