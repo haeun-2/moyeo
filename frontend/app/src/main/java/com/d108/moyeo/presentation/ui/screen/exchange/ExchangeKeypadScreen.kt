@@ -53,7 +53,7 @@ fun ExchangeKeypadScreen(
     val actionText = if (isChargeMode) "충전할" else "돌려받을"
     val balanceText = if (isChargeMode) "보유 웨이 머니: 10,000 원 (초과하는 지불 충전)" else "보유 웨이 머니: 1,000 원"
 
-    // 세로 방향 레이아웃, 화면 전체를 채우고 배경 흰색, 전체 패딩 16dp.
+    // 세로 방향 레이아웃, 화면 전체를 채우고 배경 흰색, 전체 패딩 16dp
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -85,7 +85,7 @@ fun ExchangeKeypadScreen(
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // 일본 JPY 섹션
+        // 일본 JPY
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -184,7 +184,7 @@ fun ExchangeKeypadScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 잔액 정보 (모드별 다른 텍스트)
+        // 잔액 정보
         Text(
             text = balanceText,
             style = Typography.bodySmall,
@@ -197,13 +197,18 @@ fun ExchangeKeypadScreen(
             onKeyPress = { key ->
                 when (key) {
                     is KeypadKey.Digit -> {
-                        inputAmount =
-                            if (inputAmount == "0") key.value.toString() else inputAmount + key.value.toString()
+                        if (inputAmount == "0") {
+                            inputAmount = key.value.toString()
+                        } else {
+                            inputAmount += key.value.toString()
+                        }
                     }
 
                     KeypadKey.Clear -> {
-                        // KeyMode.Zeros일 때는 "00" 추가
-                        inputAmount = if (inputAmount == "0") "00" else inputAmount + "00"
+                        // 초기 상태에서 "00" 입력 방지
+                        if (inputAmount != "0") {
+                            inputAmount += "00"
+                        }
                     }
 
                     KeypadKey.Backspace -> {
