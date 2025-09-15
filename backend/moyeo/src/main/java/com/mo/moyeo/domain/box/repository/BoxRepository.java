@@ -1,12 +1,11 @@
 package com.mo.moyeo.domain.box.repository;
 
 import com.mo.moyeo.domain.box.entity.Box;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface BoxRepository extends JpaRepository<Box, Long> {
@@ -34,7 +33,8 @@ public interface BoxRepository extends JpaRepository<Box, Long> {
             AND bm.status = 'JOINED'
         )
         AND b.type = 'GROUP'
+        ORDER BY b.createdAt
     """)
-    Slice<Box> selectJoinedGroupBoxByUserId(@Param("userId") Long userId, Pageable pageable);
+    List<Box> selectJoinedGroupBoxByUserId(@Param("userId") Long userId);
 
 }

@@ -26,4 +26,8 @@ public class BoxResponse {
                 .build();
     }
 
+    public static List<BoxResponse> from(List<Box> boxes) {
+        return boxes.stream().map(BoxResponse::from).toList();
+    }
+
 }

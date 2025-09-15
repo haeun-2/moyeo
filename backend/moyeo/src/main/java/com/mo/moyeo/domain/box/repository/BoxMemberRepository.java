@@ -2,6 +2,7 @@ package com.mo.moyeo.domain.box.repository;
 
 import com.mo.moyeo.domain.box.entity.Box;
 import com.mo.moyeo.domain.box.entity.BoxMember;
+import com.mo.moyeo.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -38,4 +39,6 @@ public interface BoxMemberRepository extends JpaRepository<BoxMember, Long> {
     """)
     Optional<Box> findPersonalBoxByBoxMemberIdAndBoxId(@Param("boxMemberId") Long boxMemberId, @Param("boxId") Long boxId);
 
+    @Query("SELECT COUNT(bm) FROM BoxMember bm WHERE bm.user = :user AND bm.status = 'JOINED'")
+    Integer countJoinedGroupByUser(User user);
 }

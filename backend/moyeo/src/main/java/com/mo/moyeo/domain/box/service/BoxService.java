@@ -2,7 +2,6 @@ package com.mo.moyeo.domain.box.service;
 
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
-import com.mo.moyeo.common.paging.PageResponse;
 import com.mo.moyeo.domain.box.dto.BoxCreateRequest;
 import com.mo.moyeo.domain.box.dto.BoxCreateResponse;
 import com.mo.moyeo.domain.box.dto.BoxPermissionResponse;
@@ -16,10 +15,6 @@ import com.mo.moyeo.domain.box.repository.BoxRepository;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,18 +35,12 @@ public class BoxService {
         return BoxResponse.from(box);
     }
 
-    public PageResponse<BoxResponse> getGroupBoxList(User user, int page, int size) {
-        Pageable pageable = PageRequest.of(
-                page,
-                size,
-                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))
-        );
-
-        Slice<Box> boxes = boxRepository.selectJoinedGroupBoxByUserId(user.getId(), pageable);
+    public List<BoxResponse> getGroupBoxList(User user) {
+        List<Box> boxes = boxRepository.selectJoinedGroupBoxByUserId(user.getId());
         for (Box box: boxes) {
             box.getBalances();
         }
-        return PageResponse.from(boxes, BoxResponse::from);
+        return BoxResponse.from(boxes);
     }
 
     public BoxPermissionResponse getMyBoxPermissions(Long boxId, User user) {
@@ -79,6 +68,11 @@ public class BoxService {
 
     @Transactional
     public BoxCreateResponse createGroupBox(User user, BoxCreateRequest request) {
+        Integer count = boxMemberRepository.countJoinedGroupByUser(user);
+        if (count >= 30) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "모임 박스는 30개까지 가입할 수 있습니다.");
+        }
+
         // 1. 모입 박스 생성
         Box box = new Box(request.getName(), user.getId(), Box.Type.GROUP);
         boxRepository.save(box);

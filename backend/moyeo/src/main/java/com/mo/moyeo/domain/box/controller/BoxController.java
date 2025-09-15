@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/boxes")
@@ -32,8 +34,8 @@ public class BoxController {
 
     @Operation(summary = "모임 박스 목록 조회", description = "유저가 가입한 모임 박스 목록을 페이징하여 조회합니다.")
     @GetMapping
-    public ResponseEntity<PageResponse<BoxResponse>> getGroupBoxList(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "3") int size, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        PageResponse<BoxResponse> response = boxService.getGroupBoxList(userDetails.getUser(), page, size);
+    public ResponseEntity<List<BoxResponse>> getGroupBoxList(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<BoxResponse> response = boxService.getGroupBoxList(userDetails.getUser());
         return ResponseEntity.ok(response);
     }
 
