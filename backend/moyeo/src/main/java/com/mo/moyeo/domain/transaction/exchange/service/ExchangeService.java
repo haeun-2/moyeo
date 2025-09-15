@@ -134,8 +134,10 @@ public class ExchangeService {
         BigDecimal fromAmount;
 
         if (fromCurrency == CurrencyType.JPY) {
-            // JPY는 100엔 기준
-            fromAmount = sellRate.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP).multiply(toAmount);
+            // JPY는 100엔 기준이므로 나눠줘야 함
+            fromAmount = sellRate
+                    .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP) // 100으로 나누기
+                    .multiply(toAmount);
         } else {
             // USD, EUR 같은 경우는 1 단위 기준
             fromAmount = sellRate.multiply(toAmount);
@@ -160,7 +162,9 @@ public class ExchangeService {
 
         if (toCurrency == CurrencyType.JPY) {
             // JPY는 100엔 기준
-            fromAmount = buyRate.multiply(BigDecimal.valueOf(100)).multiply(toAmount);
+            fromAmount = buyRate
+                    .multiply(BigDecimal.valueOf(100)) // × 100
+                    .multiply(toAmount);
         } else {
             // USD, EUR 같은 경우는 1 단위 기준
             fromAmount = buyRate.multiply(toAmount);
