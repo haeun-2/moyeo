@@ -5,11 +5,14 @@ import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
 @Entity
 @Table(name = "payments")
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment {
 
@@ -36,6 +39,9 @@ public class Payment {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
+    @Column(name = "amount")
+    private BigDecimal amount;
+
     public enum Status {
         PENDING,
         APPROVED,
@@ -43,4 +49,15 @@ public class Payment {
         CANCELLED
     }
 
+    public void paymentSuccess(){
+        this.status = Status.APPROVED;
+    }
+
+    public void paymentFailed(){
+        this.status = Status.CANCELLED;
+    }
+
+    public void updateCompletedAt(){
+        this.completedAt = LocalDateTime.now();
+    }
 }

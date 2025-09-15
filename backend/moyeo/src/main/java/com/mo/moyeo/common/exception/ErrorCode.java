@@ -96,7 +96,7 @@ public enum ErrorCode {
     INVALID_ACCOUNT_NUMBER(HttpStatus.BAD_REQUEST, "BANK_400_01", "유효하지 않은 계좌번호 입니다."),
     TRANSFER_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "BANK_400_02", "이체 한도 초과입니다."),
     INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "BANK_400_03", "잔액이 부족합니다."),
-
+    EXPIRED_PAYMENT_TOKEN(HttpStatus.BAD_REQUEST, "PAYMENT_400_01", "결제 토큰이 만료됨"),
     /**
      *
      */
@@ -106,6 +106,7 @@ public enum ErrorCode {
      * 500 INTERNAL_SERVER_ERROR - 서버 공통 오류
      */
     BANK_TRANSFER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "BANK_500_01", "거래에 실패하였습니다.");
+
 
     private final HttpStatus status;
     private final String code;
