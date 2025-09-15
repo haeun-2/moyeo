@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -14,10 +15,10 @@ import java.util.List;
 public class ExchangeTransactionDetailResponse {
 
     private CurrencyType fromCurrency;
-    private Double fromAmount;
+    private BigDecimal fromAmount;
     private CurrencyType toCurrency;
-    private Double toAmount;
-    private Double exchangeRate;
+    private BigDecimal toAmount;
+    private BigDecimal exchangeRate;
 
     public static ExchangeTransactionDetailResponse from(ExchangeTransaction exchangeTransaction) {
         return ExchangeTransactionDetailResponse.builder()

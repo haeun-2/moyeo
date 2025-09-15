@@ -21,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -39,7 +41,7 @@ public class TransferService {
         if (request.getFromBoxId().equals(request.getToBoxId())) {
             throw new CustomException(ErrorCode.BAD_REQUEST);
         }
-        Double amount = request.getAmount();
+        BigDecimal amount = request.getAmount();
         CurrencyType currency = request.getCurrency();
 
         Box fromBox = boxService.getBoxById(request.getFromBoxId());
@@ -67,7 +69,7 @@ public class TransferService {
         BoxHistory fromHistory = BoxHistory.builder()
                 .box(fromBox)
                 .transaction(transaction)
-                .amount(-1.0 * amount)
+                .amount(amount.negate())
                 .currencyCode(currency)
                 .totalAmount(fromBoxBalance.getBalance())
                 .title(toBox.getBoxName())
@@ -100,8 +102,8 @@ public class TransferService {
         }
     }
 
-    private void validateSufficientBalance(BoxBalance boxBalance, Double amount) {
-        if (boxBalance.getBalance() < amount) {
+    private void validateSufficientBalance(BoxBalance boxBalance, BigDecimal amount) {
+        if (boxBalance.checkSufficientBalance(amount)) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "잔액이 부족합니다.");
         }
     }

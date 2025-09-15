@@ -9,6 +9,8 @@ import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 @RequiredArgsConstructor
 public class BoxBalanceService {
@@ -19,11 +21,11 @@ public class BoxBalanceService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
     }
 
-    public void exchange(Box box, CurrencyType fromCurrency, CurrencyType toCurrency, Double fromAmount, Double toAmount) {
+    public void exchange(Box box, CurrencyType fromCurrency, CurrencyType toCurrency, BigDecimal fromAmount, BigDecimal toAmount) {
         BoxBalance fromBoxBalance = findBoxBalanceByBoxIdAndCurrencyType(box, fromCurrency);
         BoxBalance toBoxBalance = findBoxBalanceByBoxIdAndCurrencyType(box, toCurrency);
 
-        if(fromBoxBalance.getBalance() < fromAmount)
+        if(fromBoxBalance.checkSufficientBalance(fromAmount))
             throw new CustomException(ErrorCode.BAD_REQUEST, "환전에 필요한 금액이 부족합니다.");
 
         fromBoxBalance.decreaseBalance(fromAmount);

@@ -5,6 +5,8 @@ import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Entity
 @Table(name = "transfer_transactions")
@@ -27,6 +29,6 @@ public class TransferTransaction {
     private Currency currency;
 
     @Column(name = "amount", nullable = false)
-    private Double amount;
+    private BigDecimal amount;
 
 }

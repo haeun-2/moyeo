@@ -1,6 +1,8 @@
 package com.mo.moyeo.domain.exchange.volume.repository;
 
+import java.math.BigDecimal;
+
 public interface ExchangeStatsProjection {
     String getPeriod();
-    Double getTotalAmount();
+    BigDecimal getTotalAmount();
 }

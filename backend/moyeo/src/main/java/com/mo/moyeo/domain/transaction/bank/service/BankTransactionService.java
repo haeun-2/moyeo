@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +44,7 @@ public class BankTransactionService {
      */
     @Transactional
     public BankTransactionResponse charge(User user, DepositRequest request) {
-        return processBankTransaction(user, Double.valueOf(request.getBalance()), Transaction.Type.DEPOSIT);
+        return processBankTransaction(user, request.getBalance(), Transaction.Type.DEPOSIT);
     }
 
     /**
@@ -56,7 +58,7 @@ public class BankTransactionService {
     /**
      * 트랜잭션 생성 & 거래 처리
      */
-    private BankTransactionResponse processBankTransaction(User user, Double amount, Transaction.Type type) {
+    private BankTransactionResponse processBankTransaction(User user, BigDecimal amount, Transaction.Type type) {
         Box box = boxService.getBoxByUserId(user.getId());
 
         // 트랜잭션 생성
@@ -74,7 +76,7 @@ public class BankTransactionService {
             if(type.equals(Transaction.Type.DEPOSIT)) {
                 bankApiService.deposit(user, amount, bankTransaction);
             } else {
-                if(boxBalance.getBalance() < amount) throw new CustomException(ErrorCode.INSUFFICIENT_BALANCE);
+                if(boxBalance.checkSufficientBalance(amount)) throw new CustomException(ErrorCode.INSUFFICIENT_BALANCE);
 
                 bankApiService.withdraw(user, amount, bankTransaction);
             }
@@ -87,7 +89,7 @@ public class BankTransactionService {
                 boxBalance.increaseBalance(amount);
             } else {
                 boxBalance.decreaseBalance(amount);
-                amount = -amount;
+                amount.subtract(amount);
             }
 
             // 히스토리 기록
@@ -109,7 +111,7 @@ public class BankTransactionService {
     /**
      * BankTransaction 생성
      */
-    public BankTransaction makeBankTransaction(Transaction transaction, User user, Double amount) {
+    public BankTransaction makeBankTransaction(Transaction transaction, User user, BigDecimal amount) {
         BankTransaction bankTransaction = BankTransaction.builder()
                 .transaction(transaction)
                 .bank(bankService.getConnectedBank(user))
@@ -123,7 +125,7 @@ public class BankTransactionService {
     /**
      * BankTransaction용 BoxHistory 생성
      */
-    private BoxHistory makeBoxHistory(Box box, Transaction transaction, Double amount, BoxBalance boxBalance, Transaction.Type type) {
+    private BoxHistory makeBoxHistory(Box box, Transaction transaction, BigDecimal amount, BoxBalance boxBalance, Transaction.Type type) {
         return BoxHistory.builder()
                 .box(box)
                 .transaction(transaction)

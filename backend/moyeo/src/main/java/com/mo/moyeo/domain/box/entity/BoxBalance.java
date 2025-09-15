@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -37,7 +38,7 @@ public class BoxBalance {
     private CurrencyType currencyCode;
 
     @Column(name = "balance", nullable = false)
-    private Double balance = 0d;
+    private BigDecimal balance = BigDecimal.ZERO;
 
     @LastModifiedDate
     @Column(name = "updated_at")
@@ -49,16 +50,20 @@ public class BoxBalance {
     }
 
     // 금액 증가
-    public void increaseBalance(Double amount) {
-        this.balance += amount;
+    public void increaseBalance(BigDecimal amount) {
+        this.balance.add(amount);
     }
 
     // 금액 감소
-    public void decreaseBalance(Double amount) {
-        if (this.balance < amount) {
+    public void decreaseBalance(BigDecimal amount) {
+        if (checkSufficientBalance(amount)) {
             throw new IllegalStateException("잔액이 부족합니다");
         }
-        this.balance -= amount;
+        this.balance.subtract(amount);
+    }
+
+    public boolean checkSufficientBalance(BigDecimal amount) {
+        return this.balance.compareTo(amount) < 0;
     }
 
 }

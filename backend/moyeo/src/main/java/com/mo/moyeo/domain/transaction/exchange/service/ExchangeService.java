@@ -24,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 
@@ -47,7 +49,7 @@ public class ExchangeService {
         Transaction transaction = transactionService.makeExchangeTransaction(box, user);
         Map<String, CurrentExchangeRateDto> currentExchangeRate = exchangeRateCacheService.getCurrentExchangeRate();
 
-        Double fromAmount, toAmount;
+        BigDecimal fromAmount, toAmount;
 
         if (exchangeRequestDto.getFromCurrency() == CurrencyType.KRW) {
             ExchangeTransaction exchangeTransaction = exchangeFromKRW(transaction, currentExchangeRate, exchangeRequestDto);
@@ -75,19 +77,19 @@ public class ExchangeService {
         String fromAccount = accountUtil.getAccountByType(exchangeRequestDto.getFromCurrency());
     }
 
-    private void updateBoxBalanceAndSaveHistory(ExchangeRequestDto exchangeRequestDto, Box box, Double toAmount, Double fromAmount, Transaction transaction) {
+    private void updateBoxBalanceAndSaveHistory(ExchangeRequestDto exchangeRequestDto, Box box, BigDecimal toAmount, BigDecimal fromAmount, Transaction transaction) {
         BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(box, exchangeRequestDto.getFromCurrency());
         BoxBalance toBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(box, exchangeRequestDto.getToCurrency());
 
         toBoxBalance.increaseBalance(toAmount);
-        if(fromBoxBalance.getBalance() < fromAmount)
+        if(fromBoxBalance.checkSufficientBalance(fromAmount))
             throw new CustomException(ErrorCode.BAD_REQUEST, "환전에 필요한 금액이 부족합니다.");
         fromBoxBalance.decreaseBalance(fromAmount);
 
         BoxHistory boxHistory1 = BoxHistory.builder()
                 .box(box)
                 .transaction(transaction)
-                .amount(-1.0 * fromAmount)
+                .amount(fromAmount.negate())
                 .currencyCode(exchangeRequestDto.getFromCurrency())
                 .totalAmount(fromBoxBalance.getBalance())
                 .title("환전")
@@ -113,7 +115,7 @@ public class ExchangeService {
         //목표 -> 한화로 환전
         ExchangeTransaction txn1 = exchangeFromKRW(transaction, currentExchangeRate, exchangeRequestDto);
 
-        Double amountKRW = txn1.getFromAmount();
+        BigDecimal amountKRW = txn1.getFromAmount();
         ExchangeRequestDto dto = ExchangeRequestDto.builder()
                 .fromCurrency(exchangeRequestDto.getFromCurrency())
                 .toCurrency(CurrencyType.KRW)
@@ -126,16 +128,17 @@ public class ExchangeService {
 
     private ExchangeTransaction exchangeToKRW(Transaction transaction, Map<String, CurrentExchangeRateDto> currentExchangeRate, ExchangeRequestDto exchangeRequestDto) {
         CurrencyType fromCurrency = exchangeRequestDto.getFromCurrency();
-        Double sellRate = currentExchangeRate.get(fromCurrency.name()).getSellRate();
+        BigDecimal sellRate = currentExchangeRate.get(fromCurrency.name()).getSellRate();
 
-        Double toAmount = exchangeRequestDto.getAmount();
-        Double fromAmount;
+        BigDecimal toAmount = exchangeRequestDto.getAmount();
+        BigDecimal fromAmount;
+
         if (fromCurrency == CurrencyType.JPY) {
-            // JPY는 100엔 기준이므로 나눠줘야 함
-            fromAmount = (sellRate / 100.0) * toAmount;
+            // JPY는 100엔 기준
+            fromAmount = sellRate.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP).multiply(toAmount);
         } else {
             // USD, EUR 같은 경우는 1 단위 기준
-            fromAmount = sellRate * toAmount;
+            fromAmount = sellRate.multiply(toAmount);
         }
 
         return ExchangeTransaction.builder()
@@ -150,16 +153,17 @@ public class ExchangeService {
 
     private ExchangeTransaction exchangeFromKRW(Transaction transaction, Map<String, CurrentExchangeRateDto> currentExchangeRate, ExchangeRequestDto exchangeRequestDto) {
         CurrencyType toCurrency = exchangeRequestDto.getToCurrency();
-        Double buyRate = currentExchangeRate.get(toCurrency.name()).getBuyRate();
+        BigDecimal buyRate = currentExchangeRate.get(toCurrency.name()).getBuyRate();
 
-        Double toAmount = exchangeRequestDto.getAmount();
-        Double fromAmount;
+        BigDecimal toAmount = exchangeRequestDto.getAmount();
+        BigDecimal fromAmount;
+
         if (toCurrency == CurrencyType.JPY) {
             // JPY는 100엔 기준
-            fromAmount = (buyRate * 100.0) * toAmount;
+            fromAmount = buyRate.multiply(BigDecimal.valueOf(100)).multiply(toAmount);
         } else {
             // USD, EUR 같은 경우는 1 단위 기준
-            fromAmount = buyRate * toAmount;
+            fromAmount = buyRate.multiply(toAmount);
         }
 
         return ExchangeTransaction.builder()
@@ -179,12 +183,20 @@ public class ExchangeService {
         if (!box.isPersonal() && !boxMemberService.getMyPermission(box.getId(), user.getId()).getCanExchange())//모임 통장이면 환전 권한 있는지
             throw new CustomException(ErrorCode.ACCESS_DENIED, "권한이 없습니다.");
 
-        if (exchangeRequestDto.getAmount() % 10 != 0)
-            throw new CustomException(ErrorCode.BAD_REQUEST, "10 단위로만 환전 가능합니다.");
+        BigDecimal amount = exchangeRequestDto.getAmount();
+        BigDecimal ten = BigDecimal.TEN;
+        BigDecimal minExchange = BigDecimal.valueOf(100);
 
-        double minExchange = 100.0;
-        if (minExchange > exchangeRequestDto.getAmount())
+        // 10단위 확인
+        if (amount.remainder(ten).compareTo(BigDecimal.ZERO) != 0) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "10 단위로만 환전 가능합니다.");
+        }
+
+        // 최소 환전금액 확인
+        if (amount.compareTo(minExchange) < 0) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "최소 환전금액보다 작게 환전할 수 없습니다. " + minExchange);
+        }
+
     }
 
     public List<ExchangeTransaction> getExchangeTransactions(Long transactionId) {

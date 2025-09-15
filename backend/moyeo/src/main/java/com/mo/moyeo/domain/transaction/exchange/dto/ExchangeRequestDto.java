@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,7 +25,7 @@ public class ExchangeRequestDto {
     private CurrencyType toCurrency;
     @NotNull(message = "금액을 입력해 주세요.")
     @Min(value = 0, message = "0보다 큰 수를 입력해주세요.")
-    private Double amount;
+    private BigDecimal amount;
 
     public ExchangeRequestDto (ReservedExchange reservedExchange){
         this.fromBoxId = reservedExchange.getBox().getId();

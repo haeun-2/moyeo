@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -43,10 +44,10 @@ public class ReservedExchange {
     private Currency toCurrency;
 
     @Column(name = "target_rate")
-    private double targetRate;
+    private BigDecimal targetRate;
 
     @Column(name = "amount")
-    private double amount;
+    private BigDecimal amount;
 
     @Column(name = "expires_at")
     private LocalDate expiresAt;

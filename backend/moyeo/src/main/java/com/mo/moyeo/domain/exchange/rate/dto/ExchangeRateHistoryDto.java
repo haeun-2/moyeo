@@ -5,15 +5,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 public class ExchangeRateHistoryDto {
-    Double buyRate;
-    Double sellRate;
-    Double originalRate;
+    BigDecimal buyRate;
+    BigDecimal sellRate;
+    BigDecimal originalRate;
     String period;
 
 }
