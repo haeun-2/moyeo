@@ -15,16 +15,15 @@ import androidx.compose.ui.unit.dp
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.errorLight
 import com.d108.moyeo.presentation.theme.onSurfaceLight
-import com.d108.moyeo.presentation.theme.primaryLight
 
 @Composable
-fun EmailVerifyContent(uiState: SignUpUiState, viewModel: SignUpViewModel) {
+fun PhoneVerifyContent(uiState: SignUpUiState, viewModel: SignUpViewModel) {
     Column {
-        Text("이메일을\n확인해주세요", style = Typography.titleLarge)
-        Spacer(Modifier.height(20.dp))  // TODO: 후에 상수화 할 것
+        Text("인증번호를\n확인해주세요", style = Typography.titleLarge)
+        Spacer(Modifier.height(20.dp))  // 후에 상수화 할 것
         OutlinedTextField(
-            value = uiState.emailCode,
-            onValueChange = viewModel::onEmailCodeChanged,
+            value = uiState.phoneCode,
+            onValueChange = viewModel::onPhoneCodeChanged,
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             placeholder = {
@@ -42,6 +41,5 @@ fun EmailVerifyContent(uiState: SignUpUiState, viewModel: SignUpViewModel) {
             style = Typography.bodyMedium,
             color = errorLight
         )
-
     }
 }

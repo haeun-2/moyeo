@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Padding
@@ -29,7 +29,7 @@ import com.d108.moyeo.util.BiometricAuthManager
 @Composable
 fun SignUpScreen(
     navController: NavController,
-    viewModel: SignUpViewModel = viewModel()
+    viewModel: SignUpViewModel = hiltViewModel()
 ) {
 
     BackHandler {
@@ -87,17 +87,11 @@ fun SignUpScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    var showBankBottomSheet by remember { mutableStateOf(false) }
-    if (showBankBottomSheet) {
+    if (uiState.showBankBottomSheet) {
         BankSelectionBottomSheet(
-            banks = viewModel.bankList,
-            onBankSelected = { selectedBank ->
-                viewModel.onAccountBankChanged(selectedBank) // ViewModel에 선택된 은행 전달
-                showBankBottomSheet = false // 바텀시트 닫기
-            },
-            onDismiss = {
-                showBankBottomSheet = false // 바텀시트 닫기
-            }
+            banks = uiState.bankList, // ViewModel이 제공하는 Bank 모델 리스트
+            onBankSelected = viewModel::onBankSelected, // ViewModel의 함수를 직접 연결
+            onDismiss = viewModel::onBankBottomSheetDismiss // ViewModel의 함수를 직접 연결
         )
     }
 
@@ -113,7 +107,10 @@ fun SignUpScreen(
                 SignUpStep.NAME -> NameInputContent(uiState, viewModel)
                 SignUpStep.EMAIL_INPUT -> EmailInputContent(uiState, viewModel)
                 SignUpStep.EMAIL_VERIFY -> EmailVerifyContent(uiState, viewModel)
-                SignUpStep.ACCOUNT -> AccountInputContent(uiState, viewModel, onBankFieldClick = { showBankBottomSheet = true })
+                SignUpStep.PHONE_INPUT -> PhoneInputContent(uiState, viewModel)
+                SignUpStep.PHONE_VERIFY -> PhoneVerifyContent(uiState, viewModel)
+                SignUpStep.ACCOUNT -> AccountInputContent(uiState, viewModel,
+                        onBankFieldClick = viewModel::onBankFieldClicked)
                 SignUpStep.ACCOUNT_VERIFY -> VerifyAccountContent(uiState, viewModel)
                 SignUpStep.TERMS -> TermsContent(uiState, viewModel)
                 SignUpStep.PIN -> PinInputContent(uiState, viewModel)
@@ -128,10 +125,13 @@ fun SignUpScreen(
         val isButtonEnabled = when(uiState.currentStep) {  // 각 버튼이 활성화되는 타이밍
             SignUpStep.NAME -> uiState.name.isNotBlank()
             SignUpStep.EMAIL_INPUT -> uiState.email.isNotBlank()
-            // SignUpStep.EMAIL_VERIFY -> uiState.isEmailVerified
-            SignUpStep.EMAIL_VERIFY -> true  // 우선은 일단 가능하게
-            SignUpStep.ACCOUNT -> uiState.accountBank.isNotBlank() && uiState.accountNumber.isNotBlank()
-            SignUpStep.ACCOUNT_VERIFY -> true // TODO: 인증번호 유효성 검사
+            SignUpStep.EMAIL_VERIFY -> uiState.emailCode.length == 6
+            SignUpStep.PHONE_INPUT -> uiState.phoneNumber.isNotBlank()
+            SignUpStep.PHONE_VERIFY ->  uiState.phoneCode.length == 6
+
+            SignUpStep.ACCOUNT -> uiState.accountBank != null && uiState.accountNumber.isNotBlank()
+            SignUpStep.ACCOUNT_VERIFY -> uiState.oneCoinNumber.length == 4
+
             SignUpStep.TERMS -> uiState.termsOfServiceAccepted && uiState.privacyPolicyAccepted
             SignUpStep.PIN -> uiState.pin.length == 6
             SignUpStep.PIN_CONFIRM -> uiState.pinConfirm.length == 6 && uiState.pin == uiState.pinConfirm

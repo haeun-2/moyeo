@@ -1,9 +1,12 @@
 package com.d108.moyeo.presentation.ui.component.signup
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -30,19 +33,22 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import com.d108.moyeo.domain.model.Bank
 import com.d108.moyeo.presentation.theme.onSurfaceLight
 import com.d108.moyeo.presentation.theme.surfaceLight
+import com.d108.moyeo.util.base64ToImageBitmap
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BankSelectionBottomSheet(
-    banks: List<String>,
-    onBankSelected: (String) -> Unit,
+    banks: List<Bank>,
+    onBankSelected: (Bank) -> Unit,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
@@ -131,7 +137,7 @@ fun BankSelectionBottomSheet(
                 horizontalArrangement = Arrangement.spacedBy(16.dp), // 아이템 간 가로 간격
                 verticalArrangement = Arrangement.spacedBy(16.dp)   // 아이템 간 세로 간격
             ) {
-                items(banks) { bank ->
+                items(banks, key = { it.code }) { bank ->
                     Button(
                         onClick = { onBankSelected(bank) },
                         modifier = Modifier
@@ -146,10 +152,27 @@ fun BankSelectionBottomSheet(
                             contentColor = onSurfaceLight
                         )
                     ) {
-                        Text(
-                            text = bank,
-                            textAlign = TextAlign.Center
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            // 이미지가 null이 아닐 경우에만 Image 컴포저블을 보여줍니다.
+                            bank.logoBitmap?.let { imageBitmap ->
+                                Image(
+                                    bitmap = imageBitmap,
+                                    contentDescription = "${bank.name} 로고",
+                                    modifier = Modifier
+                                        .height(40.dp)
+                                        .fillMaxWidth(),
+                                    contentScale = ContentScale.Fit
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                            Text(
+                                text = bank.name,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }
