@@ -9,6 +9,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.d108.moyeo.presentation.ui.screen.exchange.CurrencySelectionScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeAddScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeKeypadScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
@@ -186,6 +187,11 @@ fun AppNavHost(
         // 환율의 추가 버튼을 누르면 이동
         composable("exchange_add") {
             ExchangeAddScreen(navController)
+        }
+
+        // 예약 환전
+        composable("currency_selection") {
+            CurrencySelectionScreen(navController)
         }
 
         // QR 화면
