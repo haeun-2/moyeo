@@ -30,7 +30,7 @@ fun AccountInputContent(
             modifier = Modifier.clickable(onClick = onBankFieldClick) // 클릭 이벤트를 Box로 옮겼습니다.
         ) {
             OutlinedTextField(
-                value = uiState.accountBank,
+                value = uiState.accountBank?.name ?: "",
                 onValueChange = { }, // 직접 수정하지 않으므로 비워둠
                 modifier = Modifier.fillMaxWidth(),
                 readOnly = true, // 키보드가 올라오지 않도록 읽기 전용으로 설정

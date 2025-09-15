@@ -1,7 +1,18 @@
 package com.d108.moyeo.presentation.ui.screen.signup
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.domain.model.Bank
+import com.d108.moyeo.domain.usecase.signup.GetAllBankListUseCase
+import com.d108.moyeo.domain.usecase.signup.RequestAccountAuthUseCase
+import com.d108.moyeo.domain.usecase.signup.RequestEmailAuthUseCase
+import com.d108.moyeo.domain.usecase.signup.RequestPhoneAuthUseCase
+import com.d108.moyeo.domain.usecase.signup.VerifyAccountCodeUseCase
+import com.d108.moyeo.domain.usecase.signup.VerifyEmailCodeUseCase
+import com.d108.moyeo.domain.usecase.signup.VerifyPhoneCodeUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -9,16 +20,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+private val TAG = "signupviewmodel"
 // 회원가입 과정의 모든 상태를 담는 데이터 클래스
 data class SignUpUiState(
     val currentStep: SignUpStep = SignUpStep.NAME,
+    val sessionId: String? = null, // 서버와 통신하기 위한 세션 ID 추가
 
     val name: String = "",  // 사용자 이름
 
     val email: String = "",  // 사용자 이메일
+    val emailCode: String = "", // 이메일 코드
     val isEmailVerified: Boolean = false,  // 이메일 인증 여부
 
-    val accountBank: String = "",  // 은행 이름
+    val phoneNumber: String = "",  // 전화번호
+    val phoneCode: String = "",
+    val isPhoneNumberVerified: Boolean = false,  // 전화번호 인증 여부
+
+    val bankList: List<Bank> = emptyList(),
+    val showBankBottomSheet: Boolean = false,
+    val accountBank: Bank? = null,
     val accountNumber: String = "",  // 계좌번호
 
     val oneCoinNumber: String = "",  // 1원 인증으로 입력받을 번호
@@ -34,6 +54,9 @@ data class SignUpUiState(
     val privacyPolicyAccepted: Boolean = false,
 
     val isBiometricsUsed: Boolean = false, // 생체인증 쓰는지 여부
+
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null // 에러 메시지 상태
 )
 
 // UI로 전달할 일회성 탐색 이벤트
@@ -43,8 +66,16 @@ sealed class SignUpNavigationEvent {
     object ShowBiometricPrompt : SignUpNavigationEvent()  // 생체 인증 프롬프트창
 }
 
-class SignUpViewModel : ViewModel() {
-
+@HiltViewModel
+class SignUpViewModel @Inject constructor (
+    private val requestEmailAuthUseCase: RequestEmailAuthUseCase, // Repository 대신 UseCase를 주입받음
+    private val verifyEmailCodeUseCase: VerifyEmailCodeUseCase,
+    private val requestPhoneAuthUseCase: RequestPhoneAuthUseCase,
+    private val verifyPhoneCodeUseCase: VerifyPhoneCodeUseCase,
+    private val getAllBankListUseCase: GetAllBankListUseCase,
+    private val requestAccountAuthUseCase: RequestAccountAuthUseCase,
+    private val verifyAccountCodeUseCase: VerifyAccountCodeUseCase
+) : ViewModel() {
     private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState = _uiState.asStateFlow()
 
@@ -52,54 +83,63 @@ class SignUpViewModel : ViewModel() {
     private val _navigationEvent = MutableSharedFlow<SignUpNavigationEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
-    val bankList: List<String> = listOf(
-        "우리은행", "SC제일은행", "신한은행", "KB국민은행",
-        "KEB하나은행", "시티은행", "IM뱅크", "NH농협은행",
-        "IBK기업은행", "KDB산업은행", "MG새마을금고", "카카오뱅크",
-        "싸피은행"
-    )
+    init {
+        // ViewModel이 생성될 때 은행 목록을 미리 불러옵니다.
+        loadBankList()
+    }
+
+    private fun loadBankList() {
+        viewModelScope.launch {
+            getAllBankListUseCase()
+                .onSuccess { banks ->
+                    _uiState.update { it.copy(bankList = banks) }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(errorMessage = "은행 목록을 불러오지 못했습니다.") }
+                }
+        }
+    }
 
     fun onNextClicked() {
-        val currentStep = _uiState.value.currentStep
+        when (val currentStep = _uiState.value.currentStep) {
+            // '실제 일'을 하도록 수정
+            SignUpStep.EMAIL_INPUT -> requestEmailAuth()
+            SignUpStep.EMAIL_VERIFY -> verifyEmailCode()
+            SignUpStep.PHONE_INPUT -> requestPhoneAuth()
+            SignUpStep.PHONE_VERIFY -> verifyPhoneCode()
+            SignUpStep.ACCOUNT -> requestAccountAuth()
+            SignUpStep.ACCOUNT_VERIFY -> verifyAccountCode()
+            // ... TODO: PHONE_INPUT -> requestPhoneAuth() 등 다른 단계도 추가 필요 ...
 
-        // BIOMETRICS 단계에서는 "사용하기" 버튼에서 함수 호출
-        if (currentStep == SignUpStep.BIOMETRICS) {
-            viewModelScope.launch {
-                _navigationEvent.emit(SignUpNavigationEvent.ShowBiometricPrompt)
+            // BIOMETRICS와 COMPLETE는 특별 처리
+            SignUpStep.BIOMETRICS -> viewModelScope.launch { _navigationEvent.emit(SignUpNavigationEvent.ShowBiometricPrompt) }
+            SignUpStep.COMPLETE -> viewModelScope.launch { _navigationEvent.emit(SignUpNavigationEvent.NavigateToHome) }
+
+            // 그 외 단순 화면 전환만 필요한 경우
+            else -> {
+                val nextStep = when (currentStep) {
+                    SignUpStep.NAME -> SignUpStep.EMAIL_INPUT
+                    SignUpStep.ACCOUNT_VERIFY -> SignUpStep.TERMS
+                    SignUpStep.TERMS -> SignUpStep.PIN
+                    SignUpStep.PIN -> SignUpStep.PIN_CONFIRM
+                    SignUpStep.PIN_CONFIRM -> SignUpStep.BIOMETRICS
+                    else -> null
+                }
+                if (nextStep != null) {
+                    _uiState.update { it.copy(currentStep = nextStep) }
+                }
             }
-            return // 함수를 여기서 종료
-        }
-
-        // COMPLETE 단계에서는 "시작하기" 버튼이 홈으로 가도록 이벤트 발생 후 종료
-        if (currentStep == SignUpStep.COMPLETE) {
-            viewModelScope.launch {
-                _navigationEvent.emit(SignUpNavigationEvent.NavigateToHome)
-            }
-            return
-        }
-
-        // 나머지 일반적인 단계들은 다음 단계로 상태를 업데이트
-        val nextStep = when (currentStep) {
-            SignUpStep.NAME -> SignUpStep.EMAIL_INPUT
-            SignUpStep.EMAIL_INPUT -> SignUpStep.EMAIL_VERIFY
-            SignUpStep.EMAIL_VERIFY -> SignUpStep.ACCOUNT
-            SignUpStep.ACCOUNT -> SignUpStep.ACCOUNT_VERIFY
-            SignUpStep.ACCOUNT_VERIFY -> SignUpStep.TERMS
-            SignUpStep.TERMS -> SignUpStep.PIN
-            SignUpStep.PIN -> SignUpStep.PIN_CONFIRM
-            SignUpStep.PIN_CONFIRM -> SignUpStep.BIOMETRICS
-            else -> null // 위에서 이미 처리된 BIOMETRICS, COMPLETE는 여기에 도달하지 않음
-        }
-
-        if (nextStep != null) {
-            _uiState.update { it.copy(currentStep = nextStep) }
         }
     }
 
     fun onBackClicked() {
         val currentStep = _uiState.value.currentStep
         val previousStep = when (currentStep) {
-            SignUpStep.ACCOUNT -> SignUpStep.NAME
+            SignUpStep.EMAIL_INPUT -> SignUpStep.NAME
+            SignUpStep.EMAIL_VERIFY -> SignUpStep.EMAIL_INPUT
+            SignUpStep.PHONE_INPUT -> SignUpStep.EMAIL_VERIFY
+            SignUpStep.PHONE_VERIFY -> SignUpStep.PHONE_INPUT
+            SignUpStep.ACCOUNT -> SignUpStep.PHONE_VERIFY
             SignUpStep.ACCOUNT_VERIFY -> SignUpStep.ACCOUNT
             SignUpStep.TERMS -> SignUpStep.ACCOUNT_VERIFY
             SignUpStep.PIN -> SignUpStep.TERMS
@@ -121,8 +161,6 @@ class SignUpViewModel : ViewModel() {
     }
 
     // 각 데이터 변경 시 호출될 함수들
-
-
     // 이름 단계
     fun onNameChanged(name: String) {
         _uiState.update { it.copy(name = name) }
@@ -133,13 +171,152 @@ class SignUpViewModel : ViewModel() {
         _uiState.update { it.copy(email = email) }
     }
 
-    fun onEmailVerified() {
-        _uiState.update { it.copy(isEmailVerified = true) }
+    fun onEmailCodeChanged(emailCode: String) {
+        _uiState.update { it.copy(emailCode = emailCode) }
     }
 
-    // 계좌 단계
-    fun onAccountBankChanged(accountBank: String) {
-        _uiState.update { it.copy(accountBank = accountBank) }
+    /**
+     * 이메일 인증 코드 전송을 서버에 요청합니다.
+     */
+    fun requestEmailAuth() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+
+            // ViewModel은 이제 '요리'를 시키기만 하면 됩니다. 코드가 극도로 단순해집니다.
+            requestEmailAuthUseCase(uiState.value.email)
+                .onSuccess { sessionId ->
+                    _uiState.update { it.copy(isLoading = false, sessionId = sessionId, currentStep = SignUpStep.EMAIL_VERIFY) }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "실패!") }
+                }
+        }
+    }
+
+    /**
+     * 사용자가 입력한 인증 코드를 서버에 검증 요청합니다.
+     */
+    fun verifyEmailCode() {
+        val currentState = uiState.value
+        if (currentState.sessionId == null) {
+            _uiState.update { it.copy(errorMessage = "세션 정보가 없습니다. 다시 시도해주세요.") }
+            return
+        }
+
+        Log.d(TAG, "이메일 코드 검증 직전 sessionId: ${currentState.sessionId}")
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            // Repository 대신 주입받은 UseCase를 직접 호출합니다
+            verifyEmailCodeUseCase(
+                sessionId = currentState.sessionId,
+                email = currentState.email,
+                emailCode = currentState.emailCode
+            )
+                .onSuccess {
+                    Log.d(TAG, "이메일 코드 검증 성공")
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isEmailVerified = true,
+                            currentStep = SignUpStep.PHONE_INPUT
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    Log.e(TAG, "이메일 코드 검증 실패", error)
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "인증번호가 올바르지 않습니다.") }
+                }
+        }
+    }
+
+    // 휴대폰 단계
+    fun onPhoneNumberChanged(phoneNumber: String) {
+        _uiState.update { it.copy(phoneNumber = phoneNumber) }
+    }
+
+    fun onPhoneCodeChanged(code: String) {
+        _uiState.update { it.copy(phoneCode = code) }
+    }
+
+    fun requestPhoneAuth() {
+        val currentState = uiState.value
+        if (currentState.sessionId == null) {
+            _uiState.update { it.copy(errorMessage = "세션 정보가 없습니다.") }
+            return
+        }
+
+        Log.d(TAG, "전화번호 코드 검증 직전 sessionId: ${currentState.sessionId}")
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            requestPhoneAuthUseCase(currentState.sessionId, currentState.phoneNumber)
+                .onSuccess { response ->
+                    Log.d(TAG, "전화번호 인증 요청 성공: new session = ${response.sessionId}")
+                    _uiState.update { it.copy(isLoading = false, sessionId = response.sessionId, currentStep = SignUpStep.PHONE_VERIFY) }
+                }
+                .onFailure { error ->
+                    Log.e(TAG, "전화번호 인증 요청 실패", error)
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "인증 요청에 실패했습니다.") }
+                }
+        }
+    }
+
+    fun verifyPhoneCode() {
+        val currentState = uiState.value
+        if (currentState.sessionId == null) {
+            _uiState.update { it.copy(errorMessage = "세션 정보가 없습니다.") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            verifyPhoneCodeUseCase(
+                sessionId = currentState.sessionId,
+                phoneNumber = currentState.phoneNumber,
+                phoneCode = currentState.phoneCode
+            )
+                .onSuccess { response ->
+                    Log.d(TAG, "전화번호 코드 검증 성공: new session = ${response.sessionId}")
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isPhoneNumberVerified = true,
+                            sessionId = response.sessionId,
+                            currentStep = SignUpStep.ACCOUNT
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    Log.e(TAG, "전화번호 코드 검증 실패", error)
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "인증번호가 올바르지 않습니다.") }
+                }
+        }
+    }
+
+    /**
+     * [디버그용] 실제 SMS 인증을 건너뛰고 전화번호를 즉시 '인증됨' 상태로 처리합니다.
+     */
+    fun onDebugPhoneNumberVerified() {
+        // 이 함수는 실제 출시 버전에는 포함되지 않도록 UI 단에서 제어해야 합니다.
+        _uiState.update {
+            it.copy(
+                isPhoneNumberVerified = true,
+                currentStep = SignUpStep.ACCOUNT // 인증 성공 시 다음 단계인 계좌 입력으로 이동
+            )
+        }
+    }
+
+    fun onBankFieldClicked() {
+        _uiState.update { it.copy(showBankBottomSheet = true) }
+    }
+
+    fun onBankSelected(bank: Bank) {
+        _uiState.update { it.copy(accountBank = bank, showBankBottomSheet = false) }
+    }
+
+    fun onBankBottomSheetDismiss() {
+        _uiState.update { it.copy(showBankBottomSheet = false) }
     }
 
     fun onAccountNumberChanged(accountNumber: String) {
@@ -151,8 +328,72 @@ class SignUpViewModel : ViewModel() {
         _uiState.update { it.copy(oneCoinNumber = oneCoinNumber) }
     }
 
-    fun onIsOneCoinVerifiedChanged(isOneCoinVerified: Boolean) {
-        _uiState.update { it.copy(isOneCoinVerified = isOneCoinVerified) }
+    /**
+     * 계좌 인증(1원 송금)을 서버에 요청합니다.
+     */
+    fun requestAccountAuth() {
+        val currentState = uiState.value
+        if (currentState.sessionId == null || currentState.accountBank == null) {
+            _uiState.update { it.copy(errorMessage = "필수 정보가 누락되었습니다.") }
+            return
+        }
+
+        Log.d(TAG, "1원인증 요청 직전 sessionId: ${currentState.sessionId}")
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            requestAccountAuthUseCase(
+                sessionId = currentState.sessionId,
+                email = currentState.email,
+                bankAccount = currentState.accountNumber
+            )
+                .onSuccess { response ->
+                    Log.d(TAG, "계좌 인증 요청 성공: new session = ${response.sessionId}")
+                    _uiState.update { it.copy(isLoading = false, sessionId = response.sessionId, currentStep = SignUpStep.ACCOUNT_VERIFY) }
+                }
+                .onFailure { error ->
+                    Log.e(TAG, "계좌 인증 요청 실패", error)
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "계좌 인증에 실패했습니다.") }
+                }
+        }
+    }
+
+    /**
+     * 사용자가 입력한 1원 인증 코드를 서버에 검증 요청합니다.
+     */
+    fun verifyAccountCode() {
+        val currentState = uiState.value
+        if (currentState.sessionId == null) {
+            _uiState.update { it.copy(errorMessage = "세션 정보가 없습니다.") }
+            return
+        }
+
+        Log.d(TAG, "1원인증 검증 직전 sessionId: ${currentState.sessionId}")
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            verifyAccountCodeUseCase(
+                sessionId = currentState.sessionId,
+                email = currentState.email,
+                bankAccount = currentState.accountNumber,
+                code = currentState.oneCoinNumber
+            )
+                .onSuccess { response ->
+                    Log.d(TAG, "계좌 코드 검증 성공: new session = ${response.sessionId}")
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isOneCoinVerified = true,
+                            sessionId = response.sessionId,
+                            currentStep = SignUpStep.TERMS
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    Log.e(TAG, "계좌 코드 검증 실패", error)
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "인증번호가 올바르지 않습니다.") }
+                }
+        }
     }
 
     // 약관 동의 상태
