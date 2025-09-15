@@ -92,7 +92,7 @@ fun ExchangeScreen(navController: NavController) {
         // 예약환전하기 버튼
         Button(
             onClick = {
-                Toast.makeText(context, "환전하기 버튼을 눌렀습니다", Toast.LENGTH_SHORT).show()
+                navController.navigate("currency_selection")
             },
             modifier = Modifier
                 .fillMaxWidth()
