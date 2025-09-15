@@ -44,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.theme.Spacing
+import com.d108.moyeo.presentation.theme.Padding
 
 @Composable
 fun ExchangeAddScreen(
@@ -57,7 +59,7 @@ fun ExchangeAddScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(16.dp)
+            .padding(Padding.Content)
     ) {
         // 상단 헤더 (뒤로가기, 화면 제목)
         Row(
@@ -80,7 +82,7 @@ fun ExchangeAddScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
 
         // 검색창
         OutlinedTextField(
@@ -115,13 +117,13 @@ fun ExchangeAddScreen(
             singleLine = true
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
 
         // 인기 통화 태그 목록
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(horizontal = 8.dp)
+            horizontalArrangement = Arrangement.spacedBy(Spacing.Small),
+            contentPadding = PaddingValues(horizontal = Spacing.Small)
         ) {
             items(uiState.popularCurrencies) { currency ->
                 PopularCurrencyTag(
@@ -131,18 +133,18 @@ fun ExchangeAddScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
 
         // 국가별 통화 리스트
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp) // 아이템 간 수직 간격
+            verticalArrangement = Arrangement.spacedBy(Spacing.Small) // 아이템 간 수직 간격
         ) {// 검색 결과가 없고, 검색어가 비어있지 않은 경우
             if (uiState.filteredCountries.isEmpty() && !uiState.isSearchEmpty) {
                 item {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(32.dp),
+                            .padding(Spacing.ExtraLarge),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -184,7 +186,7 @@ private fun PopularCurrencyTag(
                 shape = RoundedCornerShape(16.dp)
             )
             .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = Spacing.SmallMedium, vertical = Spacing.Small)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -193,7 +195,7 @@ private fun PopularCurrencyTag(
                 text = currency.flag,
                 style = Typography.bodyMedium
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(Spacing.ExtraSmall))
             Text(
                 text = currency.name,
                 style = Typography.bodySmall,
@@ -216,7 +218,7 @@ private fun CountrySection(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onToggleExpanded() }
-                .padding(vertical = 12.dp),
+                .padding(vertical = Spacing.SmallMedium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -238,7 +240,7 @@ private fun CountrySection(
         // 통화 리스트
         if (isExpanded && country.currencies.isNotEmpty()) {
             Column(
-                modifier = Modifier.padding(start = 16.dp)
+                modifier = Modifier.padding(start = Spacing.Medium)
             ) {
                 country.currencies.forEach { currency ->
                     CurrencyItem(
@@ -267,7 +269,7 @@ private fun CurrencyItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = Spacing.Small),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // 국기 아이콘
@@ -283,7 +285,7 @@ private fun CurrencyItem(
             )
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(Spacing.SmallMedium))
 
         // 통화 이름
         Text(

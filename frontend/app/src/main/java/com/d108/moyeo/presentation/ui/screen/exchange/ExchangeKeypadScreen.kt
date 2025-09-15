@@ -35,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.d108.moyeo.presentation.theme.Padding
+import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.ui.component.CustomKeypad
 import com.d108.moyeo.presentation.ui.component.KeyMode
@@ -58,7 +60,7 @@ fun ExchangeKeypadScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(16.dp)
+            .padding(Padding.Content)
     ) {
         // 상단 헤더
         Row(
@@ -83,7 +85,7 @@ fun ExchangeKeypadScreen(
             Box(modifier = Modifier.size(48.dp))
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(Spacing.ExtraLarge + Spacing.Small))
 
         // 일본 JPY
         Row(
@@ -97,7 +99,7 @@ fun ExchangeKeypadScreen(
                     .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Spacing.Medium))
 
             Column {
                 Text(
@@ -132,7 +134,7 @@ fun ExchangeKeypadScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
 
         // 안내 텍스트
         Row(
@@ -147,7 +149,7 @@ fun ExchangeKeypadScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(Spacing.ExtraLarge))
 
         // 대한민국 KRW 섹션
         Row(
@@ -161,7 +163,7 @@ fun ExchangeKeypadScreen(
                     .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Spacing.Medium))
 
             Text(
                 text = "대한민국 KRW",
@@ -171,7 +173,7 @@ fun ExchangeKeypadScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
 
         // 입력 금액 표시
         Text(
@@ -191,7 +193,7 @@ fun ExchangeKeypadScreen(
             color = Color.Gray,
             modifier = Modifier.padding(start = 4.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
         // 키패드 (CustomKeypad 사용)
         CustomKeypad(
             onKeyPress = { key ->
@@ -224,7 +226,7 @@ fun ExchangeKeypadScreen(
             keyMode = KeyMode.Zeros, // 00 버튼 활성화
             buttonAspectRatio = 1.2f,
             modifier = Modifier
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = Spacing.Large)
                 .height(320.dp) // 키패드 높이 고정
         )
         Spacer(modifier = Modifier.weight(1f))
@@ -246,7 +248,7 @@ fun ExchangeKeypadScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
 
     }
 }
