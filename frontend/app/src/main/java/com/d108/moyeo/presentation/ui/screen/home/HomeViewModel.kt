@@ -82,7 +82,7 @@ class HomeViewModel @Inject constructor(
     private fun loadGroups() {
         viewModelScope.launch {
             try {
-                val list = getGroupBoxes(page = 0, size = 30)
+                val list = getGroupBoxes(size = 30)
                 val mapped = list.map(::mapGroupBoxToUi)
                 _uiState.update { it.copy(groups = mapped) }
             } catch (e: Exception) {

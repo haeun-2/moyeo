@@ -9,10 +9,9 @@ interface BoxService {
     @GET("api/boxes/me")
     suspend fun getMyPersonalBox(): BoxResponseDto
 
-    // 모임 박스 (페이지네이션)
+    // 모임 박스
     @GET("api/boxes")
     suspend fun getGroupBoxes(
-        @Query("page") page: Int,
         @Query("size") size: Int
     ): List<BoxResponseDto>
 }

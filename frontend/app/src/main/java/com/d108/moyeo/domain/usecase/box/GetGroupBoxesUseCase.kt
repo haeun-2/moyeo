@@ -7,6 +7,6 @@ import javax.inject.Inject
 class GetGroupBoxesUseCase @Inject constructor(
     private val repo: BoxRepository
 ) {
-    suspend operator fun invoke(page: Int, size: Int): List<Box> =
-        repo.getGroupBoxes(page, size)
+    suspend operator fun invoke(size: Int): List<Box> =
+        repo.getGroupBoxes(size)
 }
