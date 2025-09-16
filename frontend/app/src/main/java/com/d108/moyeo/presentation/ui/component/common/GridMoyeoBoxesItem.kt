@@ -24,17 +24,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 
 @Composable
 fun GridMoyeoBoxesItem(
-    boxName: String,
-    modifier: Modifier = Modifier
+    box: Box,
 ) {
     // Card를 사용하여 각 아이템에 그림자 효과와 모양을 부여합니다.
     Card(
-        modifier = modifier.aspectRatio(1f), // 1:1 비율로 정사각형을 만듭니다.
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         // 부모 요소를 꽉 채움
@@ -63,7 +62,7 @@ fun GridMoyeoBoxesItem(
 
             // 오른쪽엔 이 모여 박스의 이름. 이 모여 박스의 이름이 남은 공간을 모두 차지함
             Text(
-                text = boxName,
+                text = box.name,
                 style = Typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 maxLines = 2,
