@@ -3,8 +3,9 @@ package com.d108.moyeo.data.remote.dto.box
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+// GET /api/boxes/me 응답 전용 DTO
 @Serializable
-data class BoxResponseDto(
+data class PersonalBoxResponseDto(
     @SerialName("boxId")
     val boxId: Long,
 

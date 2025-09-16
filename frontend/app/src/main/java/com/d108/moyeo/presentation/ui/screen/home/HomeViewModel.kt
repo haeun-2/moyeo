@@ -68,26 +68,27 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun loadPersonal() = viewModelScope.launch {
-        runCatching { getPersonalBox() }
-            .onSuccess {
-                box -> _uiState.update {
+        getPersonalBox()
+            .onSuccess { box -> // 성공 시, 상자 안의 내용물(Box)을 꺼냅니다.
+                _uiState.update {
                     it.copy(wallet = mapPersonalBoxToWalletSummary(box))
                 }
             }
-            .onFailure {
-                e -> Log.e("HomeVM", "getPersonalBox failed", e)
+            .onFailure { e ->
+                Log.e("HomeVM", "getPersonalBox failed", e)
             }
     }
 
     private fun loadGroups() {
         viewModelScope.launch {
-            try {
-                val list = getGroupBoxes(size = 30)
-                val mapped = list.map(::mapGroupBoxToUi)
-                _uiState.update { it.copy(groups = mapped) }
-            } catch (e: Exception) {
-                Log.e("HomeViewModel", "loadGroups failed", e)
-            }
+            getGroupBoxes(size = 30)
+                .onSuccess { groupBoxList -> // 성공 시, 상자 안의 내용물(List<Box>)을 꺼냅니다.
+                    val mapped = groupBoxList.map(::mapGroupBoxToUi)
+                    _uiState.update { it.copy(groups = mapped) }
+                }
+                .onFailure { e ->
+                    Log.e("HomeViewModel", "loadGroups failed", e)
+                }
         }
     }
 

@@ -1,17 +1,33 @@
 package com.d108.moyeo.data.remote.api
 
-import com.d108.moyeo.data.remote.dto.box.BoxResponseDto
+import com.d108.moyeo.data.remote.dto.box.GroupBoxResponseDto
+import com.d108.moyeo.data.remote.dto.box.PersonalBoxResponseDto
+import retrofit2.Response
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface BoxService {
     // 개인 박스
     @GET("api/boxes/me")
-    suspend fun getMyPersonalBox(): BoxResponseDto
+    suspend fun getPersonalBox(): Response<PersonalBoxResponseDto>
 
     // 모임 박스
     @GET("api/boxes")
     suspend fun getGroupBoxes(
         @Query("size") size: Int
-    ): List<BoxResponseDto>
+    ): Response<List<GroupBoxResponseDto>>
+
+
+    // 즐겨찾기한 모임 박스
+    @GET("api/boxes/bookmarks")
+    suspend fun getBookmarkedBoxes(): Response<List<GroupBoxResponseDto>>
+
+    @POST("api/boxes/{boxId}/bookmarks")
+    suspend fun addBookmark(@Path("boxId") boxId: Long): Response<Unit>
+
+    @DELETE("api/boxes/{boxId}/bookmarks")
+    suspend fun deleteBookmark(@Path("boxId") boxId: Long): Response<Unit>
 }
