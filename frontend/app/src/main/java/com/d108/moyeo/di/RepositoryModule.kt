@@ -2,9 +2,11 @@ package com.d108.moyeo.di
 
 import com.d108.moyeo.data.repository.AuthRepositoryImpl
 import com.d108.moyeo.data.repository.BankRepositoryImpl
+import com.d108.moyeo.data.repository.BoxRepositoryImpl
 import com.d108.moyeo.data.repository.SignUpRepositoryImpl
 import com.d108.moyeo.domain.repository.AuthRepository
 import com.d108.moyeo.domain.repository.BankRepository
+import com.d108.moyeo.domain.repository.BoxRepository
 import com.d108.moyeo.domain.repository.SignUpRepository
 import dagger.Binds
 import dagger.Module
@@ -47,4 +49,9 @@ abstract class RepositoryModule {  // @Binds 함수는 함수 본문이 없어�
     abstract fun bindAuthRepository(
         authRepositoryImpl: AuthRepositoryImpl
     ): AuthRepository
+
+    @Binds
+    abstract fun bindBoxRepository(
+        boxRepositoryImpl: BoxRepositoryImpl
+    ): BoxRepository
 }
