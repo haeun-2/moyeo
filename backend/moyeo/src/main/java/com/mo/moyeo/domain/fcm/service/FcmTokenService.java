@@ -1,5 +1,7 @@
 package com.mo.moyeo.domain.fcm.service;
 
+import com.mo.moyeo.common.exception.CustomException;
+import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.domain.fcm.dto.FcmTokenResponse;
 import com.mo.moyeo.domain.fcm.dto.FcmTokenUpsertRequest;
 import com.mo.moyeo.domain.fcm.entity.FcmToken;
@@ -15,6 +17,7 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class FcmTokenService {
 
     private final FcmTokenRepository fcmTokenRepository;
@@ -65,5 +68,13 @@ public class FcmTokenService {
     public void deleteTokenByDeviceToken(String deviceToken) {
         fcmTokenRepository.findByDeviceToken(deviceToken)
                 .ifPresent(fcmTokenRepository::delete);
+    }
+
+    /**
+     * 사용자의 활성 토큰 값 조회
+     */
+    public FcmToken getActiveToken(Long userId) {
+        return fcmTokenRepository.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.FCM_TOKEN_NOT_FOUND));
     }
 }
