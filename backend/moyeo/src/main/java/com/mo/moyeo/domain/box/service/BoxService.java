@@ -2,10 +2,7 @@ package com.mo.moyeo.domain.box.service;
 
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
-import com.mo.moyeo.domain.box.dto.BoxCreateRequest;
-import com.mo.moyeo.domain.box.dto.BoxCreateResponse;
-import com.mo.moyeo.domain.box.dto.BoxPermissionResponse;
-import com.mo.moyeo.domain.box.dto.BoxResponse;
+import com.mo.moyeo.domain.box.dto.*;
 import com.mo.moyeo.domain.box.entity.Box;
 import com.mo.moyeo.domain.box.entity.BoxBalance;
 import com.mo.moyeo.domain.box.entity.BoxMember;
@@ -30,17 +27,14 @@ public class BoxService {
     private final BoxMemberRepository boxMemberRepository;
     private final BoxBalanceRepository boxBalanceRepository;
 
-    public BoxResponse getMyBox(User user) {
+    public MyBoxResponse getMyBox(User user) {
         Box box = boxRepository.selectPersonalBoxByOwnerId(user.getId()).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
-        return BoxResponse.from(box);
+        return MyBoxResponse.from(box);
     }
 
-    public List<BoxResponse> getGroupBoxList(User user) {
-        List<Box> boxes = boxRepository.selectJoinedGroupBoxByUserId(user.getId());
-        for (Box box: boxes) {
-            box.getBalances();
-        }
-        return BoxResponse.from(boxes);
+    public List<GroupBoxResponse> getGroupBoxList(User user) {
+        List<BoxMember> boxes = boxMemberRepository.selectJoinedGroupBoxByUser(user);
+        return GroupBoxResponse.from(boxes);
     }
 
     public BoxPermissionResponse getMyBoxPermissions(Long boxId, User user) {

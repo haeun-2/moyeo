@@ -21,6 +21,29 @@ public interface BoxMemberRepository extends JpaRepository<BoxMember, Long> {
     Optional<BoxMember> findByBoxIdAndUserId(@Param("boxId") Long boxId, @Param("userId") Long userId);
 
     @Query("""
+            SELECT bm
+            FROM BoxMember bm
+            WHERE bm.box.id = :boxId
+            AND bm.user.id = :userId
+            AND bm.status = 'JOINED'
+    """)
+    Optional<BoxMember> findJoinedByBoxIdAndUserId(@Param("boxId") Long boxId, @Param("userId") Long userId);
+
+    @Query("""
+        SELECT DISTINCT bm
+        FROM BoxMember bm
+        JOIN FETCH bm.box b
+        LEFT JOIN FETCH b.balances bal
+        WHERE bm.user = :user
+          AND bm.status = 'JOINED'
+          AND bm.isBookmarked = true
+          AND b.type = 'GROUP'
+        ORDER BY b.createdAt DESC, b.id DESC
+    """)
+    List<BoxMember> findBookMarkedBoxAll(@Param("user") User user);
+
+
+    @Query("""
         SELECT bm
         FROM BoxMember bm
         JOIN FETCH bm.user
@@ -41,4 +64,16 @@ public interface BoxMemberRepository extends JpaRepository<BoxMember, Long> {
 
     @Query("SELECT COUNT(bm) FROM BoxMember bm WHERE bm.user = :user AND bm.status = 'JOINED'")
     Integer countJoinedGroupByUser(User user);
+
+    @Query("""
+        SELECT DISTINCT bm
+        FROM BoxMember bm
+        JOIN FETCH bm.box b
+        LEFT JOIN FETCH b.balances bal
+        WHERE bm.user = :user
+          AND bm.status = 'JOINED'
+          AND b.type = 'GROUP'
+        ORDER BY bm.isBookmarked DESC, b.createdAt DESC, b.id DESC
+    """)
+    List<BoxMember> selectJoinedGroupBoxByUser(@Param("user") User user);
 }
