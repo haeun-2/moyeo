@@ -3,6 +3,7 @@ package com.d108.moyeo.data.local
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -22,6 +23,9 @@ class UserDataManager @Inject constructor(
     companion object {
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
         private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
+
+        private val PIN_KEY = stringPreferencesKey("pin")
+        private val BIOMETRICS_PREFERENCE_KEY = booleanPreferencesKey("biometrics_preference")
     }
 
     // --- Access Token 관련 ---
@@ -41,5 +45,29 @@ class UserDataManager @Inject constructor(
 
     suspend fun clearTokens() {
         context.dataStore.edit { it.clear() }
+    }
+
+    /*
+    핀 관련
+     */
+    suspend fun savePin(pin: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PIN_KEY] = pin
+        }
+    }
+    // PIN을 FLOW로 제공
+    val pinFlow: Flow<String?> = context.dataStore.data.map { it[PIN_KEY] }
+
+    /*
+    생체 인증 관련
+     */
+    suspend fun saveBiometricsPreference(isEnabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[BIOMETRICS_PREFERENCE_KEY] = isEnabled
+        }
+    }
+
+    val biometricsPreferenceFlow: Flow<Boolean> = context.dataStore.data.map {
+        it[BIOMETRICS_PREFERENCE_KEY] ?: false  // 기본값 false
     }
 }

@@ -26,6 +26,7 @@ retrofit = "2.12.0"
 datastoreCore = "1.1.7"
 datastorePreferencesCore = "1.1.7"
 datastorePreference = "1.1.7"
+firebaseInstallationsKtx = "18.0.0"
 
 [libraries]
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
@@ -64,6 +65,7 @@ retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-
 androidx-datastore-core = { group = "androidx.datastore", name = "datastore-core", version.ref = "datastoreCore" }
 androidx-datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastorePreferencesCore" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastorePreference" }
+firebase-installations-ktx = { group = "com.google.firebase", name = "firebase-installations-ktx", version.ref = "firebaseInstallationsKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -5,9 +5,11 @@ import com.d108.moyeo.data.remote.dto.signup.AccountAuthRequestDto
 import com.d108.moyeo.data.remote.dto.signup.EmailAuthRequestDto
 import com.d108.moyeo.data.remote.dto.signup.PhoneAuthRequestDto
 import com.d108.moyeo.data.remote.dto.signup.SessionIdResponseDto
+import com.d108.moyeo.data.remote.dto.signup.SignUpRequestDto
 import com.d108.moyeo.data.remote.dto.signup.VerifyAccountCodeRequestDto
 import com.d108.moyeo.data.remote.dto.signup.VerifyEmailCodeRequestDto
 import com.d108.moyeo.data.remote.dto.signup.VerifyPhoneCodeRequestDto
+import com.d108.moyeo.domain.model.SignUpInfo
 import com.d108.moyeo.domain.repository.SignUpRepository
 import javax.inject.Inject
 
@@ -86,5 +88,23 @@ class SignUpRepositoryImpl @Inject constructor(
                 accountCode = code // DTO 필드명에 맞게 accountCode 사용
             )
         )
+    }
+
+    override suspend fun signUp(sessionId: String, signUpInfo: SignUpInfo): Result<Unit> = runCatching {
+        val requestDto = SignUpRequestDto(
+            sessionId = sessionId,
+            name = signUpInfo.name,
+            email = signUpInfo.email,
+            phoneNumber = signUpInfo.phoneNumber,
+            fid = signUpInfo.fid,
+            connectedBankCode = signUpInfo.bankCode,
+            connectedBankAccount = signUpInfo.accountNumber
+        )
+
+        val response = signUpService.signUp(requestDto)
+
+        if (!response.isSuccessful) {
+            throw Exception("Server responded with error: ${response.code()}")
+        }
     }
 }

@@ -4,13 +4,19 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.domain.model.Bank
+import com.d108.moyeo.domain.model.SignUpInfo
+import com.d108.moyeo.domain.usecase.auth.LoginUseCase
 import com.d108.moyeo.domain.usecase.signup.GetAllBankListUseCase
 import com.d108.moyeo.domain.usecase.signup.RequestAccountAuthUseCase
 import com.d108.moyeo.domain.usecase.signup.RequestEmailAuthUseCase
 import com.d108.moyeo.domain.usecase.signup.RequestPhoneAuthUseCase
+import com.d108.moyeo.domain.usecase.signup.SubmitSignUpUseCase
 import com.d108.moyeo.domain.usecase.signup.VerifyAccountCodeUseCase
 import com.d108.moyeo.domain.usecase.signup.VerifyEmailCodeUseCase
 import com.d108.moyeo.domain.usecase.signup.VerifyPhoneCodeUseCase
+import com.d108.moyeo.domain.usecase.user.GetFidUseCase
+import com.d108.moyeo.domain.usecase.user.SaveBiometricsPreferenceUseCase
+import com.d108.moyeo.domain.usecase.user.SavePinUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,42 +28,7 @@ import kotlinx.coroutines.launch
 
 private val TAG = "signupviewmodel"
 // 회원가입 과정의 모든 상태를 담는 데이터 클래스
-data class SignUpUiState(
-    val currentStep: SignUpStep = SignUpStep.NAME,
-    val sessionId: String? = null, // 서버와 통신하기 위한 세션 ID 추가
 
-    val name: String = "",  // 사용자 이름
-
-    val email: String = "",  // 사용자 이메일
-    val emailCode: String = "", // 이메일 코드
-    val isEmailVerified: Boolean = false,  // 이메일 인증 여부
-
-    val phoneNumber: String = "",  // 전화번호
-    val phoneCode: String = "",
-    val isPhoneNumberVerified: Boolean = false,  // 전화번호 인증 여부
-
-    val bankList: List<Bank> = emptyList(),
-    val showBankBottomSheet: Boolean = false,
-    val accountBank: Bank? = null,
-    val accountNumber: String = "",  // 계좌번호
-
-    val oneCoinNumber: String = "",  // 1원 인증으로 입력받을 번호
-    val isOneCoinVerified: Boolean = false,  // 1원인증 완료 여부
-
-    val isTermsAccepted: Boolean = false,  // 약관 동의 여부
-
-    val pin: String = "",  // 6자리 핀번호 최초 입력
-    val pinConfirm: String = "",  // 6자리 핀번호 확인
-
-    val allTermsAccepted: Boolean = false,
-    val termsOfServiceAccepted: Boolean = false,
-    val privacyPolicyAccepted: Boolean = false,
-
-    val isBiometricsUsed: Boolean = false, // 생체인증 쓰는지 여부
-
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null // 에러 메시지 상태
-)
 
 // UI로 전달할 일회성 탐색 이벤트
 sealed class SignUpNavigationEvent {
@@ -74,7 +45,12 @@ class SignUpViewModel @Inject constructor (
     private val verifyPhoneCodeUseCase: VerifyPhoneCodeUseCase,
     private val getAllBankListUseCase: GetAllBankListUseCase,
     private val requestAccountAuthUseCase: RequestAccountAuthUseCase,
-    private val verifyAccountCodeUseCase: VerifyAccountCodeUseCase
+    private val verifyAccountCodeUseCase: VerifyAccountCodeUseCase,
+    private val submitSignUpUseCase: SubmitSignUpUseCase,
+    private val savePinUseCase: SavePinUseCase,
+    private val saveBiometricsPreferenceUseCase: SaveBiometricsPreferenceUseCase,
+    private val getFidUseCase: GetFidUseCase,
+    private val loginUseCase: LoginUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState = _uiState.asStateFlow()
@@ -109,17 +85,15 @@ class SignUpViewModel @Inject constructor (
             SignUpStep.PHONE_VERIFY -> verifyPhoneCode()
             SignUpStep.ACCOUNT -> requestAccountAuth()
             SignUpStep.ACCOUNT_VERIFY -> verifyAccountCode()
-            // ... TODO: PHONE_INPUT -> requestPhoneAuth() 등 다른 단계도 추가 필요 ...
+            SignUpStep.COMPLETE -> submitFinalSignUp()
 
             // BIOMETRICS와 COMPLETE는 특별 처리
             SignUpStep.BIOMETRICS -> viewModelScope.launch { _navigationEvent.emit(SignUpNavigationEvent.ShowBiometricPrompt) }
-            SignUpStep.COMPLETE -> viewModelScope.launch { _navigationEvent.emit(SignUpNavigationEvent.NavigateToHome) }
 
             // 그 외 단순 화면 전환만 필요한 경우
             else -> {
                 val nextStep = when (currentStep) {
                     SignUpStep.NAME -> SignUpStep.EMAIL_INPUT
-                    SignUpStep.ACCOUNT_VERIFY -> SignUpStep.TERMS
                     SignUpStep.TERMS -> SignUpStep.PIN
                     SignUpStep.PIN -> SignUpStep.PIN_CONFIRM
                     SignUpStep.PIN_CONFIRM -> SignUpStep.BIOMETRICS
@@ -182,7 +156,6 @@ class SignUpViewModel @Inject constructor (
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            // ViewModel은 이제 '요리'를 시키기만 하면 됩니다. 코드가 극도로 단순해집니다.
             requestEmailAuthUseCase(uiState.value.email)
                 .onSuccess { sessionId ->
                     _uiState.update { it.copy(isLoading = false, sessionId = sessionId, currentStep = SignUpStep.EMAIL_VERIFY) }
@@ -328,9 +301,6 @@ class SignUpViewModel @Inject constructor (
         _uiState.update { it.copy(oneCoinNumber = oneCoinNumber) }
     }
 
-    /**
-     * 계좌 인증(1원 송금)을 서버에 요청합니다.
-     */
     fun requestAccountAuth() {
         val currentState = uiState.value
         if (currentState.sessionId == null || currentState.accountBank == null) {
@@ -467,6 +437,65 @@ class SignUpViewModel @Inject constructor (
             isBiometricsUsed = true,
             currentStep = SignUpStep.COMPLETE // 완료 단계로 이동
         )}
+    }
+
+    private fun submitFinalSignUp() {
+        val currentState = uiState.value
+        if (currentState.sessionId == null || currentState.accountBank == null) {
+            _uiState.update { it.copy(errorMessage = "필수 정보가 누락되었습니다.") }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            // 최종 제출 직전에 FID 받음
+            getFidUseCase()
+                .onSuccess { fid ->
+                    Log.d("SignUpViewModel", "FID 가져오기 성공: $fid")
+
+                    val signUpInfo = SignUpInfo(
+                        name = currentState.name,
+                        email = currentState.email,
+                        phoneNumber = currentState.phoneNumber,
+                        bankCode = currentState.accountBank.code,
+                        accountNumber = currentState.accountNumber,
+                        fid = fid // 실제 FID 값으로 교체
+                    )
+
+                    submitSignUpUseCase(currentState.sessionId, signUpInfo)
+                        .onSuccess {
+                            Log.d("SignUpViewModel", "최종 회원가입 성공!")
+                            autoLoginAfterSignUp(signUpInfo)
+                        }
+                        .onFailure { error ->
+                            Log.e("SignUpViewModel", "최종 회원가입 실패", error)
+                            _uiState.update { it.copy(isLoading = false, errorMessage = "회원가입에 실패했습니다.") }
+                        }
+                }
+                .onFailure { error ->
+                    Log.e("SignUpViewModel", "FID 가져오기 실패", error)
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "기기 ID를 가져오지 못했습니다.") }
+                }
+        }
+    }
+
+    private suspend fun autoLoginAfterSignUp(signUpInfo: SignUpInfo) {
+        Log.d("SignUpViewModel", "회원가입 성공 후 자동 로그인 시도...")
+        loginUseCase(signUpInfo.phoneNumber, signUpInfo.fid)
+            .onSuccess { token ->
+                Log.d("SignUpViewModel", "자동 로그인 성공! AccessToken: ${token.accessToken}")
+                savePinUseCase(uiState.value.pin)
+                saveBiometricsPreferenceUseCase(uiState.value.isBiometricsUsed)
+                _navigationEvent.emit(SignUpNavigationEvent.NavigateToHome)
+            }
+            .onFailure { error ->
+                Log.e("SignUpViewModel", "자동 로그인 실패", error)
+                // 자동 로그인은 실패했지만, 회원가입 자체는 성공했으므로
+                // 사용자가 직접 로그인할 수 있도록 로그인 화면(또는 FirstScreen)으로 보냅니다.
+                _uiState.update { it.copy(isLoading = false, errorMessage = "회원가입은 완료되었으나, 자동 로그인에 실패했습니다.") }
+                _navigationEvent.emit(SignUpNavigationEvent.NavigateBack)
+            }
     }
 
 }

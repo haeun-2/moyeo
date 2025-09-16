@@ -127,7 +127,7 @@ fun SignUpScreen(
             SignUpStep.EMAIL_INPUT -> uiState.email.isNotBlank()
             SignUpStep.EMAIL_VERIFY -> uiState.emailCode.length == 6
             SignUpStep.PHONE_INPUT -> uiState.phoneNumber.isNotBlank()
-            SignUpStep.PHONE_VERIFY ->  uiState.phoneCode.length == 6
+            SignUpStep.PHONE_VERIFY ->  uiState.phoneCode.length <= 6
 
             SignUpStep.ACCOUNT -> uiState.accountBank != null && uiState.accountNumber.isNotBlank()
             SignUpStep.ACCOUNT_VERIFY -> uiState.oneCoinNumber.length == 4
