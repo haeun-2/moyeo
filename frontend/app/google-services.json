@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1048590474024",
+    "project_id": "moyeo-191f6",
+    "storage_bucket": "moyeo-191f6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1048590474024:android:bfaef27a9befa003c58e1d",
+        "android_client_info": {
+          "package_name": "com.d108.moyeo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCB5wlzAdtPLe1RRYFrd2GeNgSX-g9XjS0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

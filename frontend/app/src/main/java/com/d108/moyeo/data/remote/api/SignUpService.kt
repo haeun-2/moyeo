@@ -4,6 +4,7 @@ import com.d108.moyeo.data.remote.dto.signup.AccountAuthRequestDto
 import com.d108.moyeo.data.remote.dto.signup.EmailAuthRequestDto
 import com.d108.moyeo.data.remote.dto.signup.PhoneAuthRequestDto
 import com.d108.moyeo.data.remote.dto.signup.SessionIdResponseDto
+import com.d108.moyeo.data.remote.dto.signup.SignUpRequestDto
 import com.d108.moyeo.data.remote.dto.signup.VerifyAccountCodeRequestDto
 import com.d108.moyeo.data.remote.dto.signup.VerifyEmailCodeRequestDto
 import com.d108.moyeo.data.remote.dto.signup.VerifyPhoneCodeRequestDto
@@ -57,7 +58,13 @@ interface SignUpService {
     suspend fun verifyAccountCode(@Body request: VerifyAccountCodeRequestDto): SessionIdResponseDto
 
 
-    // TODO: 나중에 전화번호, 계좌, 최종 회원가입 등 다른 API들을 여기에 추가해야 합니다.
+    /**
+     * 최종 회원가입 정보를 서버에 전송합니다.
+     * @param request 회원가입에 필요한 모든 정보가 담긴 DTO
+     * @return 성공 시 별도의 데이터가 없는 성공 응답(200 OK)
+     */
+    @POST("/api/auth/signup")
+    suspend fun signUp(@Body request: SignUpRequestDto): Response<Unit>
 }
 
 /*

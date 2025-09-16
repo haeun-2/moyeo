@@ -1,6 +1,7 @@
 package com.d108.moyeo.domain.repository
 
 import com.d108.moyeo.data.remote.dto.signup.SessionIdResponseDto
+import com.d108.moyeo.domain.model.SignUpInfo
 
 /**
  * 회원가입 기능과 관련된 데이터 처리를 위한 인터페이스 (설계도).
@@ -52,5 +53,7 @@ interface SignUpRepository {
      * 서버에 계좌 1원 인증 코드의 유효성을 검증합니다.
      */
     suspend fun verifyAccountCode(sessionId: String, email: String, bankAccount: String, code: String): Result<SessionIdResponseDto>
-    // TODO: 나중에 전화번호, 계좌, 최종 회원가입 등 다른 함수들을 여기에 추가해야 합니다.
+
+    // 최종 가입 요청
+    suspend fun signUp(sessionId: String, signUpInfo: SignUpInfo): Result<Unit>
 }
