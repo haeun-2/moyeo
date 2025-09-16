@@ -8,6 +8,7 @@ import com.d108.moyeo.data.repository.SignUpRepositoryImpl
 import com.d108.moyeo.domain.repository.AuthRepository
 import com.d108.moyeo.domain.repository.BankRepository
 import com.d108.moyeo.domain.repository.BoxRepository
+import com.d108.moyeo.domain.repository.FidRepository
 import com.d108.moyeo.domain.repository.SignUpRepository
 import dagger.Binds
 import dagger.Module
