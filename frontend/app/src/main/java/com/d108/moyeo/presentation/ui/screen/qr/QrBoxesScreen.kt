@@ -4,17 +4,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
@@ -22,11 +25,12 @@ import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.ui.component.common.GridMoyeoBoxesItem
 
 @Composable
-fun QRBoxesScreen(navController: NavController) {
-    // 임시 데이터
-    val moyeoBoxes = remember {
-        List(10) { "모여박스 ${it + 1}" }
-    }
+fun QRBoxesScreen(
+    navController: NavController,
+    viewModel: QrBoxesViewModel = hiltViewModel()
+) {
+
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier.padding(
@@ -47,17 +51,33 @@ fun QRBoxesScreen(navController: NavController) {
         // 약간의 스페이서
         Spacer(modifier = Modifier.height(Spacing.Large))
 
-        // 2열 그리드의 레이지 뭐시기
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
-            verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
+        Box(
+            modifier = Modifier.fillMaxSize(), // Box가 남은 공간을 모두 차지하도록
+            contentAlignment = Alignment.Center // 내용물을 중앙에 배치
         ) {
-            // common에 있는 GridMoyeoBoxesItem 을 내용물로 함
-            items(moyeoBoxes) { boxName ->
-                GridMoyeoBoxesItem(boxName = boxName)
+
+            if (uiState.isLoading) {  // 로딩 중
+                CircularProgressIndicator()
+            }
+
+            else if (uiState.errorMessage != null) {  // 에러 발생
+                Text(text = uiState.errorMessage!!)
+            }
+
+            else {  // 성공
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
+                ) {
+                    items(
+                        items = uiState.allBoxes,
+                        key = { it.id }
+                    ) { box ->
+                        GridMoyeoBoxesItem(
+                            box = box
+                        )
+                    }
+                }
             }
         }
-
     }
 }

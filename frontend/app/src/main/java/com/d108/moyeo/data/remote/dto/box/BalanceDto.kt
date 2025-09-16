@@ -1,13 +1,12 @@
 package com.d108.moyeo.data.remote.dto.box
 
+import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
-@Serializable
 data class BalanceDto(
-    @SerialName("currency")
+    @SerializedName("currency")
     val currency: String,
 
-    @SerialName("balance")
+    @SerializedName("balance")
     val balance: Double
 )

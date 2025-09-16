@@ -30,7 +30,7 @@ import com.d108.moyeo.presentation.theme.primaryLight
 import com.d108.moyeo.presentation.ui.component.qr.SquareMoyeoBoxItem
 
 @Composable
-fun QRScreen(
+fun QrScreen(
     navController: NavController,
     viewModel: QRScreenViewModel = hiltViewModel()
 ) {

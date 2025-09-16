@@ -35,7 +35,7 @@ import com.d108.moyeo.presentation.ui.screen.more.MoreScreen
 import com.d108.moyeo.presentation.ui.screen.more.MyConsultationScreen
 import com.d108.moyeo.presentation.ui.screen.more.NoticesScreen
 import com.d108.moyeo.presentation.ui.screen.qr.QRBoxesScreen
-import com.d108.moyeo.presentation.ui.screen.qr.QRScreen
+import com.d108.moyeo.presentation.ui.screen.qr.QrScreen
 import com.d108.moyeo.presentation.ui.screen.signup.SignUpScreen
 
 @Composable
@@ -258,7 +258,7 @@ fun AppNavHost(
 
         // QR 화면
         composable(AppScreen.QR.route) {
-            QRScreen(navController = navController)
+            QrScreen(navController = navController)
         }
 
         composable(AppScreen.QRBoxes.route) {
