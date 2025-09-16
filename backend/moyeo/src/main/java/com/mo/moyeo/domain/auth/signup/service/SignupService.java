@@ -3,9 +3,8 @@ package com.mo.moyeo.domain.auth.signup.service;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.domain.auth.signup.dto.*;
-import com.mo.moyeo.domain.box.service.BoxService;
 import com.mo.moyeo.domain.user.entity.User;
-import com.mo.moyeo.domain.user.repository.UserRepository;
+import com.mo.moyeo.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,15 +18,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SignupService {
 
-    private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
 
     private final SignupSessionRedisService signupSessionRedisService;
     private final VerificationService verificationService;
     private final AccountConnectionService accountConnectionService;
     private final EncryptionService encryptionService;
-    private final BoxService boxService;
+    private final UserService userService;
 
     /**
      * 이메일 중복 확인 & 인증코드 전송
@@ -36,9 +33,7 @@ public class SignupService {
 
         String email = request.getEmail();
 
-        if (userRepository.existsByEmail(email)) {
-            throw new CustomException(ErrorCode.DUPLICATE_RESOURCE, "이미 가입된 이메일입니다.");
-        }
+        userService.validateUserEmailNotExists(email);
 
         // 세션 생성
         String sessionId = UUID.randomUUID().toString();
@@ -101,9 +96,7 @@ public class SignupService {
 
         String phoneNumber = request.getPhoneNumber();
 
-        if (userRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new CustomException(ErrorCode.DUPLICATE_RESOURCE, "이미 가입된 전화번호입니다.");
-        }
+        userService.validateUserPhoneNumberNotExists(phoneNumber);
 
         // 인증번호 발송 후 redis에 저장
         String verificationCode = "1";
@@ -201,10 +194,8 @@ public class SignupService {
         String hashedFid = passwordEncoder.encode(request.getFid());
         String encryptedBankKey = encryptionService.encrypt(bankKey);
 
-        // 유저 객체 생성
-        User newUser = userRepository.save(User.from(request, hashedFid, encryptedBankKey));
-
-        boxService.createPersonalBox(newUser);
+        // 유저 가입 처리
+        userService.registerUser(User.from(request, hashedFid, encryptedBankKey));
 
         signupSessionRedisService.deleteSignupSession(sessionId);
     }
