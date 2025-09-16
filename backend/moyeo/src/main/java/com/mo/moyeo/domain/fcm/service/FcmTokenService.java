@@ -5,7 +5,6 @@ import com.mo.moyeo.domain.fcm.dto.FcmTokenUpsertRequest;
 import com.mo.moyeo.domain.fcm.entity.FcmToken;
 import com.mo.moyeo.domain.fcm.repository.FcmTokenRepository;
 import com.mo.moyeo.domain.user.entity.User;
-import com.mo.moyeo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +18,6 @@ import java.util.Optional;
 public class FcmTokenService {
 
     private final FcmTokenRepository fcmTokenRepository;
-    private final UserRepository userRepository;
 
     /**
      * 토큰 등록/갱신
