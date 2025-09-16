@@ -1,7 +1,5 @@
 package com.d108.moyeo.presentation.ui.screen.exchange
 
-import android.R.attr.mode
-import android.util.Log.v
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,9 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -252,11 +247,13 @@ fun ExchangeKeypadScreen(
         // 하단 실행 버튼
         Button(
             onClick = {
-                val message = when (uiState.mode) {
-                    "reservation" -> "${uiState.inputAmount} 원 ${viewModel.getDisplayCurrencyName()} ${viewModel.getScreenTitle()} 실행됨"
-                    else -> "${uiState.inputAmount} 원 ${viewModel.getScreenTitle()} 실행됨"
+                if (uiState.mode == "reservation"){
+                    // 예약 완료 페이지로 이동
+                    navController.navigate( "reservation_complete/${viewModel.getDisplayCurrencyCode()}/${viewModel.getDisplayCurrencyName()}/${uiState.inputAmount}/${uiState.convertedKrwAmount}")
+                } else {
+                    val message = "${uiState.inputAmount} 원 ${viewModel.getScreenTitle()} 실행됨\""
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             },
             enabled = !uiState.isProcessing && uiState.inputAmount != "0",
             modifier = Modifier
