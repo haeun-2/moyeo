@@ -14,7 +14,7 @@ class BoxRepositoryImpl @Inject constructor(
         return api.getMyPersonalBox().toDomain()
     }
 
-    override suspend fun getGroupBoxes(page: Int, size: Int): List<Box> {
-        return api.getGroupBoxes(page, size).map { it.toDomain() }
+    override suspend fun getGroupBoxes(size: Int): List<Box> {
+        return api.getGroupBoxes(size).map { it.toDomain() }
     }
 }
