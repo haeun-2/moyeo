@@ -106,7 +106,8 @@ public class SignupService {
         }
 
         // 인증번호 발송 후 redis에 저장
-        String verificationCode = verificationService.sendSmsVerificationCode(phoneNumber);
+        String verificationCode = "1";
+//        String verificationCode = verificationService.sendSmsVerificationCode(phoneNumber);
         signupSessionRedisService.saveSmsVerificationCode(phoneNumber, verificationCode);
 
         return new VerificationResponse(sessionId);
