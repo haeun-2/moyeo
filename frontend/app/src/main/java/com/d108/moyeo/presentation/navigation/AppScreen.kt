@@ -110,5 +110,6 @@ sealed class AppScreen(
     // '내 문의 내역'의 상세 화면 경로. {consultationId} 부분이 파라미터
     object ConsultationDetail: AppScreen(route = "consultation_detail/{consultationId}", title = "상담 내용 상세")
 
-
+    // 그룹 박스 추가 관련
+    object CreateBox: AppScreen(route = "create_box", title = "그룹 박스 생성")
 }

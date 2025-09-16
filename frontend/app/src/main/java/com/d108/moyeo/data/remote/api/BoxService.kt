@@ -1,8 +1,11 @@
 package com.d108.moyeo.data.remote.api
 
+import com.d108.moyeo.data.remote.dto.box.CreateBoxRequestDto
+import com.d108.moyeo.data.remote.dto.box.CreateBoxResponseDto
 import com.d108.moyeo.data.remote.dto.box.GroupBoxResponseDto
 import com.d108.moyeo.data.remote.dto.box.PersonalBoxResponseDto
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -30,4 +33,7 @@ interface BoxService {
 
     @DELETE("api/boxes/{boxId}/bookmarks")
     suspend fun deleteBookmark(@Path("boxId") boxId: Long): Response<Unit>
+
+    @POST("api/boxes")
+    suspend fun createBox(@Body request: CreateBoxRequestDto) : Response<CreateBoxResponseDto>
 }
