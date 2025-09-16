@@ -36,6 +36,7 @@ public class Box extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "box", cascade = CascadeType.ALL)
     @BatchSize(size = 7)
+    @OrderBy("currencyCode ASC")
     private List<BoxBalance> balances;
 
     @Builder
