@@ -1,6 +1,5 @@
 package com.d108.moyeo.presentation.ui.screen.home
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +12,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -23,7 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.*
@@ -31,8 +33,22 @@ import com.d108.moyeo.presentation.ui.component.home.WalletEditBottomSheet
 
 private val TAG = "HomeScreen"
 @Composable
-fun HomeScreen(navController: NavController,
-               viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(
+    navController: NavController,
+    viewModel: HomeViewModel = hiltViewModel()
+) {
+    // lifecycle 관리
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.onResumed()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     // ViewModel의 상태를 구독합니다.
     val uiState by viewModel.uiState.collectAsState()
@@ -123,7 +139,7 @@ fun HomeScreen(navController: NavController,
             Spacer(Modifier.height(24.dp))
             AddBar(
                 label = "추가",
-                onClick = { navController.navigate(AppScreen.Exchange.route) }
+                onClick = { navController.navigate(AppScreen.CreateBox.route) }
             )
             Spacer(Modifier.height(8.dp))
         }

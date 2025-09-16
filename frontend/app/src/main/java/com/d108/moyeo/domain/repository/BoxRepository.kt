@@ -7,4 +7,5 @@ interface BoxRepository {
     suspend fun getGroupBoxes(size: Int): Result<List<Box>>
 
     suspend fun getBookmarkedBoxes(): Result<List<Box>>
+    suspend fun createBox(name: String): Result<Long>
 }

@@ -28,6 +28,16 @@ class HomeViewModel @Inject constructor(
     private val getGroupBoxes: GetGroupBoxesUseCase
 ) : ViewModel() {
 
+    private var didHandleFirstResume: Boolean = false
+
+    fun onResumed() {
+        if (didHandleFirstResume) {
+            refresh()
+        } else {
+            didHandleFirstResume = true
+        }
+    }
+
     private val _uiState = MutableStateFlow(
         HomeUiState(
             wallet = WalletSummary(
