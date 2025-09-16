@@ -6,19 +6,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.d108.moyeo.domain.model.box.Balance
 import com.d108.moyeo.presentation.theme.Typography
+import java.text.DecimalFormat
 
 @Composable
 fun CurrencyItem(
-    currencyName: String,
-    amount: String,
+    balance: Balance,
     modifier: Modifier = Modifier
 ) {
+    // 금액에 천 단위 쉼표를 추가하기 위한 포맷터
+    val formattedAmount = DecimalFormat("#,###.##").format(balance.balance)
+
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(currencyName, style = Typography.labelSmall)
-        Text(amount, style = Typography.labelMedium)
+        Text(balance.currency, style = Typography.labelSmall)
+        Text(formattedAmount, style = Typography.labelMedium)
     }
 }

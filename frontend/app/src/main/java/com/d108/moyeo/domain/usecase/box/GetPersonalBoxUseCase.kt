@@ -7,5 +7,5 @@ import javax.inject.Inject
 class GetPersonalBoxUseCase @Inject constructor(
     private val repo: BoxRepository
 ) {
-    suspend operator fun invoke(): Box = repo.getPersonalBox()
+    suspend operator fun invoke(): Result<Box> = repo.getPersonalBox()
 }
