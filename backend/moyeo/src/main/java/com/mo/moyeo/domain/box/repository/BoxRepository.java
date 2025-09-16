@@ -22,19 +22,4 @@ public interface BoxRepository extends JpaRepository<Box, Long> {
     """)
     Optional<Box> selectPersonalBoxByOwnerId(@Param("ownerId") Long ownerId);
 
-    @Query("""
-        SELECT DISTINCT b
-        FROM Box b
-        JOIN FETCH b.balances
-        WHERE b.id in (
-            SELECT bm.box.id
-            FROM BoxMember bm
-            WHERE bm.user.id = :userId
-            AND bm.status = 'JOINED'
-        )
-        AND b.type = 'GROUP'
-        ORDER BY b.createdAt
-    """)
-    List<Box> selectJoinedGroupBoxByUserId(@Param("userId") Long userId);
-
 }

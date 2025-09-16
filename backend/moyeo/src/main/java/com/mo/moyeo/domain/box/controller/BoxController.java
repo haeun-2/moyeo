@@ -1,11 +1,7 @@
 package com.mo.moyeo.domain.box.controller;
 
-import com.mo.moyeo.common.paging.PageResponse;
 import com.mo.moyeo.domain.auth.security.dto.CustomUserDetails;
-import com.mo.moyeo.domain.box.dto.BoxCreateRequest;
-import com.mo.moyeo.domain.box.dto.BoxCreateResponse;
-import com.mo.moyeo.domain.box.dto.BoxPermissionResponse;
-import com.mo.moyeo.domain.box.dto.BoxResponse;
+import com.mo.moyeo.domain.box.dto.*;
 import com.mo.moyeo.domain.box.service.BoxService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,15 +23,15 @@ public class BoxController {
 
     @Operation(summary = "개인 박스 조회", description = "유저의 개인 박스를 조회합니다.")
     @GetMapping("/me")
-    public ResponseEntity<BoxResponse> getMyBox(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        BoxResponse response = boxService.getMyBox(userDetails.getUser());
+    public ResponseEntity<MyBoxResponse> getMyBox(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        MyBoxResponse response = boxService.getMyBox(userDetails.getUser());
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "모임 박스 목록 조회", description = "유저가 가입한 모임 박스 목록을 페이징하여 조회합니다.")
+    @Operation(summary = "모임 박스 목록 조회", description = "유저가 가입한 모임 박스 목록을 조회합니다. 북마크한 박스가 우선 조회됩니다.")
     @GetMapping
-    public ResponseEntity<List<BoxResponse>> getGroupBoxList(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<BoxResponse> response = boxService.getGroupBoxList(userDetails.getUser());
+    public ResponseEntity<List<GroupBoxResponse>> getGroupBoxList(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<GroupBoxResponse> response = boxService.getGroupBoxList(userDetails.getUser());
         return ResponseEntity.ok(response);
     }
 

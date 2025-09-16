@@ -55,6 +55,9 @@ public class BoxMember {
     @Column(name = "status", nullable = false)
     private Status status = Status.JOINED;
 
+    @Column(name = "is_bookmarked", nullable = false)
+    private Boolean isBookmarked = false;
+
     public BoxMember(Box box, User user) {
         this.box = box;
         this.user = user;
@@ -86,6 +89,14 @@ public class BoxMember {
 
     public boolean isMember() {
         return this.status.equals(Status.JOINED);
+    }
+
+    public void unbookmark() {
+        this.isBookmarked = false;
+    }
+
+    public void bookmark() {
+        this.isBookmarked = true;
     }
 
     public enum Status {
