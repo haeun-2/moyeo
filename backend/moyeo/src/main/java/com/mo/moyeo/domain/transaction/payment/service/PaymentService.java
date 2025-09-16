@@ -3,13 +3,11 @@ package com.mo.moyeo.domain.transaction.payment.service;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.common.util.finance_api.AccountUtil;
-import com.mo.moyeo.common.util.finance_api.ApiUtil;
-import com.mo.moyeo.domain.box.dto.BoxMemberResponse;
-import com.mo.moyeo.domain.box.entity.Box;
-import com.mo.moyeo.domain.box.entity.BoxBalance;
-import com.mo.moyeo.domain.box.service.BoxBalanceService;
-import com.mo.moyeo.domain.box.service.BoxMemberService;
-import com.mo.moyeo.domain.box.service.BoxService;
+import com.mo.moyeo.domain.box.box.entity.Box;
+import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
+import com.mo.moyeo.domain.box.balance.service.BoxBalanceService;
+import com.mo.moyeo.domain.box.member.service.BoxMemberService;
+import com.mo.moyeo.domain.box.box.service.BoxService;
 import com.mo.moyeo.domain.merchant.entity.Merchant;
 import com.mo.moyeo.domain.merchant.service.MerchantService;
 import com.mo.moyeo.domain.transaction.bank.dto.BankTransferDTO;
@@ -28,10 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -73,16 +68,7 @@ public class PaymentService {
     }
 
     private void validateCondition(User user, Long boxId) {
-        Box box = boxService.getBoxById(boxId);
-        if(box.isPersonal() && !box.getOwnerId().equals(user.getId()))
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-
-        if(!box.isPersonal()){
-            BoxMemberResponse boxMemberResponse = boxMemberService.getMyPermission(boxId, user.getId());
-            if(!boxMemberResponse.getCanPayment())
-                throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
-
+        boxMemberService.validatePaymentPermission(boxService.getBoxById(boxId), user);
     }
 
     // 토큰 생성
@@ -118,7 +104,7 @@ public class PaymentService {
 
         //박스 찾기
         Box box = boxService.getReferenceById(boxId);
-        BoxBalance boxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(box, paymentRequestDto.currencyType());
+        BoxBalance boxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(box, paymentRequestDto.currencyType());
         if(boxBalance.getBalance().compareTo(paymentRequestDto.amount())<0)
             throw new CustomException(ErrorCode.INSUFFICIENT_BALANCE);
         boxBalance.decreaseBalance(paymentRequestDto.amount());

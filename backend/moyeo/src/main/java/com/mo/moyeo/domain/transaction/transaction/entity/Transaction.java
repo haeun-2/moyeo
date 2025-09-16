@@ -1,7 +1,6 @@
 package com.mo.moyeo.domain.transaction.transaction.entity;
 
-import com.mo.moyeo.domain.box.entity.Box;
-import com.mo.moyeo.domain.transaction.category.entity.Category;
+import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;

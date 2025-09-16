@@ -3,10 +3,10 @@ package com.mo.moyeo.domain.transaction.bank.service;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.domain.bank.service.BankService;
-import com.mo.moyeo.domain.box.entity.Box;
-import com.mo.moyeo.domain.box.entity.BoxBalance;
-import com.mo.moyeo.domain.box.service.BoxBalanceService;
-import com.mo.moyeo.domain.box.service.BoxService;
+import com.mo.moyeo.domain.box.box.entity.Box;
+import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
+import com.mo.moyeo.domain.box.balance.service.BoxBalanceService;
+import com.mo.moyeo.domain.box.box.service.BoxService;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.transaction.bank.dto.*;
 import com.mo.moyeo.domain.transaction.bank.entity.BankTransaction;
@@ -71,7 +71,7 @@ public class BankTransactionService {
 
         try {
             // 박스 잔액 조회
-            BoxBalance boxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(box, CurrencyType.KRW);
+            BoxBalance boxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(box, CurrencyType.KRW);
 
             if(type.equals(Transaction.Type.DEPOSIT)) {
                 bankApiService.deposit(user, amount, bankTransaction);

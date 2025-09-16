@@ -2,11 +2,11 @@ package com.mo.moyeo.domain.transaction.transfer.service;
 
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
-import com.mo.moyeo.domain.box.entity.Box;
-import com.mo.moyeo.domain.box.entity.BoxBalance;
-import com.mo.moyeo.domain.box.service.BoxBalanceService;
-import com.mo.moyeo.domain.box.service.BoxMemberService;
-import com.mo.moyeo.domain.box.service.BoxService;
+import com.mo.moyeo.domain.box.box.entity.Box;
+import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
+import com.mo.moyeo.domain.box.balance.service.BoxBalanceService;
+import com.mo.moyeo.domain.box.member.service.BoxMemberService;
+import com.mo.moyeo.domain.box.box.service.BoxService;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.service.CurrencyService;
 import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
@@ -47,11 +47,11 @@ public class TransferService {
 
         Box fromBox = boxService.getBoxById(request.getFromBoxId());
         validatePermission(user, fromBox); // 이체 권한 화인
-        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(fromBox, currency);
+        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(fromBox, currency);
         validateSufficientBalance(fromBoxBalance, amount); // 출금 박스 잔액 확인
 
         Box toBox = boxService.getBoxById(request.getToBoxId());
-        BoxBalance toBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(toBox, currency);
+        BoxBalance toBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(toBox, currency);
 
         // 입출금
         fromBoxBalance.decreaseBalance(amount);
@@ -94,13 +94,7 @@ public class TransferService {
     }
 
     private void validatePermission(User user, Box box) {
-        if (box.isPersonal() && !box.getOwnerId().equals(user.getId())) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED, "권한이 없습니다.");
-        }
-
-        if (!box.isPersonal() && !boxMemberService.getMyPermission(box.getId(), user.getId()).getCanTransfer()) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED, "권한이 없습니다.");
-        }
+        boxMemberService.validateTransferPermission(box, user);
     }
 
     private void validateSufficientBalance(BoxBalance boxBalance, BigDecimal amount) {

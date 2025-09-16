@@ -4,11 +4,11 @@ import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.common.util.batch.BatchInsert;
 import com.mo.moyeo.common.util.finance_api.AccountUtil;
-import com.mo.moyeo.domain.box.entity.Box;
-import com.mo.moyeo.domain.box.entity.BoxBalance;
-import com.mo.moyeo.domain.box.service.BoxBalanceService;
-import com.mo.moyeo.domain.box.service.BoxMemberService;
-import com.mo.moyeo.domain.box.service.BoxService;
+import com.mo.moyeo.domain.box.box.entity.Box;
+import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
+import com.mo.moyeo.domain.box.balance.service.BoxBalanceService;
+import com.mo.moyeo.domain.box.member.service.BoxMemberService;
+import com.mo.moyeo.domain.box.box.service.BoxService;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.service.CurrencyService;
 import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
@@ -78,8 +78,8 @@ public class ExchangeService {
     }
 
     private void updateBoxBalanceAndSaveHistory(ExchangeRequestDto exchangeRequestDto, Box box, BigDecimal toAmount, BigDecimal fromAmount, Transaction transaction) {
-        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(box, exchangeRequestDto.getFromCurrency());
-        BoxBalance toBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(box, exchangeRequestDto.getToCurrency());
+        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(box, exchangeRequestDto.getFromCurrency());
+        BoxBalance toBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(box, exchangeRequestDto.getToCurrency());
 
         toBoxBalance.increaseBalance(toAmount);
         if(fromBoxBalance.checkSufficientBalance(fromAmount))
@@ -181,11 +181,7 @@ public class ExchangeService {
     }
 
     private void validateCondition(User user, ExchangeRequestDto exchangeRequestDto, Box box) {
-        if (box.isPersonal() && !box.getOwnerId().equals(user.getId()))//개인 통장이면 주인인지 체크
-            throw new CustomException(ErrorCode.ACCESS_DENIED, "권한이 없습니다.");
-
-        if (!box.isPersonal() && !boxMemberService.getMyPermission(box.getId(), user.getId()).getCanExchange())//모임 통장이면 환전 권한 있는지
-            throw new CustomException(ErrorCode.ACCESS_DENIED, "권한이 없습니다.");
+        boxMemberService.validateExchangePermission(box, user);
 
         BigDecimal amount = exchangeRequestDto.getAmount();
         BigDecimal ten = BigDecimal.TEN;

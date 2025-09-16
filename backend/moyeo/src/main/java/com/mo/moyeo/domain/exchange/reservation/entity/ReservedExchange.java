@@ -1,6 +1,6 @@
 package com.mo.moyeo.domain.exchange.reservation.entity;
 
-import com.mo.moyeo.domain.box.entity.Box;
+import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.currency.entity.Currency;
 import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import com.mo.moyeo.domain.user.entity.User;

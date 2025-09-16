@@ -1,7 +1,7 @@
 package com.mo.moyeo.domain.transaction.statistics.service;
 
-import com.mo.moyeo.domain.box.entity.Box;
-import com.mo.moyeo.domain.box.service.BoxService;
+import com.mo.moyeo.domain.box.box.entity.Box;
+import com.mo.moyeo.domain.box.box.service.BoxService;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.merchant.entity.Merchant;
 import com.mo.moyeo.domain.merchant.repository.MerchantRepository;
