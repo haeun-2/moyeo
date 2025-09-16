@@ -12,6 +12,7 @@ import androidx.navigation.navArgument
 import com.d108.moyeo.presentation.ui.screen.exchange.CurrencySelectionScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeAddScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeKeypadScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeReservationScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
@@ -178,12 +179,30 @@ fun AppNavHost(
         composable(AppScreen.Exchange.route) {
             ExchangeScreen(navController = navController)
         }
-        composable("exchange_keypad/charge") {
-            ExchangeKeypadScreen(navController, "charge")
+
+        composable(
+            "exchange_keypad/{mode}?currencyCode={currencyCode}&currencyName={currencyName}",
+            arguments= listOf(
+                navArgument("mode") {type = NavType.StringType},
+                navArgument("currencyCode") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("currencyName") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )) { backStackEntry ->
+            ExchangeKeypadScreen(
+                navController = navController,
+                mode = backStackEntry.arguments?.getString("mode") ?: "charge",
+                currencyCode = backStackEntry.arguments?.getString("currencyCode"),
+                currencyName = backStackEntry.arguments?.getString("currencyName")
+            )
         }
-        composable("exchange_keypad/refund") {
-            ExchangeKeypadScreen(navController, "refund")
-        }
+
         // 환율의 추가 버튼을 누르면 이동
         composable("exchange_add") {
             ExchangeAddScreen(navController)
@@ -192,6 +211,23 @@ fun AppNavHost(
         // 예약 환전
         composable("currency_selection") {
             CurrencySelectionScreen(navController)
+        }
+
+        // 국가별 환전
+        composable(
+            route = "exchange_reservation/{currencyCode}/{currencyName}",
+            arguments = listOf(
+                navArgument("currencyCode") { type = NavType.StringType },
+                navArgument("currencyName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
+            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
+            ExchangeReservationScreen(
+                navController = navController,
+                currencyCode = currencyCode,
+                currencyName = currencyName
+            )
         }
 
         // QR 화면

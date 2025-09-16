@@ -99,9 +99,9 @@ fun CurrencySelectionScreen(
         // 확인 버튼
         Button(
             onClick = {
-                viewModel.getSelectedCurrency()?.let {
-                    // TODO: 선택된 통화로 예약 화면으로 이동
-                    navController.popBackStack()
+                // 해당 국가에 맞게 네비게이션 이동
+                viewModel.getSelectedCurrency()?.let {currency->
+                    navController.navigate("exchange_reservation/${currency.code}/${currency.name}")
                 }
             },
             enabled = uiState.selectedCurrency != null,
