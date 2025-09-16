@@ -4,6 +4,7 @@ import android.content.Context
 import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.data.remote.api.AuthService
 import com.d108.moyeo.data.remote.api.BankService
+import com.d108.moyeo.data.remote.api.BoxService
 import com.d108.moyeo.data.remote.api.SignUpService
 import com.d108.moyeo.data.remote.interceptor.AuthInterceptor
 import com.google.gson.GsonBuilder
@@ -80,4 +81,9 @@ object NetworkModule {  // 여러 부품을 조립해서 새로운 것을 '만�
     fun provideAuthService(retrofit: Retrofit): AuthService {
         return retrofit.create(AuthService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideBoxService(retrofit: Retrofit): BoxService =
+        retrofit.create(BoxService::class.java)
 }
