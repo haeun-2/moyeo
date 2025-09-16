@@ -4,7 +4,6 @@ import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.SendResponse;
-import com.mo.moyeo.domain.fcm.repository.FcmTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TokenFailureService {
 
-    private final FcmTokenRepository fcmTokenRepository;
+    private final FcmTokenService fcmTokenService;
 
     /**
      * 배치 응답에서 실패한 토큰들 처리
@@ -48,7 +47,7 @@ public class TokenFailureService {
                 maskToken(token), errorCode, exception.getMessage());
 
         if (shouldDeactivateToken(errorCode)) {
-            deleteToken(token);
+            fcmTokenService.deleteTokenByDeviceToken(token);
         }
     }
 
@@ -59,14 +58,6 @@ public class TokenFailureService {
 //        return errorCode == MessagingErrorCode.UNREGISTERED ||
         return errorCode == MessagingErrorCode.INVALID_ARGUMENT ||
                 errorCode == MessagingErrorCode.SENDER_ID_MISMATCH;
-    }
-
-    /**
-     * 토큰 비활성화
-     */
-    private void deleteToken(String token) {
-        fcmTokenRepository.findByDeviceToken(token)
-                .ifPresent(fcmTokenRepository::delete);
     }
 
     /**

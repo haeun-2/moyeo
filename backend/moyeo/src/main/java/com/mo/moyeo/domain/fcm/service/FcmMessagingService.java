@@ -1,11 +1,8 @@
 package com.mo.moyeo.domain.fcm.service;
 
-import com.mo.moyeo.common.exception.CustomException;
-import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.domain.fcm.config.FcmConstants;
 import com.mo.moyeo.domain.fcm.dto.FcmMessageDTO;
 import com.mo.moyeo.domain.fcm.entity.FcmToken;
-import com.mo.moyeo.domain.fcm.repository.FcmTokenRepository;
 import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FcmMessagingService {
 
-    private final FcmTokenRepository fcmTokenRepository;
+    private final FcmTokenService fcmTokenService;
     private final FcmAsyncService fcmAsyncService;
 
     @Value("${fcm.default-topic-name}")
@@ -71,18 +68,10 @@ public class FcmMessagingService {
      * 사용자 ID로 메시지 전송
      */
     public void sendMessageByUserId(FcmMessageDTO message, Long userId) {
-        FcmToken token = getActiveToken(userId);
+        FcmToken token = fcmTokenService.getActiveToken(userId);
 
         fcmAsyncService.sendMulticastMessageAsync(Collections.singletonList(token.getDeviceToken()), message);
 
         log.debug("사용자 {} 메시지 전송 완료.", userId);
-    }
-
-    /**
-     * 사용자의 활성 토큰 값 조회
-     */
-    private FcmToken getActiveToken(Long userId) {
-        return fcmTokenRepository.findByUserId(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.FCM_TOKEN_NOT_FOUND));
     }
 }
