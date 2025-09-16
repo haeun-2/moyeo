@@ -2,6 +2,7 @@ package com.d108.moyeo.data.repository
 
 import com.d108.moyeo.data.mapper.toDomain
 import com.d108.moyeo.data.remote.api.BoxService
+import com.d108.moyeo.data.remote.dto.box.CreateBoxRequestDto
 import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.domain.repository.BoxRepository
 import javax.inject.Inject
@@ -45,5 +46,17 @@ class BoxRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun createBox(name: String): Result<Long> {
+        return runCatching {
+            val response = api.createBox(CreateBoxRequestDto(name))
+            if (response.isSuccessful) {
+                response.body()?.boxId ?: throw Exception("Response body is null")
+            } else {
+                throw Exception("Server responded with error: ${response.code()}")
+            }
+        }
+    }
+
 }
 

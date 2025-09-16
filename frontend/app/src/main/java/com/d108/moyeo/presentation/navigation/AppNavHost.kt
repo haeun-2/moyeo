@@ -25,6 +25,7 @@ import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxDetailScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.calculating.CalculatingScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.collecting.CollectingScreen
 import com.d108.moyeo.presentation.ui.screen.home.charging.ChargingScreen
+import com.d108.moyeo.presentation.ui.screen.home.creating.CreateBoxScreen
 import com.d108.moyeo.presentation.ui.screen.home.sending.SendingScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
@@ -69,6 +70,16 @@ fun AppNavHost(
 
         composable(AppScreen.Notification.route) {
             NotificationScreen(navController = navController)
+        }
+
+        composable(AppScreen.CreateBox.route) {
+            CreateBoxScreen(
+                onBackClick = { navController.popBackStack() },
+                onFinishClick = {
+                    // 결과 화면의 "닫기" 동작: 홈으로 복귀
+                    navController.popBackStack(AppScreen.Home.route, inclusive = false)
+                }
+            )
         }
 
         // 후에 마이 월렛으로 어떤 화폐를 타고 들어왔는지 파라미터 도입...아니다 지금 할까?
