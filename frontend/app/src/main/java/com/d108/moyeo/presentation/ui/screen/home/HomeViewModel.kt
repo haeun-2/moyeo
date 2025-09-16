@@ -95,6 +95,7 @@ class HomeViewModel @Inject constructor(
 
     private fun mapPersonalBoxToWalletSummary(box: Box): WalletSummary {
         val balances = box.balances
+            .filter { it.balance != 0.0 } // 0이 아닌 통화만 출력
             .sortedByDescending { it.balance } // 보유 많은 순
             .map {
                 CurrencyBalance(
