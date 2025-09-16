@@ -29,6 +29,8 @@ class AuthRepositoryImpl @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 val tokenDto = response.body()!!
                 userDataManager.saveTokens(tokenDto.accessToken, tokenDto.refreshToken)
+                userDataManager.savePin("111111")
+                userDataManager.saveBiometricsPreference(true)
                 tokenDto.toDomain()
             } else {
                 throw Exception("Server responded with error: ${response.code()}")
@@ -42,6 +44,8 @@ class AuthRepositoryImpl @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 val tokenDto = response.body()!!
                 userDataManager.saveTokens(tokenDto.accessToken, tokenDto.refreshToken)
+                userDataManager.savePin("111111")
+                userDataManager.saveBiometricsPreference(true)
                 tokenDto.toDomain()
             } else {
                 throw Exception("Server responded with error: ${response.code()}")
