@@ -12,6 +12,7 @@ import androidx.navigation.navArgument
 import com.d108.moyeo.presentation.ui.screen.exchange.CurrencySelectionScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeAddScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeKeypadScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ReservationCompleteScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeReservationScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
@@ -229,6 +230,31 @@ fun AppNavHost(
                 currencyName = currencyName
             )
         }
+        // 예약환전 완료
+        // Navigation에 추가
+        composable(
+            route = "reservation_complete/{currencyCode}/{currencyName}/{foreignAmount}/{krwAmount}",
+            arguments = listOf(
+                navArgument("currencyCode") { type = NavType.StringType },
+                navArgument("currencyName") { type = NavType.StringType },
+                navArgument("foreignAmount") { type = NavType.StringType },
+                navArgument("krwAmount") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
+            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
+            val foreignAmount = backStackEntry.arguments?.getString("foreignAmount") ?: ""
+            val krwAmount = backStackEntry.arguments?.getString("krwAmount") ?: ""
+
+            ReservationCompleteScreen(
+                navController = navController,
+                currencyCode = currencyCode,
+                currencyName = currencyName,
+                foreignAmount = foreignAmount,
+                krwAmount = krwAmount
+            )
+        }
+
 
         // QR 화면
         composable(AppScreen.QR.route) {
