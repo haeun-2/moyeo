@@ -2,7 +2,7 @@ package com.mo.moyeo.domain.user.service;
 
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
-import com.mo.moyeo.domain.box.service.BoxService;
+import com.mo.moyeo.domain.box.box.service.BoxApplicationService;
 import com.mo.moyeo.domain.user.entity.User;
 import com.mo.moyeo.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final BoxService boxService;
+    private final BoxApplicationService boxApplicationService;
 
     public void validateUserEmailNotExists(String email) {
         if (userRepository.existsByEmail(email)) {
@@ -44,6 +44,6 @@ public class UserService {
     @Transactional
     public void registerUser(User user) {
         User newUser = userRepository.save(user);
-        boxService.createPersonalBox(newUser);
+        boxApplicationService.createPersonalBox(newUser);
     }
 }

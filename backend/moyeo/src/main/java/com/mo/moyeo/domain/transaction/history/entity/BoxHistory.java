@@ -1,6 +1,6 @@
 package com.mo.moyeo.domain.transaction.history.entity;
 
-import com.mo.moyeo.domain.box.entity.Box;
+import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.transaction.category.entity.Category;
 import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
