@@ -56,6 +56,7 @@ public class BankApiService {
 
     @Value("${FOREIGN_CURRENCY_TRANSFER_ENDPOINT}")
     private String FOREIGN_CURRENCY_TRANSFER;
+
     /**
      * 박스로 입금 (연결 계좌 -> 법인 계좌 -> 박스)
      */
@@ -239,9 +240,9 @@ public class BankApiService {
 
     public void paymentTransfer(@NotNull CurrencyType currencyType, BankTransferDTO bankTransferDTO) {
 
-        if(currencyType == CurrencyType.KRW){
+        if (currencyType == CurrencyType.KRW) {
             executeTransfer(bankTransferDTO);
-        }else {
+        } else {
             Map<String, Object> requestBody = createApiRequestBody(ApiType.updateForeignCurrencyDemandDepositAccountTransfer.name(), MOYEO_USER_KEY);
             requestBody.put("depositAccountNo", bankTransferDTO.getDepositAccountNo());
             requestBody.put("depositTransactionSummary", bankTransferDTO.getDepositTransactionSummary());
