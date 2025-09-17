@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -72,30 +73,38 @@ fun QRScreen(
                 .background(Color.White), // QR 코드의 흰색 배경
             contentAlignment = Alignment.Center
         ) {
-            // TODO: 여기에 실제 생성된 QR 코드 Bitmap 이미지를 표시해야 합니다.
-            // 지금은 임시 이미지를 사용.
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground), // 임시 이미지
-                contentDescription = "QR Code"
-            )
+            if (uiState.isLoadingQR) {
+                CircularProgressIndicator()
+            } else if (uiState.qrImageBitmap != null) {
+                Image(
+                    bitmap = uiState.qrImageBitmap!!,
+                    contentDescription = "QR Code",
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Text("박스를 선택하여 QR코드를 생성하세요.", textAlign = TextAlign.Center)
+            }
         }
 
         Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // 1분짜리 타이머. 우선 00:57이라고만 표시
-            Text(
-                text = "00:57",
-                style = Typography.bodyMedium,
-                color = primaryLight
-            )
-            // 그리고 그 옆에는 새로고침 아이콘 버튼이 있음
-            IconButton(onClick = { /* TODO: QR 코드 새로고침 로직 */ }) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "새로고침"
+
+        if (uiState.isTimerRunning) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // ViewModel의 timerText 상태를 표시
+                Text(
+                    text = uiState.timerText,
+                    style = Typography.bodyMedium,
+                    color = primaryLight
                 )
+                // 새로고침 아이콘 버튼
+                IconButton(onClick = viewModel::onRefreshQRClick) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "새로고침"
+                    )
+                }
             }
         }
 
