@@ -56,7 +56,7 @@ fun ExchangeKeypadScreen(
     // 예약 모드일경우
     LaunchedEffect(mode, currencyCode, currencyName) {
         if (mode == "reservation" && currencyCode != null && currencyName != null) {
-                viewModel.setReservationMode(currencyCode, currencyName)
+            viewModel.setReservationMode(currencyCode, currencyName)
         } else {
             viewModel.setMode(mode)
         }
@@ -131,12 +131,18 @@ fun ExchangeKeypadScreen(
             // 환율 히스토리 버튼
             if (viewModel.shouldShowHistoryButton()) {
                 Button(
-                    onClick = { },
+                    onClick = {
+                        // 환율 히스토리 화면으로 이동
+                        val code = viewModel.getDisplayCurrencyCode()
+                        val name = viewModel.getDisplayCurrencyName()
+                        val currentMode = uiState.mode
+                        navController.navigate("exchange_history/$code/$name/$currentMode")
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Gray.copy(alpha = 0.2f)
                     ),
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.height(32.dp)
+                    shape = RoundedCornerShape(Spacing.Medium),
+                    modifier = Modifier.height(Spacing.ExtraLarge)
                 ) {
                     Text(
                         text = "환율 히스토리",
@@ -247,12 +253,20 @@ fun ExchangeKeypadScreen(
         // 하단 실행 버튼
         Button(
             onClick = {
+                // 예약 모드일 때만 예약완료 페이지로 이동
                 if (uiState.mode == "reservation"){
-                    // 예약 완료 페이지로 이동
-                    navController.navigate( "reservation_complete/${viewModel.getDisplayCurrencyCode()}/${viewModel.getDisplayCurrencyName()}/${uiState.inputAmount}/${uiState.convertedKrwAmount}")
+                    // 예약 완료 페이지로 이동 -> 변수 설정
+                    val currencyCode = viewModel.getDisplayCurrencyCode()
+                    val currencyName = viewModel.getDisplayCurrencyName()
+                    val inputAmount = uiState.inputAmount
+                    val convertedAmount = uiState.convertedKrwAmount
+                    navController.navigate("reservation_complete/$currencyCode/$currencyName/$inputAmount/$convertedAmount")
                 } else {
-                    val message = "${uiState.inputAmount} 원 ${viewModel.getScreenTitle()} 실행됨\""
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    // 일반 충전/환불 모드일 때는 완료 페이지로 이동 -> 변수 설정
+                    val mode = uiState.mode
+                    val inputAmount = uiState.inputAmount
+                    val currencyUnit = viewModel.getCurrencyUnit()
+                    navController.navigate("exchange_complete/$mode/$inputAmount/$currencyUnit")
                 }
             },
             enabled = !uiState.isProcessing && uiState.inputAmount != "0",
