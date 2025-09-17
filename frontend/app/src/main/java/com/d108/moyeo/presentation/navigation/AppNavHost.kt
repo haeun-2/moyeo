@@ -11,6 +11,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.d108.moyeo.presentation.ui.screen.exchange.CurrencySelectionScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeAddScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeCompleteScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeHistoryScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeKeypadScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ReservationCompleteScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeReservationScreen
@@ -263,6 +265,48 @@ fun AppNavHost(
                 currencyName = currencyName,
                 foreignAmount = foreignAmount,
                 krwAmount = krwAmount
+            )
+        }
+
+        // 환전 완료 화면
+        composable(
+            route = "exchange_complete/{mode}/{amount}/{currencyUnit}",
+            arguments = listOf(
+                navArgument("mode") { type = NavType.StringType },
+                navArgument("amount") { type = NavType.StringType },
+                navArgument("currencyUnit") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val mode = backStackEntry.arguments?.getString("mode") ?: "charge"
+            val amount = backStackEntry.arguments?.getString("amount") ?: "0"
+            val currencyUnit = backStackEntry.arguments?.getString("currencyUnit") ?: "JPY"
+
+            ExchangeCompleteScreen(
+                navController = navController,
+                mode = mode,
+                amount = amount,
+                currencyUnit = currencyUnit
+            )
+        }
+
+        // 환율 히스토리
+        composable(
+            route = "exchange_history/{currencyCode}/{currencyName}/{mode}",
+            arguments = listOf(
+                navArgument("currencyCode") { type = NavType.StringType },
+                navArgument("currencyName") { type = NavType.StringType },
+                navArgument("mode") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
+            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
+            val mode = backStackEntry.arguments?.getString("mode") ?: "charge"
+
+            ExchangeHistoryScreen(
+                navController = navController,
+                currencyCode = currencyCode,
+                currencyName = currencyName,
+                mode = mode
             )
         }
 

@@ -92,7 +92,7 @@ fun CalculatingScreen(navController: NavController,
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                 contentDescription = "뒤로가기",
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(Spacing.ExtraLarge)
             )
         }
 

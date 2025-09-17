@@ -204,7 +204,7 @@ class ExchangeKeypadViewModel : ViewModel() {
         return if (_uiState.value.mode == "reservation" && _uiState.value.currencyName != null) {
             _uiState.value.currencyName!!
         } else {
-            "일본 JPY"
+            "국가 화폐명"
         }
     }
     fun getDisplayCurrencyCode(): String {
