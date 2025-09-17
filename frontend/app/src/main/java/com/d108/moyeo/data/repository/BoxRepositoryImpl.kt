@@ -11,6 +11,16 @@ class BoxRepositoryImpl @Inject constructor(
     private val api: BoxService
 ) : BoxRepository {
 
+        override suspend fun createBox(name: String): Result<Long> {
+        return runCatching {
+            val response = api.createBox(CreateBoxRequestDto(name))
+            if (response.isSuccessful) {
+                response.body()?.boxId ?: throw Exception("Response body is null")
+            } else {
+                throw Exception("Server responded with error: ${response.code()}")
+            }
+        }
+    }
 
     override suspend fun getPersonalBox(): Result<Box> {
         return runCatching {
@@ -47,16 +57,21 @@ class BoxRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun createBox(name: String): Result<Long> {
+    override suspend fun addBookmark(boxId: Long): Result<Unit> {
         return runCatching {
-            val response = api.createBox(CreateBoxRequestDto(name))
-            if (response.isSuccessful) {
-                response.body()?.boxId ?: throw Exception("Response body is null")
-            } else {
-                throw Exception("Server responded with error: ${response.code()}")
+            val response = api.addBookmark(boxId)
+            if (!response.isSuccessful) {
+                throw Exception("Server responded with error code: ${response.code()}")
+
+
+
+    override suspend fun deleteBookmark(boxId: Long): Result<Unit> {
+        return runCatching {
+            val response = api.deleteBookmark(boxId)
+            if (!response.isSuccessful) {
+                throw Exception("Server responded with error code: ${response.code()}")
             }
         }
     }
-
 }
 

@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -30,12 +31,22 @@ import com.d108.moyeo.presentation.theme.primaryLight
 import com.d108.moyeo.presentation.ui.component.qr.SquareMoyeoBoxItem
 
 @Composable
-fun QrScreen(
+fun QRScreen(
     navController: NavController,
     viewModel: QRScreenViewModel = hiltViewModel()
 ) {
     // ViewModel의 상태를 구독합니다.
     val uiState by viewModel.uiState.collectAsState()
+
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    LaunchedEffect(savedStateHandle) {
+        savedStateHandle?.getLiveData<Long>("newly_bookmarked_id")?.observeForever { newId ->
+            if (newId != null) {
+                viewModel.refreshAndSelect(newId)
+                savedStateHandle.remove<Long>("newly_bookmarked_id")
+            }
+        }
+    }
 
     // 선택된 박스의 이름을 찾습니다. (없으면 기본 텍스트)
     val selectedBoxName = remember(uiState.selectedBoxId, uiState.bookmarkedBoxes) {

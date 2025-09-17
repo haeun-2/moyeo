@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.component.common
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -27,14 +28,33 @@ import androidx.compose.ui.unit.dp
 import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.theme.onSurfaceVariantLight
+import com.d108.moyeo.presentation.theme.primaryLight
+import com.d108.moyeo.presentation.theme.surfaceVariantLight
 
 @Composable
 fun GridMoyeoBoxesItem(
     box: Box,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+
+    val cardColors = if (box.isBookmarked) {
+        CardDefaults.cardColors(
+            containerColor = surfaceVariantLight,
+            contentColor = onSurfaceVariantLight
+        )
+    } else {
+        CardDefaults.cardColors()
+    }
     // Card를 사용하여 각 아이템에 그림자 효과와 모양을 부여합니다.
     Card(
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        onClick = onClick,
+        enabled = !box.isBookmarked, // 즐겨찾기된 항목은 클릭 불가
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = if (isSelected) BorderStroke(2.dp, primaryLight) else null,
+        colors = cardColors
     ) {
         // 부모 요소를 꽉 채움
         Row(

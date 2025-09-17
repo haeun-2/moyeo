@@ -15,7 +15,7 @@ class QRScreenViewModel @Inject constructor(
     private val getBookmarkedBoxesUseCase: GetBookmarkedBoxesUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(QrScreenUiState())
+    private val _uiState = MutableStateFlow(QRScreenUiState())
     val uiState = _uiState.asStateFlow()
 
     init {
@@ -29,8 +29,30 @@ class QRScreenViewModel @Inject constructor(
             currentState.copy(selectedBoxId = newSelectedId)
         }
         // TODO: 여기서 서버에 QR 토큰 생성을 요청하는 로직이 추가되어야 합니다.
-        // 예: generateQrCode(newSelectedId)
+        // 예: generateQRCode(newSelectedId)
     }
+
+    fun refreshAndSelect(boxIdToSelect: Long) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            getBookmarkedBoxesUseCase()
+                .onSuccess { boxes ->
+                    // 성공 시, 목록과 선택된 ID를 '한 번에' 업데이트하여 충돌 방지
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            bookmarkedBoxes = boxes,
+                            selectedBoxId = boxIdToSelect
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "즐겨찾기 목록을 불러오지 못했습니다.") }
+                }
+        }
+    }
+
+
 
     private fun loadBookmarkedBoxes() {
         viewModelScope.launch {
@@ -48,6 +70,10 @@ class QRScreenViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false, errorMessage = "즐겨찾기 목록을 불러오지 못했습니다.") }
                 }
         }
+    }
+
+    fun refreshBookmarkedBoxes() {
+        loadBookmarkedBoxes()
     }
 
 }
