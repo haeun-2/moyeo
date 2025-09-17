@@ -62,7 +62,9 @@ class BoxRepositoryImpl @Inject constructor(
             val response = api.addBookmark(boxId)
             if (!response.isSuccessful) {
                 throw Exception("Server responded with error code: ${response.code()}")
-
+            }
+        }
+    }
 
 
     override suspend fun deleteBookmark(boxId: Long): Result<Unit> {

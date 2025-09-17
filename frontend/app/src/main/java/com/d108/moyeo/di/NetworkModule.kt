@@ -5,6 +5,7 @@ import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.data.remote.api.AuthService
 import com.d108.moyeo.data.remote.api.BankService
 import com.d108.moyeo.data.remote.api.BoxService
+import com.d108.moyeo.data.remote.api.PaymentService
 import com.d108.moyeo.data.remote.api.SignUpService
 import com.d108.moyeo.data.remote.interceptor.AuthInterceptor
 import com.google.gson.GsonBuilder
@@ -86,4 +87,14 @@ object NetworkModule {  // 여러 부품을 조립해서 새로운 것을 '만�
     @Singleton
     fun provideBoxService(retrofit: Retrofit): BoxService =
         retrofit.create(BoxService::class.java)
+
+
+    /*
+    결제와 관련된 서비스
+     */
+    @Provides
+    @Singleton
+    fun providePaymentService(retrofit: Retrofit): PaymentService {
+        return retrofit.create(PaymentService::class.java)
+    }
 }
