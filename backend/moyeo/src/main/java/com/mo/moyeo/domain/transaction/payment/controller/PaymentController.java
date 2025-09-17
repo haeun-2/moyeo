@@ -29,9 +29,8 @@ public class PaymentController {
 
     @PostMapping
     @Operation(summary = "결제 요청", description = "테스트용 입력 JPY, merchantId = 10")
-    public ResponseEntity<?> getPaymentToken(@AuthenticationPrincipal CustomUserDetails customUserDetails, @Valid @RequestBody PaymentRequestDto paymentRequestDto){
-        User user = customUserDetails.getUser();
-        paymentService.payment(user,paymentRequestDto);
+    public ResponseEntity<?> getPaymentToken(@Valid @RequestBody PaymentRequestDto paymentRequestDto){
+        paymentService.payment(paymentRequestDto);
         return ResponseEntity.ok().build();
     }
 }

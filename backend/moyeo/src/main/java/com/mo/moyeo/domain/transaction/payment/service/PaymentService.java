@@ -21,6 +21,7 @@ import com.mo.moyeo.domain.transaction.payment.repository.PaymentRepository;
 import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import com.mo.moyeo.domain.transaction.transaction.service.TransactionService;
 import com.mo.moyeo.domain.user.entity.User;
+import com.mo.moyeo.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -51,16 +52,19 @@ public class PaymentService {
     private final RedisTemplate<String, String> redisTemplate;
     private final BoxService boxService;
     private final BoxHistoryService boxHistoryService;
+    private final UserService userService;
+
     // 랜덤 시드 생성
     private static final SecureRandom random = new SecureRandom();
-    private static final String TOKEN_KEY = "TOKEN_KEY";
+    private static final String TOKEN_BOX_KEY = "TOKEN_BOX_KEY";
+    private static final String TOKEN_USER_KEY = "TOKEN_USER_KEY";
 
     public TokenResponse getQrCode(User user, Long boxId) {
         log.debug("user :{} , box : {}",user.getId(), boxId);
         validateCondition(user, boxId);
         String token ;
         try {
-            token = generateToken(boxId);
+            token = generateToken(user, boxId);
         } catch (NoSuchAlgorithmException e) {
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
@@ -72,7 +76,7 @@ public class PaymentService {
     }
 
     // 토큰 생성
-    public String generateToken(Long boxId) throws NoSuchAlgorithmException {
+    public String generateToken(User user, Long boxId) throws NoSuchAlgorithmException {
         byte[] salt = new byte[8]; // 8바이트 랜덤
         random.nextBytes(salt);
 
@@ -84,14 +88,25 @@ public class PaymentService {
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
 
         // 매핑 저장
-        String tokenKey = TOKEN_KEY + ":" + token; // 예: "payment_tokens:abc123"
-        redisTemplate.opsForValue().set(tokenKey, String.valueOf(boxId), Duration.ofSeconds(30));
+        String tokenBoxKey = TOKEN_BOX_KEY + ":" + token; // 예: "payment_tokens:abc123"
+        redisTemplate.opsForValue().set(tokenBoxKey, String.valueOf(boxId), Duration.ofSeconds(30));
+
+        String tokenUserKey = TOKEN_USER_KEY + ":" + token; // 예: "payment_tokens:abc123"
+        redisTemplate.opsForValue().set(tokenUserKey, String.valueOf(user.getId()), Duration.ofSeconds(30));
         return token;
     }
 
     // 토큰에서 원본 값 확인
-    public Long getOriginalValue(String token) {
-        String tokenKey = TOKEN_KEY + ":" + token; // 예: "payment_tokens:abc123"
+    public Long getTokenBoxId(String token) {
+        String tokenKey = TOKEN_BOX_KEY + ":" + token; // 예: "payment_tokens:abc123"
+        String value = redisTemplate.opsForValue().get(tokenKey);
+
+        if(value==null)throw new CustomException(ErrorCode.EXPIRED_PAYMENT_TOKEN);
+        return Long.parseLong(value); // DB에서 조회 시 사용
+    }
+
+    public Long getTokenUserId(String token) {
+        String tokenKey = TOKEN_USER_KEY + ":" + token; // 예: "payment_tokens:abc123"
         String value = redisTemplate.opsForValue().get(tokenKey);
 
         if(value==null)throw new CustomException(ErrorCode.EXPIRED_PAYMENT_TOKEN);
@@ -99,12 +114,16 @@ public class PaymentService {
     }
 
     @Transactional
-    public void payment(User user, PaymentRequestDto paymentRequestDto) {
-        Long boxId = getOriginalValue(paymentRequestDto.token());
+    public void payment(PaymentRequestDto paymentRequestDto) {
+        Long boxId = getTokenBoxId(paymentRequestDto.token());
+        Long userId = getTokenUserId(paymentRequestDto.token());
+        User user = userService.getById(userId);
 
         //박스 찾기
         Box box = boxService.getReferenceById(boxId);
         BoxBalance boxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(box, paymentRequestDto.currencyType());
+        boxMemberService.validatePaymentPermission(box, user);
+
         if(boxBalance.getBalance().compareTo(paymentRequestDto.amount())<0)
             throw new CustomException(ErrorCode.INSUFFICIENT_BALANCE);
         boxBalance.decreaseBalance(paymentRequestDto.amount());
@@ -113,7 +132,6 @@ public class PaymentService {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyMMddHHmmss");
         String approvalNumber = LocalDateTime.now().format(formatter) + UUID.randomUUID();
-
 
         //merchant 조회
         Merchant merchant = merchantService.getMerchantById(paymentRequestDto.merchantId());
