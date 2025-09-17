@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +36,8 @@ import com.d108.moyeo.presentation.ui.component.home.BoxEditBottomSheet
 import com.d108.moyeo.presentation.ui.component.textColorUtil
 
 private val TAG = "HomeScreen"
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -81,6 +85,10 @@ fun HomeScreen(
         }
     }
 
+    // 최상단에서 아래로 당겨 새로고침
+    val pullToRefreshState = rememberPullToRefreshState()
+    val isRefreshing = uiState.isRefreshing
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -109,21 +117,29 @@ fun HomeScreen(
             )
             Spacer(Modifier.height(Spacing.Large))
 
-            // --- 스크롤되는 메인 콘텐츠 영역 ---
-            // 이 LazyColumn이 남은 공간을 모두 차지합니다.
-            LazyColumn(
-                modifier = Modifier.weight(1f)
+            // 최상단에서 아래로 당겨 새로고침
+            PullToRefreshBox(
+                state = pullToRefreshState,
+                isRefreshing = isRefreshing,
+                onRefresh = { viewModel.refresh() }, // 새로고침 동작
+                modifier = Modifier.weight(1f),
             ) {
-                // 그룹별 포켓 카드들
-                itemsIndexed(uiState.groups) { index, item ->
-                    GroupBoxCard(
-                        data = item,
-                        onDepositClick = { viewModel.onDepositClick(item.id) },
-                        onMoreClick = { viewModel.onGroupMoreClick(item.id.toLong()) },
-                        onColumnClick = { viewModel.onGroupBoxClick(item.id) }
-                    )
-                    if (index < uiState.groups.lastIndex) {
-                        Spacer(Modifier.height(Spacing.Large))
+                // --- 스크롤되는 메인 콘텐츠 영역 ---
+                // 이 LazyColumn이 남은 공간을 모두 차지합니다.
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // 그룹별 포켓 카드들
+                    itemsIndexed(uiState.groups) { index, item ->
+                        GroupBoxCard(
+                            data = item,
+                            onDepositClick = { viewModel.onDepositClick(item.id) },
+                            onMoreClick = { viewModel.onGroupMoreClick(item.id.toLong()) },
+                            onColumnClick = { viewModel.onGroupBoxClick(item.id) }
+                        )
+                        if (index < uiState.groups.lastIndex) {
+                            Spacer(Modifier.height(Spacing.Large))
+                        }
                     }
                 }
             }

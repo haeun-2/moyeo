@@ -12,6 +12,7 @@ import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import com.d108.moyeo.domain.repository.AuthRepository
 import com.d108.moyeo.presentation.theme.boxAvailableColors
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.abs
@@ -50,7 +52,8 @@ class HomeViewModel @Inject constructor(
                 balances = emptyList()
             ),
             groups = emptyList(),
-            showWalletEditSheet = false
+            showWalletEditSheet = false,
+            isRefreshing = false
         )
     )
     val uiState = _uiState.asStateFlow()
@@ -96,9 +99,14 @@ class HomeViewModel @Inject constructor(
         refresh()
     }
 
-    fun refresh() {
-        loadPersonal()
-        loadGroups()
+    fun refresh() = viewModelScope.launch {
+        _uiState.update { it.copy(isRefreshing = true) }
+
+        val personal: Job = loadPersonal()
+        val group: Job = loadGroups()
+        joinAll(personal, group)
+
+        _uiState.update { it.copy(isRefreshing = false) }
     }
 
     private fun loadPersonal() = viewModelScope.launch {
@@ -113,29 +121,27 @@ class HomeViewModel @Inject constructor(
             }
     }
 
-    private fun loadGroups() {
-        viewModelScope.launch {
-            getGroupBoxes(size = 30)
-                .onSuccess { list ->
-                    val base: List<GroupBox> = list.map(::mapGroupBoxToUi)
+    private fun loadGroups(): Job =  viewModelScope.launch {
+        getGroupBoxes(size = 30)
+            .onSuccess { list ->
+                val base: List<GroupBox> = list.map(::mapGroupBoxToUi)
 
-                    val mapped = kotlinx.coroutines.coroutineScope {
-                        base.map { groupBox ->
-                            async {
-                                val id = groupBox.id.toLong()
-                                val savedName  = userDataManager.getGroupName(id)
-                                val savedColor = userDataManager.getGroupColor(id)?.let { Color(it) }
-                                val patchedBg = savedColor ?: groupBox.bg
-                                val patchedName = savedName ?: groupBox.title
-                                groupBox.copy(title = patchedName, bg = patchedBg)
-                            }
-                        }.awaitAll()
-                    }
-
-                    _uiState.update { it.copy(groups = mapped) }
+                val mapped = kotlinx.coroutines.coroutineScope {
+                    base.map { groupBox ->
+                        async {
+                            val id = groupBox.id.toLong()
+                            val savedName  = userDataManager.getGroupName(id)
+                            val savedColor = userDataManager.getGroupColor(id)?.let { Color(it) }
+                            val patchedBg = savedColor ?: groupBox.bg
+                            val patchedName = savedName ?: groupBox.title
+                            groupBox.copy(title = patchedName, bg = patchedBg)
+                        }
+                    }.awaitAll()
                 }
-                .onFailure { e -> Log.e("HomeViewModel", "loadGroups failed", e) }
-        }
+
+                _uiState.update { it.copy(groups = mapped) }
+            }
+            .onFailure { e -> Log.e("HomeViewModel", "loadGroups failed", e) }
     }
 
     // ---------- 매핑 ----------

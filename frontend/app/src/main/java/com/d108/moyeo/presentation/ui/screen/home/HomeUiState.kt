@@ -31,4 +31,5 @@ data class HomeUiState(
     val showWalletEditSheet: Boolean = false,
     val editingGroupId: Long? = null,
     val showGroupEditSheet: Boolean = false,
+    val isRefreshing: Boolean = false
 )
