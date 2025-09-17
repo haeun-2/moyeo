@@ -79,3 +79,10 @@ val pink = Color(0xFFFFC9C9)
 val brown = Color(0xFFB89563)
 val purple = Color(0xFFD2B6FF)
 val button = Color(0x26000000)
+
+val boxAvailableColors = listOf(
+    Color(0xFFFFFFFF), Color(0xFFF2F4F6), Color(0xFF4B5563), Color(0xFF000000),
+    Color(0xFF8ECDF0), Color(0xFF7DA2F7), Color(0xFF8EA6C9), Color(0xFFA896FF),
+    Color(0xFFD2B6FF), Color(0xFF63B5B1), Color(0xFF74D0C1), Color(0xFF7FB77E),
+    Color(0xFFA9C266), Color(0xFFC9E39A), Color(0xFFFFC9C9), Color(0xFFB89563)
+)
