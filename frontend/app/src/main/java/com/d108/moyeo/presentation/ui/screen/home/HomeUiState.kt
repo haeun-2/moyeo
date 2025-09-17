@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 /** 상단 지갑 요약 */
 data class WalletSummary(
     val title: String,
-    val color: Color,
+    val bg: Color,
     val balances: List<CurrencyBalance>
 )
 
@@ -29,4 +29,6 @@ data class HomeUiState(
     val wallet: WalletSummary,
     val groups: List<GroupBox> = emptyList(),
     val showWalletEditSheet: Boolean = false,
+    val editingGroupId: Long? = null,
+    val showGroupEditSheet: Boolean = false,
 )

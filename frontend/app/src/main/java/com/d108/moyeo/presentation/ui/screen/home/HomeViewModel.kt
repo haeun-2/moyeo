@@ -5,12 +5,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.domain.usecase.box.GetGroupBoxesUseCase
 import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import com.d108.moyeo.domain.repository.AuthRepository
-import com.d108.moyeo.presentation.theme.surfaceLight
+import com.d108.moyeo.presentation.theme.boxAvailableColors
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -25,7 +28,8 @@ import kotlin.math.abs
 class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val getPersonalBox: GetPersonalBoxUseCase,
-    private val getGroupBoxes: GetGroupBoxesUseCase
+    private val getGroupBoxes: GetGroupBoxesUseCase,
+    private val userDataManager: UserDataManager
 ) : ViewModel() {
 
     private var didHandleFirstResume: Boolean = false
@@ -42,7 +46,7 @@ class HomeViewModel @Inject constructor(
         HomeUiState(
             wallet = WalletSummary(
                 title = "",
-                color = surfaceLight,
+                bg = boxAvailableColors[1],
                 balances = emptyList()
             ),
             groups = emptyList(),
@@ -68,6 +72,26 @@ class HomeViewModel @Inject constructor(
             }
         }
 
+        // 색상 로딩
+        viewModelScope.launch {
+            userDataManager.walletColorFlow.collect { savedColor ->
+                if (savedColor != null) {
+                    _uiState.update { state ->
+                        state.copy(wallet = state.wallet.copy(bg = Color(savedColor)))
+                    }
+                }
+            }
+        }
+
+        // 박스 이름 로딩
+        viewModelScope.launch {
+            userDataManager.walletNameFlow.collect { savedName ->
+                if (!savedName.isNullOrBlank()) {
+                    _uiState.update { s -> s.copy(wallet = s.wallet.copy(title = savedName)) }
+                }
+            }
+        }
+        
         // 첫 로딩
         refresh()
     }
@@ -92,13 +116,25 @@ class HomeViewModel @Inject constructor(
     private fun loadGroups() {
         viewModelScope.launch {
             getGroupBoxes(size = 30)
-                .onSuccess { groupBoxList -> // 성공 시, 상자 안의 내용물(List<Box>)을 꺼냅니다.
-                    val mapped = groupBoxList.map(::mapGroupBoxToUi)
+                .onSuccess { list ->
+                    val base: List<GroupBox> = list.map(::mapGroupBoxToUi)
+
+                    val mapped = kotlinx.coroutines.coroutineScope {
+                        base.map { groupBox ->
+                            async {
+                                val id = groupBox.id.toLong()
+                                val savedName  = userDataManager.getGroupName(id)
+                                val savedColor = userDataManager.getGroupColor(id)?.let { Color(it) }
+                                val patchedBg = savedColor ?: groupBox.bg
+                                val patchedName = savedName ?: groupBox.title
+                                groupBox.copy(title = patchedName, bg = patchedBg)
+                            }
+                        }.awaitAll()
+                    }
+
                     _uiState.update { it.copy(groups = mapped) }
                 }
-                .onFailure { e ->
-                    Log.e("HomeViewModel", "loadGroups failed", e)
-                }
+                .onFailure { e -> Log.e("HomeViewModel", "loadGroups failed", e) }
         }
     }
 
@@ -114,10 +150,12 @@ class HomeViewModel @Inject constructor(
                     value = formatAmount(it.currency, it.balance),
                     code = it.currency)
             }
+        val title = _uiState.value.wallet.title
+            .takeIf { it.isNotBlank() }?: box.name
 
         return WalletSummary(
-            title = box.name,
-            color = colorFromId(box.id),
+            title = title,
+            bg = _uiState.value.wallet.bg,
             balances = balances
         )
     }
@@ -135,7 +173,7 @@ class HomeViewModel @Inject constructor(
             id = box.id.toString(),
             title = box.name,
             amount = amountText,
-            bg = colorFromId(box.id).copy(alpha = 0.25f)
+            bg = colorFromId(box.id)
         )
     }
 
@@ -160,12 +198,7 @@ class HomeViewModel @Inject constructor(
 
     private fun colorFromId(id: Long): Color {
         val base = abs(id.hashCode())
-        val palette = listOf(
-            Color(0xFF8BC34A), Color(0xFF4CAF50), Color(0xFF03A9F4), Color(0xFF00BCD4),
-            Color(0xFFCDDC39), Color(0xFFFFC107), Color(0xFFFF9800), Color(0xFF9C27B0),
-            Color(0xFFE91E63), Color(0xFF3F51B5)
-        )
-        return palette[base % palette.size]
+        return boxAvailableColors[base % boxAvailableColors.size]
     }
 
     // ---------- 네비게이션 ----------
@@ -197,10 +230,14 @@ class HomeViewModel @Inject constructor(
             current.copy(
                 wallet = current.wallet.copy(
                     title = newName,
-                    color = newColor
+                    bg = newColor
                 ),
                 showWalletEditSheet = false
             )
+        }
+        viewModelScope.launch {
+            userDataManager.saveWalletColor(newColor.toArgb())
+            userDataManager.saveWalletName(newName)
         }
     }
 
@@ -222,6 +259,34 @@ class HomeViewModel @Inject constructor(
                     )
                 )
             }
+        }
+    }
+
+    fun onGroupMoreClick(boxId: Long) {
+        _uiState.update { it.copy(editingGroupId = boxId, showGroupEditSheet = true) }
+    }
+
+    fun onGroupEditDismiss() {
+        _uiState.update { it.copy(editingGroupId = null, showGroupEditSheet = false) }
+    }
+
+    fun onGroupEditConfirm(newName: String, newColor: Color) {
+        val id = _uiState.value.editingGroupId ?: return
+        _uiState.update { state ->
+            state.copy(
+                groups = state.groups.map { group ->
+                    if (group.id == id.toString()) group.copy(
+                        title = newName,
+                        bg = newColor
+                    ) else group
+                },
+                editingGroupId = null,
+                showGroupEditSheet = false
+            )
+        }
+        viewModelScope.launch {
+            userDataManager.saveGroupName(id, newName)
+            userDataManager.saveGroupColor(id, newColor.toArgb())
         }
     }
 
