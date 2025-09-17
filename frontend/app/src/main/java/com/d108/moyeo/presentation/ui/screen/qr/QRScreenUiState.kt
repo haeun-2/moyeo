@@ -2,7 +2,7 @@ package com.d108.moyeo.presentation.ui.screen.qr
 
 import com.d108.moyeo.domain.model.box.Box
 
-data class QrScreenUiState(
+data class QRScreenUiState(
     val bookmarkedBoxes: List<Box> = emptyList(),
     val selectedBoxId: Long? = null,
     val isLoading: Boolean = false,
