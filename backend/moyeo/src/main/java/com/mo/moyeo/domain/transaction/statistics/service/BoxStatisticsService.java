@@ -28,7 +28,7 @@ public class BoxStatisticsService {
     private final MerchantRepository merchantRepository;
     private final BoxHistoryRepository boxHistoryRepository;
 
-    public Map<CurrencyType, BoxStatisticsResponse> getCategoryStatistics(Long boxId, LocalDate startDate, LocalDate endDate, CurrencyType currency) {
+    public Map<CurrencyType, BoxStatisticsResponse> getCategoryStatistics(Long boxId, LocalDate startDate, LocalDate endDate) {
         Box box = boxService.getBoxById(boxId);
         if (startDate == null) {
             startDate = box.getCreatedAt().toLocalDate();

@@ -28,10 +28,9 @@ public class BoxStatisticsController {
     public ResponseEntity<Map<CurrencyType, BoxStatisticsResponse>> getCategoryStatistics(
             @PathVariable Long boxId,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
-            @RequestParam CurrencyType currency
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate
     ) {
-        Map<CurrencyType, BoxStatisticsResponse> response = boxStatisticsService.getCategoryStatistics(boxId, startDate, endDate, currency);
+        Map<CurrencyType, BoxStatisticsResponse> response = boxStatisticsService.getCategoryStatistics(boxId, startDate, endDate);
         return ResponseEntity.ok(response);
     }
 
