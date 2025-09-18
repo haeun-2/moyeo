@@ -16,6 +16,7 @@ public interface BoxHistoryRepository extends JpaRepository<BoxHistory, Long>, B
 
     @Query("""
         SELECT new com.mo.moyeo.domain.transaction.statistics.dto.CategoryStatisticsDto(
+            bh.currencyCode,
             c.id,
             c.name,
             abs(sum(bh.amount))
@@ -24,15 +25,14 @@ public interface BoxHistoryRepository extends JpaRepository<BoxHistory, Long>, B
         JOIN bh.category c
         WHERE bh.box.id = :boxId
           AND bh.amount < 0
-          AND bh.currencyCode = :currencyCode
           AND bh.createdAt BETWEEN :startDate AND :endDate
-        GROUP BY c.id, c.name
+        GROUP BY bh.currencyCode, c.id, c.name
+        ORDER BY bh.currencyCode, c.id
     """)
     List<CategoryStatisticsDto> findCategoryStatistics(
             @Param("boxId") Long boxId,
             @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate,
-            @Param("currencyCode") CurrencyType currencyCode
+            @Param("endDate") LocalDateTime endDate
     );
 
     @EntityGraph(attributePaths = "transaction")

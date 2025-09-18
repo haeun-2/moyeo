@@ -13,6 +13,8 @@ import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.service.CurrencyService;
 import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
 import com.mo.moyeo.domain.exchange.rate.service.ExchangeRateCacheService;
+import com.mo.moyeo.domain.transaction.category.entity.CategoryType;
+import com.mo.moyeo.domain.transaction.category.service.CategoryCacheService;
 import com.mo.moyeo.domain.transaction.exchange.dto.ExchangeRequestDto;
 import com.mo.moyeo.domain.transaction.exchange.entity.ExchangeTransaction;
 import com.mo.moyeo.domain.transaction.exchange.repository.ExchangeRepository;
@@ -41,6 +43,7 @@ public class ExchangeService {
     private final AccountUtil accountUtil;
     private final BoxBalanceService boxBalanceService;
     private final BatchInsert batchInsert;
+    private final CategoryCacheService categoryCacheService;
 
     @Transactional
     public void exchange(User user, ExchangeRequestDto exchangeRequestDto) {
@@ -94,6 +97,7 @@ public class ExchangeService {
                 .totalAmount(fromBoxBalance.getBalance())
                 .title("환전")
                 .type(Transaction.Type.EXCHANGE)
+                .category(categoryCacheService.getByName(CategoryType.EXCHANGE))
                 .createdAt(transaction.getCreatedAt())
                 .build();
 
@@ -105,6 +109,7 @@ public class ExchangeService {
                 .totalAmount(toBoxBalance.getBalance())
                 .title("환전")
                 .type(Transaction.Type.EXCHANGE)
+                .category(categoryCacheService.getByName(CategoryType.EXCHANGE))
                 .createdAt(transaction.getCreatedAt())
                 .build();
 

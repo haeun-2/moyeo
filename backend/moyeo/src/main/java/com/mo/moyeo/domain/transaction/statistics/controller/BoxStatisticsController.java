@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,15 +23,15 @@ public class BoxStatisticsController {
 
     private final BoxStatisticsService boxStatisticsService;
 
-    @Operation(summary = "카테고리별 통계 조회", description = "지출 거래내역을 카테고리별 백분율, 총지출액로 조회합니다.")
+    @Operation(summary = "통화별 카테고리 통계 조회", description = "통화별로 지출 거래내역을 카테고리별 백분율, 총지출액로 조회합니다.")
     @GetMapping("/categories")
-    public ResponseEntity<BoxStatisticsResponse> getCategoryStatistics(
+    public ResponseEntity<Map<CurrencyType, BoxStatisticsResponse>> getCategoryStatistics(
             @PathVariable Long boxId,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
             @RequestParam CurrencyType currency
     ) {
-        BoxStatisticsResponse response = boxStatisticsService.getCategoryStatistics(boxId, startDate, endDate, currency);
+        Map<CurrencyType, BoxStatisticsResponse> response = boxStatisticsService.getCategoryStatistics(boxId, startDate, endDate, currency);
         return ResponseEntity.ok(response);
     }
 
