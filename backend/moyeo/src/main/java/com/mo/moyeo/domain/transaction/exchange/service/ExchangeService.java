@@ -43,7 +43,7 @@ public class ExchangeService {
     private final AccountUtil accountUtil;
     private final BoxBalanceService boxBalanceService;
     private final BatchInsert batchInsert;
-    private final CategoryCacheService categoryService;
+    private final CategoryCacheService categoryCacheService;
 
     @Transactional
     public void exchange(User user, ExchangeRequestDto exchangeRequestDto) {
@@ -97,7 +97,7 @@ public class ExchangeService {
                 .totalAmount(fromBoxBalance.getBalance())
                 .title("환전")
                 .type(Transaction.Type.EXCHANGE)
-                .category(categoryService.getByName(CategoryType.EXCHANGE))
+                .category(categoryCacheService.getByName(CategoryType.EXCHANGE))
                 .createdAt(transaction.getCreatedAt())
                 .build();
 
@@ -109,7 +109,7 @@ public class ExchangeService {
                 .totalAmount(toBoxBalance.getBalance())
                 .title("환전")
                 .type(Transaction.Type.EXCHANGE)
-                .category(categoryService.getByName(CategoryType.EXCHANGE))
+                .category(categoryCacheService.getByName(CategoryType.EXCHANGE))
                 .createdAt(transaction.getCreatedAt())
                 .build();
 

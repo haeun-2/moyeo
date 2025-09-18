@@ -47,7 +47,7 @@ public class ReservedExchangeService {
     private final BoxMemberService boxMemberService;
     private final ExchangeService exchangeService;
     private final ExchangeRateCacheService exchangeRateCacheService;
-    private final CategoryCacheService categoryService;
+    private final CategoryCacheService categoryCacheService;
 
     @Transactional
     public void reserveExchange(User user, ExchangeReserveDto exchangeReserveDto) {
@@ -85,7 +85,7 @@ public class ReservedExchangeService {
                 .totalAmount(fromBoxBalance.getBalance())
                 .title("예약 환전")
                 .type(Transaction.Type.EXCHANGE_RESERVATION)
-                .category(categoryService.getByName(CategoryType.EXCHANGE))
+                .category(categoryCacheService.getByName(CategoryType.EXCHANGE))
                 .createdAt(transaction.getCreatedAt())
                 .build();
 

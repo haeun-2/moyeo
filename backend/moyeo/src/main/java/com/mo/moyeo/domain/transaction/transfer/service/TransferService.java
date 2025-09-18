@@ -37,7 +37,7 @@ public class TransferService {
     private final CurrencyService currencyService;
     private final BoxBalanceService boxBalanceService;
     private final BoxHistoryService boxHistoryService;
-    private final CategoryCacheService categoryService;
+    private final CategoryCacheService categoryCacheService;
 
     @Transactional
     public void transfer(User user, TransferRequest request) {
@@ -78,7 +78,7 @@ public class TransferService {
                 .totalAmount(fromBoxBalance.getBalance())
                 .title(toBox.getBoxName())
                 .type(Transaction.Type.TRANSFER)
-                .category(categoryService.getByName(CategoryType.WITHDRAW))
+                .category(categoryCacheService.getByName(CategoryType.WITHDRAW))
                 .createdAt(transaction.getCreatedAt())
                 .build();
 
@@ -90,7 +90,7 @@ public class TransferService {
                 .totalAmount(toBoxBalance.getBalance())
                 .title(fromBox.getBoxName())
                 .type(Transaction.Type.TRANSFER)
-                .category(categoryService.getByName(CategoryType.DEPOSIT))
+                .category(categoryCacheService.getByName(CategoryType.DEPOSIT))
                 .createdAt(transaction.getCreatedAt())
                 .build();
 

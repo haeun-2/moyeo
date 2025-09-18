@@ -15,11 +15,11 @@ import java.util.List;
 @RequestMapping("/api/categories")
 public class CategoryController {
 
-    private final CategoryCacheService categoryService;
+    private final CategoryCacheService categoryCacheService;
 
     @GetMapping
     public ResponseEntity<List<CategoryResponse>> getAllCategory() {
-        List<CategoryResponse> response = categoryService.getAllCategoryList();
+        List<CategoryResponse> response = categoryCacheService.getAllCategoryList();
         return ResponseEntity.ok(response);
     }
 
