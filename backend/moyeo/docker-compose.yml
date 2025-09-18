@@ -10,25 +10,64 @@ services:
       - .env
     depends_on:
       - redis
+      - mysql
+    networks:
+      - monitoring
 
   redis:
     image: redis:latest
     container_name: moyeo-redis
     ports:
       - "6379:6379"
+    networks:
+      - monitoring
 
   mysql:
     image: mysql:latest
     container_name: moyeo-mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - mysql_data:/var/lib/mysql               # 데이터 영구 저장
+      - mysql_data:/var/lib/mysql
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: moyeo-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: moyeo-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER= ${GF_USER}
+      - GF_SECURITY_ADMIN_PASSWORD= ${GF_PW}
+    volumes:
+      - grafana_data:/var/lib/grafana   # 볼륨 마운트 추가
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
 
 volumes:
+  grafana_data:
   mysql_data:
+
+networks:
+  monitoring:
+    driver: bridge

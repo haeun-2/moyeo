@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/boxes/invite/**", "/download.html").permitAll()
                         .requestMatchers("/api/payments").permitAll()
                         .requestMatchers("/api/v1/users/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll() // 프로메테우스 메트릭 공개
 //                        .requestMatchers(("/**")).permitAll()
                         .anyRequest().authenticated())
         ;
