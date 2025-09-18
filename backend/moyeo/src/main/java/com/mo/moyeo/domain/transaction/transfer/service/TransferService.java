@@ -27,7 +27,6 @@ import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class TransferService {
 
     private final TransferRepository transferRepository;

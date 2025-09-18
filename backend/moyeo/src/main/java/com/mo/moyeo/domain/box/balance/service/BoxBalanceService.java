@@ -9,12 +9,14 @@ import com.mo.moyeo.domain.box.balance.repository.BoxBalanceRepository;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BoxBalanceService {
     private final BoxBalanceRepository boxBalanceRepository;
     private final BatchInsert batchInsert;
