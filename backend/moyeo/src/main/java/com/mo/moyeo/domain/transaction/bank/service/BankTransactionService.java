@@ -37,7 +37,7 @@ public class BankTransactionService {
     private final BankService bankService;
     private final BankApiService bankApiService;
     private final BoxHistoryService boxHistoryService;
-    private final CategoryCacheService categoryCacheService;
+    private final CategoryCacheService categoryService;
 
     private final String TITLE = "연결 계좌";
     private static final CurrencyType DEFAULT_CURRENCY = CurrencyType.KRW;
@@ -138,7 +138,7 @@ public class BankTransactionService {
                 .totalAmount(boxBalance.getBalance())
                 .title(TITLE)
                 .type(type)
-                .category(type == Transaction.Type.DEPOSIT ? categoryCacheService.getByName(CategoryType.DEPOSIT) : categoryCacheService.getByName(CategoryType.WITHDRAW))
+                .category(type == Transaction.Type.DEPOSIT ? categoryService.getByName(CategoryType.DEPOSIT) : categoryService.getByName(CategoryType.WITHDRAW))
                 .build();
     }
 

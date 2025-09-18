@@ -1,6 +1,5 @@
 package com.mo.moyeo.domain.transaction.category.service;
 
-import com.mo.moyeo.domain.transaction.category.dto.CategoryResponse;
 import com.mo.moyeo.domain.transaction.category.entity.Category;
 import com.mo.moyeo.domain.transaction.category.entity.CategoryType;
 import com.mo.moyeo.domain.transaction.category.repository.CategoryRepository;
@@ -9,8 +8,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -24,8 +22,13 @@ public class CategoryService {
 
     @Cacheable(value = CATEGORY_KEY, key = "'all'")
     public Map<CategoryType, Category> getAllCategoryMap() {
-        return categoryRepository.findAll().stream()
-                .collect(Collectors.toMap(Category::getName, category -> category));
+        return categoryRepository.findAllByOrderByIdAsc().stream()
+                .collect(Collectors.toMap(
+                        Category::getName,
+                        category -> category,
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ));
     }
 
 }

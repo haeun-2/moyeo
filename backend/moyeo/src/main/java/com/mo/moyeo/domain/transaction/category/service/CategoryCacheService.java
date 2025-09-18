@@ -6,7 +6,6 @@ import com.mo.moyeo.domain.transaction.category.entity.CategoryType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -21,10 +20,8 @@ public class CategoryCacheService {
 
     public List<CategoryResponse> getAllCategoryList() {
         return categoryService.getAllCategoryMap().values().stream()
-                .sorted(Comparator.comparing(Category::getId)) // ID 오름차순 정렬
                 .map(CategoryResponse::from)
                 .toList();
     }
-
 
 }
