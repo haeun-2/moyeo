@@ -8,6 +8,7 @@ import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
 import com.mo.moyeo.domain.box.balance.service.BoxBalanceService;
 import com.mo.moyeo.domain.box.member.service.BoxMemberService;
 import com.mo.moyeo.domain.box.box.service.BoxService;
+import com.mo.moyeo.domain.currency.service.CurrencyService;
 import com.mo.moyeo.domain.merchant.entity.Merchant;
 import com.mo.moyeo.domain.merchant.service.MerchantService;
 import com.mo.moyeo.domain.transaction.bank.dto.BankTransferDTO;
@@ -53,6 +54,7 @@ public class PaymentService {
     private final BoxService boxService;
     private final BoxHistoryService boxHistoryService;
     private final UserService userService;
+    private final CurrencyService currencyService;
 
     // 랜덤 시드 생성
     private static final SecureRandom random = new SecureRandom();
@@ -139,6 +141,7 @@ public class PaymentService {
                 .transaction(transaction)
                 .merchant(merchant)
                 .approvalNumber(approvalNumber)
+                .currency(currencyService.getReferenceByType(paymentRequestDto.currencyType()))
                 .amount(paymentRequestDto.amount())
                 .status(Payment.Status.PENDING)
                 .build();
