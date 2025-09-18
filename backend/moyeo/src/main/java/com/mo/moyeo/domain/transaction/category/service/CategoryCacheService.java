@@ -15,7 +15,7 @@ public class CategoryCacheService {
     private final CategoryService categoryService;
 
     public Category getByName(CategoryType type) {
-        return categoryService.getAllCategoryMap().get(type);
+        return categoryService.getAllCategoryMap().get(type.name());
     }
 
     public List<CategoryResponse> getAllCategoryList() {

@@ -21,10 +21,10 @@ public class CategoryService {
     private final String CATEGORY_KEY = "category";
 
     @Cacheable(value = CATEGORY_KEY, key = "'all'")
-    public Map<CategoryType, Category> getAllCategoryMap() {
+    public Map<String, Category> getAllCategoryMap() {
         return categoryRepository.findAllByOrderByIdAsc().stream()
                 .collect(Collectors.toMap(
-                        Category::getName,
+                        category -> category.getName().name(),
                         category -> category,
                         (existing, replacement) -> existing,
                         LinkedHashMap::new
