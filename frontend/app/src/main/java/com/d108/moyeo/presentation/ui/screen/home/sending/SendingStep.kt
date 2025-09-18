@@ -1,9 +1,9 @@
 package com.d108.moyeo.presentation.ui.screen.home.sending
 
 enum class SendingStep {  // 이체 화면 순서
-    CHOOSE_CURRENCY,  // 어떤 금액을 보내나요?
-
     TARGET_BOX,  // 어느 박스로 보내나요?
+
+    CHOOSE_CURRENCY,  // 어떤 금액을 보내나요?
 
     HOW_MUCH,  // 보낼 금액을 입력해주세요
 

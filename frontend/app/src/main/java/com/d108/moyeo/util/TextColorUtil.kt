@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.component
+package com.d108.moyeo.util
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance

@@ -27,31 +27,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.d108.moyeo.core.BoxStoreUiState
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.theme.brown
-import com.d108.moyeo.presentation.theme.pink
 import com.d108.moyeo.presentation.theme.primaryLight
-import com.d108.moyeo.presentation.theme.purple
 import com.d108.moyeo.presentation.theme.surfaceLight
-
-data class TargetBoxData(  // TODO: 임시 데이터 << 이거 DTO를 정해야겠는데...슬슬
-    val id: String,
-    val title: String,
-    val bg: Color
-)
 
 @Composable
 fun TargetBoxContent(
     selectedBoxId: String,
-    onBoxSelect: (String) -> Unit
+    onBoxSelect: (String) -> Unit,
+    boxes: List<BoxStoreUiState> // textColor 가 추가된 모임 박스 목록
 ) {
-    // TODO: 이 더미 데이터는 추후 ViewModel에서 실제 박스 목록으로 받아와야 합니다.
-    val dummyBoxes = listOf(
-        TargetBoxData("box_1", "상훈 풍헌 동찬 일본 여행", pink),
-        TargetBoxData("box_2", "미국 도대체 언제 감", brown),
-        TargetBoxData("box_3", "오아시스", purple),
-    )
 
     Column {
         Text(
@@ -64,10 +51,12 @@ fun TargetBoxContent(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Spacing.Medium) // 카드 사이의 간격
         ) {
-            items(dummyBoxes) { box ->
+            items(boxes) { box ->
                 val isSelected = (box.id == selectedBoxId)
                 SelectableGroupBoxCard(
-                    data = box,
+                    title = box.title,
+                    bg = box.bg,
+                    textColor = box.textColor,
                     isSelected = isSelected,
                     onClick = { onBoxSelect(box.id) }
                 )
@@ -78,14 +67,19 @@ fun TargetBoxContent(
 
 @Composable
 private fun SelectableGroupBoxCard(
-    data: TargetBoxData,
-    isSelected: Boolean, // 현재 선택되었는지 여부
+    title: String,
+    bg: Color,
+    textColor: Color,
+    isSelected: Boolean,
     onClick: () -> Unit
 ) {
     Card(
         onClick = onClick, // 카드 전체에 클릭 이벤트를 적용합니다.
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = data.bg),
+        colors = CardDefaults.cardColors(
+            containerColor = bg,
+            contentColor = textColor
+        ),
         // isSelected가 true일 때만 테두리를 표시하여 하이라이트 효과를 줍니다.
         border = if (isSelected) {
             BorderStroke(4.dp, primaryLight)
@@ -112,9 +106,8 @@ private fun SelectableGroupBoxCard(
 
             Text(
                 modifier = Modifier.weight(1f), // 남은 공간을 모두 차지
-                text = data.title,
+                text = title,
                 style = Typography.titleMedium, // 텍스트 스타일 조정
-                color = Color.Black,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Start // 왼쪽 정렬

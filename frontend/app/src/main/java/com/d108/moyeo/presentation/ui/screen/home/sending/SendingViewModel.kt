@@ -3,6 +3,10 @@ package com.d108.moyeo.presentation.ui.screen.home.sending
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.core.BoxStore
+import com.d108.moyeo.domain.usecase.banking.TransferUseCase
+import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,43 +14,29 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-/**
- * 이체 화면의 상태(State)를 정의합니다.
- *
- * @property currentStep 현재 진행 중인 이체 단계
- * @property currency 사용자가 선택한 보낼 화폐 (예: "KRW", "USD")
- * @property targetBox 사용자가 선택한 보낼 박스 ID
- * @property howMuch 사용자가 입력한 보낼 금액
- */
-data class SendingUiState(
-    val currentStep: SendingStep = SendingStep.CHOOSE_CURRENCY,
-    val currency: String = "",
-    val targetBox: String = "",
-    val howMuch: String = "",
-    val pin: String = "",
-
-    // PIN 검증을 위한 상태
-    val pinFailureCount: Int = 0,
-    val isPinLocked: Boolean = false,
-    val pinError: String? = null
-)
+import javax.inject.Inject
 
 sealed class SendingNavEvent {
     data object NavigateBack : SendingNavEvent()
     data object ShowBiometricPrompt : SendingNavEvent() // 생체 인증 창을 띄우라는 이벤트 추가
 }
 
-
-class SendingViewModel(
+@HiltViewModel
+class SendingViewModel @Inject constructor(
     // NavHost에서 전달해준 파라미터('currencyId')를 받기 위해 SavedStateHandle를 사용
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val getPersonalBox: GetPersonalBoxUseCase,
+    private val sendTransfer: TransferUseCase,
+    private val boxStore: BoxStore
 ) : ViewModel() {
+
+    // BoxStore 에서 모임 박스 목록, 내 통화 목록을 불러옴
+    val groupBoxesUi = boxStore.groupBoxesUi
+    val currencies = boxStore.personalCurrencies
 
     // TODO: 임시 정답 핀을 찐핀으로 바꾸기
     // 임시 정답 PIN 추가
     private val correctPin = "111111"
-
 
     private val _uiState = MutableStateFlow(SendingUiState())
     val uiState = _uiState.asStateFlow()
@@ -68,6 +58,11 @@ class SendingViewModel(
     //  - val remainingLockTime = checkPinLockStatusUseCase()
     //  - if (remainingLockTime > 0) { _uiState.update { it.copy(isPinLocked = true, ...) } }
 
+    // 내 통장 ID
+    private var myPersonalBoxId: Long? = null
+    private var isSubmitting: Boolean = false
+
+
     // ViewModel이 처음 생성될 때 실행되는 초기화 블록
     init {
         // NavHost로부터 전달받은 'currencyId' 파라미터를 꺼냄
@@ -80,8 +75,14 @@ class SendingViewModel(
                 currentState.copy(currency = initialCurrency)
             }
         }
-    }
 
+        //
+        viewModelScope.launch {
+            getPersonalBox()
+                .onSuccess { box -> myPersonalBoxId = box.id }
+                .onFailure { /* TODO: 에러 처리 */}
+        }
+    }
 
     // 2. 각 단계에서 사용자가 입력한 값을 SendingUiState에 반영하는 함수
     /**
@@ -123,9 +124,7 @@ class SendingViewModel(
 
     // 생체 인증에 성공
     fun onBiometricsSucceeded() {
-        // TODO: 실제 서버에 이체 요청 API 호출
-        // API 호출 성공 시 FINISH 단계로 이동
-        _uiState.update { it.copy(currentStep = SendingStep.FINISH) }
+        submitTransfer()
     }
 
     /**
@@ -190,9 +189,36 @@ class SendingViewModel(
     }
 
     fun onPinSucceeded() {
-        // TODO: 실제 서버에 이체 요청 API 호출
-        // API 호출 성공 시 FINISH 단계로 이동
-        _uiState.update { it.copy(currentStep = SendingStep.FINISH) }
+        submitTransfer()
+    }
+
+
+    /** 실제 API 호출 */
+    private fun submitTransfer() {
+        if (isSubmitting) return
+        val state = _uiState.value
+        val from = myPersonalBoxId
+        val to = state.targetBox.toLongOrNull()
+        val amount = state.howMuch.toLongOrNull()
+        val currency = state.currency
+
+        // 입력 검증
+        if (from == null || to == null || amount == null || currency.isBlank()) {
+            _uiState.update { it.copy(pinError = "이체 정보가 올바르지 않습니다.") }
+            return
+        }
+
+        isSubmitting = true
+        viewModelScope.launch {
+            sendTransfer(fromBoxId = from, toBoxId = to, currency = currency, amount = amount)
+                .onSuccess {
+                    _uiState.update { it.copy(currentStep = SendingStep.FINISH) }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(pinError = "이체 실패: ${e.message ?: "알 수 없는 오류"}") }
+                }
+            isSubmitting = false
+        }
     }
 
 
@@ -202,10 +228,10 @@ class SendingViewModel(
      */
     fun onNextClicked() {
         when (_uiState.value.currentStep) {
-            SendingStep.CHOOSE_CURRENCY -> {
-                _uiState.update { it.copy(currentStep = SendingStep.TARGET_BOX) }
-            }
             SendingStep.TARGET_BOX -> {
+                _uiState.update { it.copy(currentStep = SendingStep.CHOOSE_CURRENCY) }
+            }
+            SendingStep.CHOOSE_CURRENCY -> {
                 _uiState.update { it.copy(currentStep = SendingStep.HOW_MUCH) }
             }
             SendingStep.HOW_MUCH -> {
@@ -244,14 +270,14 @@ class SendingViewModel(
     fun onBackClick() {
         val currentStep = _uiState.value.currentStep
 
-        if (currentStep == SendingStep.CHOOSE_CURRENCY || currentStep == SendingStep.FINISH) {
+        if (currentStep == SendingStep.TARGET_BOX || currentStep == SendingStep.FINISH) {
             viewModelScope.launch {
                 _navigationEvent.emit(SendingNavEvent.NavigateBack)
             }
         } else {
             val previousStep = when (currentStep) {
-                SendingStep.TARGET_BOX -> SendingStep.CHOOSE_CURRENCY
-                SendingStep.HOW_MUCH -> SendingStep.TARGET_BOX
+                SendingStep.CHOOSE_CURRENCY -> SendingStep.TARGET_BOX
+                SendingStep.HOW_MUCH -> SendingStep.CHOOSE_CURRENCY
                 SendingStep.BIOMETRIC, SendingStep.PIN -> SendingStep.HOW_MUCH // 인증 단계에서는 금액 입력으로
                 else -> currentStep
             }

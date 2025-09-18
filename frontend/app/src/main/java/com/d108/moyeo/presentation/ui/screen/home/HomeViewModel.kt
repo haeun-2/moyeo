@@ -5,12 +5,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.domain.usecase.box.GetGroupBoxesUseCase
 import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import com.d108.moyeo.domain.repository.AuthRepository
 import com.d108.moyeo.presentation.theme.boxAvailableColors
+import com.d108.moyeo.presentation.ui.screen.home.sending.CurrencyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -31,7 +33,8 @@ class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val getPersonalBox: GetPersonalBoxUseCase,
     private val getGroupBoxes: GetGroupBoxesUseCase,
-    private val userDataManager: UserDataManager
+    private val userDataManager: UserDataManager,
+    private val boxStore: BoxStore
 ) : ViewModel() {
 
     private var didHandleFirstResume: Boolean = false
@@ -109,12 +112,23 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(isRefreshing = false) }
     }
 
+    // refresh 단계에서 개인 정보를 불러올 때 불러온 정보를 BoxStore 에 저장.
     private fun loadPersonal() = viewModelScope.launch {
         getPersonalBox()
             .onSuccess { box -> // 성공 시, 상자 안의 내용물(Box)을 꺼냅니다.
                 _uiState.update {
                     it.copy(wallet = mapPersonalBoxToWalletSummary(box))
                 }
+                val currencies = box.balances
+                    .filter { it.balance != 0.0 }
+                    .sortedByDescending { it.balance } // TODO: 정렬 삭제
+                    .map {
+                        CurrencyData(
+                            name = currencyLabel(it.currency),
+                            code = it.currency
+                        )
+                    }
+                boxStore.setPersonalCurrencies(currencies)
             }
             .onFailure { e ->
                 Log.e("HomeVM", "getPersonalBox failed", e)
@@ -140,6 +154,7 @@ class HomeViewModel @Inject constructor(
                 }
 
                 _uiState.update { it.copy(groups = mapped) }
+                boxStore.setGroupBoxes(mapped)
             }
             .onFailure { e -> Log.e("HomeViewModel", "loadGroups failed", e) }
     }
@@ -149,7 +164,7 @@ class HomeViewModel @Inject constructor(
     private fun mapPersonalBoxToWalletSummary(box: Box): WalletSummary {
         val balances = box.balances
             .filter { it.balance != 0.0 } // 0이 아닌 통화만 출력
-            .sortedByDescending { it.balance } // 보유 많은 순
+            .sortedByDescending { it.balance } // TODO: 정렬 삭제
             .map {
                 CurrencyBalance(
                     label = currencyLabel(it.currency),
@@ -276,6 +291,7 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(editingGroupId = null, showGroupEditSheet = false) }
     }
 
+    // 박스 정보를 수정했을 때 해당 정보를 BoxStore 에 저장
     fun onGroupEditConfirm(newName: String, newColor: Color) {
         val id = _uiState.value.editingGroupId ?: return
         _uiState.update { state ->
@@ -294,6 +310,11 @@ class HomeViewModel @Inject constructor(
             userDataManager.saveGroupName(id, newName)
             userDataManager.saveGroupColor(id, newColor.toArgb())
         }
+        boxStore.patchBox(
+            id = id.toString(),
+            newName = newName,
+            newBg = newColor
+        )
     }
 
     fun onDepositClick(boxId: String) {
