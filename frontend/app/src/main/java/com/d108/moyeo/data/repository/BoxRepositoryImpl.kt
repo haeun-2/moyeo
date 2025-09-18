@@ -6,6 +6,7 @@ import com.d108.moyeo.data.remote.dto.box.CreateBoxRequestDto
 import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.domain.repository.BoxRepository
 import javax.inject.Inject
+import com.d108.moyeo.domain.model.box.BoxDetail
 
 class BoxRepositoryImpl @Inject constructor(
     private val api: BoxService
@@ -42,7 +43,17 @@ class BoxRepositoryImpl @Inject constructor(
                 throw Exception("Server responded with error: ${response.code()}")
             }
         }
+    }
 
+    override suspend fun getBoxDetail(boxId: Long): Result<BoxDetail> {
+        return runCatching {
+            val response = api.getBoxDetail(boxId)
+            if (response.isSuccessful) {
+                response.body()?.toDomain() ?: throw NullPointerException("Response body is null")
+            } else {
+                throw Exception("Server responded with error code: ${response.code()}")
+            }
+        }
     }
 
     override suspend fun getBookmarkedBoxes(): Result<List<Box>> {

@@ -1,5 +1,6 @@
 package com.d108.moyeo.data.remote.api
 
+import com.d108.moyeo.data.remote.dto.box.BoxDetailResponseDto
 import com.d108.moyeo.data.remote.dto.box.CreateBoxRequestDto
 import com.d108.moyeo.data.remote.dto.box.CreateBoxResponseDto
 import com.d108.moyeo.data.remote.dto.box.GroupBoxResponseDto
@@ -22,6 +23,9 @@ interface BoxService {
     suspend fun getGroupBoxes(
         @Query("size") size: Int
     ): Response<List<GroupBoxResponseDto>>
+
+    @GET("api/boxes/{boxId}")
+    suspend fun getBoxDetail(@Path("boxId") boxId: Long): Response<BoxDetailResponseDto>
 
 
     // 즐겨찾기한 모임 박스
