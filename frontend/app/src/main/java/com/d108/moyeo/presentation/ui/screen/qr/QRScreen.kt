@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items // lazy.items를 import 합니다.
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -18,8 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel // viewModel import
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.R // QR 코드 이미지 예제를 위해 R을 import합니다.
 import com.d108.moyeo.presentation.navigation.AppScreen
@@ -33,14 +34,24 @@ import com.d108.moyeo.presentation.ui.component.qr.SquareMoyeoBoxItem
 @Composable
 fun QRScreen(
     navController: NavController,
-    viewModel: QRScreenViewModel = viewModel() // ViewModel 주입
+    viewModel: QRScreenViewModel = hiltViewModel()
 ) {
     // ViewModel의 상태를 구독합니다.
     val uiState by viewModel.uiState.collectAsState()
 
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    LaunchedEffect(savedStateHandle) {
+        savedStateHandle?.getLiveData<Long>("newly_bookmarked_id")?.observeForever { newId ->
+            if (newId != null) {
+                viewModel.refreshAndSelect(newId)
+                savedStateHandle.remove<Long>("newly_bookmarked_id")
+            }
+        }
+    }
+
     // 선택된 박스의 이름을 찾습니다. (없으면 기본 텍스트)
-    val selectedBoxName = remember(uiState.selectedBoxId, uiState.moyeoBoxes) {
-        uiState.moyeoBoxes.find { it.id == uiState.selectedBoxId }?.name ?: "결제할 모여 박스를 선택해주세요"
+    val selectedBoxName = remember(uiState.selectedBoxId, uiState.bookmarkedBoxes) {
+        uiState.bookmarkedBoxes.find { it.id == uiState.selectedBoxId }?.name ?: "결제할 모여 박스를 선택해주세요"
     }
 
     Column(
@@ -52,22 +63,6 @@ fun QRScreen(
             ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- 상단 타이틀 ---
-//        Box(
-//            modifier = Modifier.fillMaxWidth(),
-//            contentAlignment = Alignment.Center // 텍스트를 중앙 정렬
-//        ) {
-//            // 뒤로가기 버튼을 왼쪽에 배치
-//            IconButton(
-//                onClick = { navController.popBackStack() },
-//                modifier = Modifier.align(Alignment.CenterStart)
-//            ) {
-//                Icon(
-//                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-//                    contentDescription = "뒤로가기"
-//                )
-//            }
-//        }
 
         Spacer(modifier = Modifier.height(Spacing.Large))
 
@@ -78,30 +73,38 @@ fun QRScreen(
                 .background(Color.White), // QR 코드의 흰색 배경
             contentAlignment = Alignment.Center
         ) {
-            // TODO: 여기에 실제 생성된 QR 코드 Bitmap 이미지를 표시해야 합니다.
-            // 지금은 임시 이미지를 사용.
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground), // 임시 이미지
-                contentDescription = "QR Code"
-            )
+            if (uiState.isLoadingQR) {
+                CircularProgressIndicator()
+            } else if (uiState.qrImageBitmap != null) {
+                Image(
+                    bitmap = uiState.qrImageBitmap!!,
+                    contentDescription = "QR Code",
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Text("박스를 선택하여 QR코드를 생성하세요.", textAlign = TextAlign.Center)
+            }
         }
 
         Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // 1분짜리 타이머. 우선 00:57이라고만 표시
-            Text(
-                text = "00:57",
-                style = Typography.bodyMedium,
-                color = primaryLight
-            )
-            // 그리고 그 옆에는 새로고침 아이콘 버튼이 있음
-            IconButton(onClick = { /* TODO: QR 코드 새로고침 로직 */ }) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "새로고침"
+
+        if (uiState.isTimerRunning) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // ViewModel의 timerText 상태를 표시
+                Text(
+                    text = uiState.timerText,
+                    style = Typography.bodyMedium,
+                    color = primaryLight
                 )
+                // 새로고침 아이콘 버튼
+                IconButton(onClick = viewModel::onRefreshQRClick) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "새로고침"
+                    )
+                }
             }
         }
 
@@ -126,11 +129,11 @@ fun QRScreen(
         ) {
             // 레이지로우 아이템은 ViewModel의 리스트를 사용
             items(
-                items = uiState.moyeoBoxes,
+                items = uiState.bookmarkedBoxes,
                 key = { it.id } // 각 아이템의 고유 키를 지정
             ) { box ->
                 SquareMoyeoBoxItem(
-                    moyeoBox = box,
+                    box = box,
                     isSelected = (uiState.selectedBoxId == box.id),
                     onClick = { viewModel.selectBox(box.id) }
                 )

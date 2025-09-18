@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Getter
 @Entity
 @Table(name = "bank_transactions")
@@ -31,7 +33,7 @@ public class BankTransaction {
     private String bankAccount;
 
     @Column(name = "amount", nullable = false)
-    private Double amount;
+    private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
@@ -68,7 +70,7 @@ public class BankTransaction {
     }
 
     @Builder
-    public BankTransaction(Transaction transaction, Bank bank, String bankAccount, Double amount) {
+    public BankTransaction(Transaction transaction, Bank bank, String bankAccount, BigDecimal amount) {
         this.transaction = transaction;
         this.bank = bank;
         this.bankAccount = bankAccount;

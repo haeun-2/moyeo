@@ -1,12 +1,13 @@
 package com.mo.moyeo.domain.transaction.history.entity;
 
-import com.mo.moyeo.domain.box.entity.Box;
+import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.transaction.category.entity.Category;
 import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -34,14 +35,14 @@ public class BoxHistory {
     private LocalDateTime createdAt;
 
     @Column(name = "amount", nullable = false)
-    private Double amount;
+    private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "currency_code", length = 3, nullable = false)
     private CurrencyType currencyCode;
 
     @Column(name = "total_amount", nullable = false)
-    private Double totalAmount;
+    private BigDecimal totalAmount;
 
     @Column(name = "title", length = 100, nullable = false)
     private String title;

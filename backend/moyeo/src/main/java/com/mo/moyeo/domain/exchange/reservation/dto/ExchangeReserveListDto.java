@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -18,8 +19,8 @@ public class ExchangeReserveListDto {
     private Long id;
     private CurrencyType fromCurrency;
     private CurrencyType toCurrency;
-    private double targetRate;
-    private double amount;
+    private BigDecimal targetRate;
+    private BigDecimal amount;
     private LocalDate expiresAt;
     private LocalDateTime createdAt;
     private ReservedExchange.Status status;

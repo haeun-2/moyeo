@@ -5,7 +5,6 @@ import androidx.activity.compose.BackHandler
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,15 +24,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.util.BiometricAuthManager
 
 @Composable
-fun SendingScreen(navController: NavController,
-                  viewModel: SendingViewModel = viewModel()) {
+fun SendingScreen(
+    navController: NavController,
+    viewModel: SendingViewModel = hiltViewModel()
+) {
 
     // 생체 인증에 필요
     val context = LocalContext.current
@@ -94,7 +95,10 @@ fun SendingScreen(navController: NavController,
         }
     }
 
+    // BoxStore 에서 모임 박스 목록, 내 통화 목록을 받아옴
     val uiState by viewModel.uiState.collectAsState()
+    val boxes by viewModel.groupBoxesUi.collectAsState()
+    val currencies by viewModel.currencies.collectAsState()
 
     Column(
         modifier = Modifier
@@ -113,25 +117,28 @@ fun SendingScreen(navController: NavController,
             .weight(1f)
             .padding(Spacing.Medium)) {
             when (uiState.currentStep) {
-                SendingStep.CHOOSE_CURRENCY -> ChooseCurrencyContent(
-                    selectedCurrency = uiState.currency,
-                    onCurrencySelect = viewModel::onCurrencySelected
-                )
                 SendingStep.TARGET_BOX -> TargetBoxContent(
+                    boxes = boxes,
                     selectedBoxId = uiState.targetBox,
                     onBoxSelect = viewModel::onTargetBoxSelected
                 )
+                SendingStep.CHOOSE_CURRENCY -> ChooseCurrencyContent(
+                    selectedCurrency = uiState.currency,
+                    onCurrencySelect = viewModel::onCurrencySelected,
+                    currencies = currencies
+                )
+                //  TODO: 뷰모델 이렇게 하는 거 맞아?
                 SendingStep.HOW_MUCH -> HowMuchContent(viewModel = viewModel)
-                SendingStep.BIOMETRIC -> BiometricContent() // TODO: 구현 필요
-                SendingStep.PIN -> PinContent(viewModel = viewModel) // TODO: 구현 필요
-                SendingStep.FINISH -> FinishContent() // TODO: 구현 필요
+                SendingStep.BIOMETRIC -> BiometricContent()
+                SendingStep.PIN -> PinContent(viewModel = viewModel)
+                SendingStep.FINISH -> FinishContent(viewModel = viewModel)
             }
 
         }
 
         val isButtonEnabled = when(uiState.currentStep) {
-            SendingStep.CHOOSE_CURRENCY -> uiState.currency.isNotBlank()
             SendingStep.TARGET_BOX -> uiState.targetBox.isNotBlank()
+            SendingStep.CHOOSE_CURRENCY -> uiState.currency.isNotBlank()
             SendingStep.HOW_MUCH -> uiState.howMuch.isNotBlank()
             SendingStep.BIOMETRIC -> true // 이 단계는 자동 진행되므로 버튼 비활성화도 가능
             SendingStep.PIN -> uiState.pin.length == 6 // 6자리로 완료

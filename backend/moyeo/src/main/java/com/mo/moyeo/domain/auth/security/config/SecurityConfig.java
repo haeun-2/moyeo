@@ -40,8 +40,13 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**","/api/auth/signup/**", "/api/auth/login", "/api/auth/refresh", "/api/boxes/invite/*", "/download.html").permitAll()
-                        .requestMatchers(("/**")).permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/auth/signup/**", "/api/auth/login", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/boxes/invite/**", "/download.html").permitAll()
+                        .requestMatchers("/api/payments").permitAll()
+                        .requestMatchers("/api/v1/users/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll() // 프로메테우스 메트릭 공개
+//                        .requestMatchers(("/**")).permitAll()
                         .anyRequest().authenticated())
         ;
 

@@ -24,27 +24,13 @@ import com.d108.moyeo.presentation.theme.onSurfaceVariantLight
 import com.d108.moyeo.presentation.theme.primaryLight
 import com.d108.moyeo.presentation.theme.surfaceVariantLight
 
-// 화면에 표시할 통화 데이터 클래스 (ViewModel에서 전달받을 데이터 모델)
-data class CurrencyData(
-    val name: String, // "대한민국 원"
-    val code: String  // "KRW"
-)
 
 @Composable
 fun ChooseCurrencyContent(
     selectedCurrency: String,
-    onCurrencySelect: (String) -> Unit
+    onCurrencySelect: (String) -> Unit,
+    currencies: List<CurrencyData> // 선택 가능한 통화 리스트
 ) {
-    // TODO: 이 더미 데이터는 추후 ViewModel에서 실제 보유 통화 목록으로 받아와야 합니다.
-    val dummyCurrencies = listOf(
-        CurrencyData("대한민국 원", "KRW"),
-        CurrencyData("미국 달러", "USD"),
-        CurrencyData("유럽 유로", "EUR"),
-        CurrencyData("일본 엔", "JPY"),
-        CurrencyData("중국 위안", "CNY"),
-        CurrencyData("영국 파운드", "GBP")
-    )
-
     Column {
         Text(
             text = "어떤 통화로 보낼까요?",
@@ -58,7 +44,7 @@ fun ChooseCurrencyContent(
             horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
             verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
         ) {
-            items(dummyCurrencies) { currency ->
+            items(currencies) { currency ->
                 val isSelected = (currency.code == selectedCurrency)
                 CurrencyButton(
                     text = "${currency.name}\n(${currency.code})",

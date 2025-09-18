@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity(name = "exchange_rates")
@@ -28,13 +29,13 @@ public class ExchangeRate {
     private Currency currency;
 
     @Column(name = "buy_rate")
-    private Double buyRate;
+    private BigDecimal buyRate;
 
     @Column(name = "sell_rate")
-    private Double sellRate;
+    private BigDecimal sellRate;
 
     @Column(name = "original_rate")
-    private Double originalRate;
+    private BigDecimal originalRate;
 
     @CreationTimestamp
     @Column(name = "recorded_at")

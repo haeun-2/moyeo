@@ -6,7 +6,7 @@ import com.mo.moyeo.domain.auth.security.config.JwtProperties;
 import com.mo.moyeo.domain.auth.security.dto.*;
 import com.mo.moyeo.domain.auth.security.util.JwtUtil;
 import com.mo.moyeo.domain.user.entity.User;
-import com.mo.moyeo.domain.user.repository.UserRepository;
+import com.mo.moyeo.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +20,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final JwtProperties jwtProperties;
     private final JwtRedisService jwtRedisService;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -29,8 +29,7 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
         try {
             // 사용자 조회
-            User user = userRepository.findByPhoneNumber(request.getPhoneNumber())
-                    .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND, "존재하지 않는 사용자입니다."));
+            User user = userService.getByPhoneNumber(request.getPhoneNumber());
 
             // fid 검증
             if (!passwordEncoder.matches(request.getFid(), user.getFid())) {

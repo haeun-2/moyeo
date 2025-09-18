@@ -1,9 +1,10 @@
 package com.mo.moyeo.domain.transaction.history.controller;
 
 import com.mo.moyeo.common.paging.PageResponse;
-import com.mo.moyeo.domain.transaction.history.dto.TransactionUpdateRequest;
-import com.mo.moyeo.domain.transaction.history.dto.TransactionSearchCondition;
+import com.mo.moyeo.domain.transaction.history.dto.ExchangeTransactionDetailResponse;
 import com.mo.moyeo.domain.transaction.history.dto.TransactionResponse;
+import com.mo.moyeo.domain.transaction.history.dto.TransactionSearchCondition;
+import com.mo.moyeo.domain.transaction.history.dto.TransactionUpdateRequest;
 import com.mo.moyeo.domain.transaction.history.service.BoxHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,6 +12,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,6 +30,13 @@ public class BoxHistoryController {
             @Valid @ModelAttribute TransactionSearchCondition request
     ) {
         PageResponse<TransactionResponse> response = boxHistoryService.getTransactions(boxId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "박스 환전 거래내역 상세 조회", description = "특정 환전 거래내역를 상세 조회합니다.")
+    @GetMapping("/{historyId}")
+    public ResponseEntity<List<ExchangeTransactionDetailResponse>> getExchangeTransactionDetail(@PathVariable Long historyId) {
+        List<ExchangeTransactionDetailResponse> response = boxHistoryService.getExchangeTransactionDetail(historyId);
         return ResponseEntity.ok(response);
     }
 

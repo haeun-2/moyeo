@@ -1,6 +1,6 @@
 package com.mo.moyeo.domain.transaction.transaction.service;
 
-import com.mo.moyeo.domain.box.entity.Box;
+import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import com.mo.moyeo.domain.transaction.transaction.repository.TransactionRepository;
 import com.mo.moyeo.domain.user.entity.User;
@@ -64,6 +64,17 @@ public class TransactionService {
                 .fromBox(box)
                 .user(user)
                 .transactionType(Transaction.Type.EXCHANGE_RESERVATION)
+                .uuid(UUID.randomUUID().toString().replace("-", "").substring(0, 20))
+                .build();
+        return transactionRepository.save(transaction);
+    }
+
+    public Transaction makePaymentTransaction(Box box, User user){
+        Transaction transaction = Transaction.builder()
+                .user(user)
+                .toBox(box)
+                .fromBox(box)
+                .transactionType(Transaction.Type.PAYMENT)
                 .uuid(UUID.randomUUID().toString().replace("-", "").substring(0, 20))
                 .build();
         return transactionRepository.save(transaction);

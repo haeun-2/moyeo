@@ -23,10 +23,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,7 +33,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.d108.moyeo.presentation.theme.Padding
+import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.ui.component.CustomKeypad
 import com.d108.moyeo.presentation.ui.component.KeyMode
@@ -43,22 +45,28 @@ import com.d108.moyeo.presentation.ui.component.KeypadKey
 @Composable
 fun ExchangeKeypadScreen(
     navController: NavController,
-    mode: String = "charge" // 기본값 charge 또는 "refund"
+    mode: String = "charge", // 기본값 charge, "refund", "reservation"
+    currencyCode: String?= null,
+    currencyName:String? = null,
+    viewModel: ExchangeKeypadViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    var inputAmount by remember { mutableStateOf("0") }
+    val uiState by viewModel.uiState.collectAsState()
 
-    val isChargeMode = mode == "charge"
-    val screenTitle = if (isChargeMode) "충전하기" else "돌려받기"
-    val actionText = if (isChargeMode) "충전할" else "돌려받을"
-    val balanceText = if (isChargeMode) "보유 웨이 머니: 10,000 원 (초과하는 지불 충전)" else "보유 웨이 머니: 1,000 원"
-
-    // 세로 방향 레이아웃, 화면 전체를 채우고 배경 흰색, 전체 패딩 16dp.
+    // 예약 모드일경우
+    LaunchedEffect(mode, currencyCode, currencyName) {
+        if (mode == "reservation" && currencyCode != null && currencyName != null) {
+            viewModel.setReservationMode(currencyCode, currencyName)
+        } else {
+            viewModel.setMode(mode)
+        }
+    }
+    // 세로 방향 레이아웃, 화면 전체를 채우고 배경 흰색, 전체 패딩 16dp
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(16.dp)
+            .padding(Padding.Content)
     ) {
         // 상단 헤더
         Row(
@@ -73,7 +81,7 @@ fun ExchangeKeypadScreen(
                 )
             }
             Text(
-                text = screenTitle,
+                text = viewModel.getScreenTitle(),
                 style = Typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
@@ -83,9 +91,9 @@ fun ExchangeKeypadScreen(
             Box(modifier = Modifier.size(48.dp))
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(Spacing.ExtraLarge + Spacing.Small))
 
-        // 일본 JPY 섹션
+        // 일본 JPY
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -94,20 +102,25 @@ fun ExchangeKeypadScreen(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
-            )
+                    .background(Color.Gray.copy(alpha = 0.3f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = viewModel.getDisplayFlag(),
+                    style = Typography.headlineMedium
+                )
+            }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Spacing.Medium))
 
             Column {
                 Text(
-                    text = "일본 JPY",
+                    text = viewModel.getDisplayCurrencyName(),
                     style = Typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
                     color = Color.Black
                 )
                 Text(
-                    text = if (isChargeMode) "100 엔 = 980 원" else "100 엔 = 980 원",
+                    text = viewModel.getDisplayExchangeRate(),
                     style = Typography.bodySmall,
                     color = Color.Gray
                 )
@@ -116,23 +129,31 @@ fun ExchangeKeypadScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             // 환율 히스토리 버튼
-            Button(
-                onClick = { },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Gray.copy(alpha = 0.2f)
-                ),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.height(32.dp)
-            ) {
-                Text(
-                    text = "환율 히스토리",
-                    style = Typography.bodySmall,
-                    color = Color.Black
-                )
+            if (viewModel.shouldShowHistoryButton()) {
+                Button(
+                    onClick = {
+                        // 환율 히스토리 화면으로 이동
+                        val code = viewModel.getDisplayCurrencyCode()
+                        val name = viewModel.getDisplayCurrencyName()
+                        val currentMode = uiState.mode
+                        navController.navigate("exchange_history/$code/$name/$currentMode")
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Gray.copy(alpha = 0.2f)
+                    ),
+                    shape = RoundedCornerShape(Spacing.Medium),
+                    modifier = Modifier.height(Spacing.ExtraLarge)
+                ) {
+                    Text(
+                        text = "환율 히스토리",
+                        style = Typography.bodySmall,
+                        color = Color.Black
+                    )
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
 
         // 안내 텍스트
         Row(
@@ -141,27 +162,44 @@ fun ExchangeKeypadScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${actionText} 금액을 입력해주세요",
+                text = "${viewModel.getActionText()} 금액을 입력해주세요",
                 style = Typography.bodyMedium,
                 color = Color.Gray
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
+
+        // 입력 금액 표시 (외국 통화)
+        Text(
+            text = "${uiState.inputAmount} ${viewModel.getCurrencyUnit()}",
+            style = Typography.displayLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+
+        Spacer(modifier = Modifier.height(Spacing.Medium))
 
         // 대한민국 KRW 섹션
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 회색 원
+            // 한국 국기
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .background(Color.Gray.copy(alpha = 0.3f), CircleShape)
-            )
+                    .background(Color.Gray.copy(alpha = 0.3f), CircleShape),
+                contentAlignment = Alignment.Center
+            ){
+                Text(
+                    text = "🇰🇷",
+                    style = Typography.headlineMedium
+                )
+            }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Spacing.Medium))
 
             Text(
                 text = "대한민국 KRW",
@@ -171,77 +209,84 @@ fun ExchangeKeypadScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
 
-        // 입력 금액 표시
+        // 환산된 원화 금액 표시
         Text(
-            text = "$inputAmount 원",
-            style = Typography.displayLarge,
+            text = "${uiState.convertedKrwAmount} 원",
+            style = Typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            color = Color.Black,
+            color = Color.Gray,
             modifier = Modifier.padding(start = 4.dp)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 잔액 정보 (모드별 다른 텍스트)
+        // 잔액 정보
         Text(
-            text = balanceText,
+            text = viewModel.getBalanceText(),
             style = Typography.bodySmall,
             color = Color.Gray,
             modifier = Modifier.padding(start = 4.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
+
         // 키패드 (CustomKeypad 사용)
         CustomKeypad(
             onKeyPress = { key ->
                 when (key) {
-                    is KeypadKey.Digit -> {
-                        inputAmount =
-                            if (inputAmount == "0") key.value.toString() else inputAmount + key.value.toString()
-                    }
-
-                    KeypadKey.Clear -> {
-                        // KeyMode.Zeros일 때는 "00" 추가
-                        inputAmount = if (inputAmount == "0") "00" else inputAmount + "00"
-                    }
-
-                    KeypadKey.Backspace -> {
-                        inputAmount = if (inputAmount.length <= 1) "0" else inputAmount.dropLast(1)
-                    }
-
-                    is KeypadKey.Custom -> {
-                        // 필요시 처리
-                    }
+                    is KeypadKey.Digit -> viewModel.onDigitInput(key.value.toString())
+                    KeypadKey.Clear -> viewModel.onDigitInput("00")
+                    KeypadKey.Backspace -> viewModel.onBackspace()
+                    is KeypadKey.Custom -> { /* 필요시 처리 */ }
                 }
             },
-            keypadColortype = "normal", // 일반 색상 사용
-            keyMode = KeyMode.Zeros, // 00 버튼 활성화
+            keypadColortype = "normal",
+            keyMode = KeyMode.Zeros,
             buttonAspectRatio = 1.2f,
             modifier = Modifier
-                .padding(horizontal = 24.dp)
-                .height(320.dp) // 키패드 높이 고정
+                .padding(horizontal = Spacing.Large)
+                .height(320.dp)
         )
         Spacer(modifier = Modifier.weight(1f))
+
         // 하단 실행 버튼
         Button(
             onClick = {
-                Toast.makeText(context, "$inputAmount 원 $screenTitle 실행됨", Toast.LENGTH_SHORT).show()
+                // 예약 모드일 때만 예약완료 페이지로 이동
+                if (uiState.mode == "reservation"){
+                    // 예약 완료 페이지로 이동 -> 변수 설정
+                    val currencyCode = viewModel.getDisplayCurrencyCode()
+                    val currencyName = viewModel.getDisplayCurrencyName()
+                    val inputAmount = uiState.inputAmount
+                    val convertedAmount = uiState.convertedKrwAmount
+                    navController.navigate("reservation_complete/$currencyCode/$currencyName/$inputAmount/$convertedAmount")
+                } else {
+                    // 일반 충전/환불 모드일 때는 완료 페이지로 이동 -> 변수 설정
+                    val mode = uiState.mode
+                    val inputAmount = uiState.inputAmount
+                    val currencyUnit = viewModel.getCurrencyUnit()
+                    navController.navigate("exchange_complete/$mode/$inputAmount/$currencyUnit")
+                }
             },
+            enabled = !uiState.isProcessing && uiState.inputAmount != "0",
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(28.dp)
         ) {
-            Text(
-                text = screenTitle,
-                color = Color.White,
-                style = Typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
+            if (uiState.isProcessing) {
+                Text("처리 중...", color = Color.White, style = Typography.bodyLarge, fontWeight = FontWeight.Bold)
+            } else {
+                Text(
+                    text = viewModel.getScreenTitle(),
+                    color = Color.White,
+                    style = Typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
+        Spacer(modifier = Modifier.height(Spacing.Medium))
     }
 }

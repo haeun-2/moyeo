@@ -1,10 +1,17 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
+import android.icu.number.Precision.currency
 import androidx.lifecycle.ViewModel
-import com.d108.moyeo.presentation.ui.component.home.mywallet.Currency
+import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.presentation.ui.component.home.FilterOptions
+import com.d108.moyeo.presentation.ui.component.home.WalletFilterOptionsAdp
+import com.d108.moyeo.presentation.ui.component.home.Currency
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 
 // 임시 데이터 클래스
@@ -25,10 +32,19 @@ data class WalletFilterOptions(
     val sort: String = "최신"
 )
 
+// 변환 확장 함수
+fun WalletFilterOptions.toAdapter(): WalletFilterOptionsAdp =
+    WalletFilterOptionsAdp(period, scope, sort)
+
+fun FilterOptions.toWallet(): WalletFilterOptions = when (this) {
+    is WalletFilterOptionsAdp -> WalletFilterOptions(period, scope, sort)
+    else -> error("Wallet 화면에서 처리할 수 없는 FilterOptions 타입: $this")
+}
+
 // MyWalletScreen의 UI 상태
 data class MyWalletUiState(
     val transactions: List<WalletTransaction> = emptyList(),
-    val walletName: String = "내 통장",
+    val walletName: String = "내 통장", // TODO:월렛 이름 반영
     val totalBalance: String = "123,456,789 원",
     val searchQuery: String = "",
     val filters: WalletFilterOptions = WalletFilterOptions(),
@@ -36,15 +52,26 @@ data class MyWalletUiState(
     // 화폐 단위 선택을 위한 바텀 시트
     val showCurrencySheet: Boolean = false,
     val currencies: List<Currency> = emptyList(),
+    // 선택받은 화폐 단위
+    var choosenCurrencyCode: String = "KRW",
 
     // 필터링을 위한 바텀 시트
     val showFilterSheet: Boolean = false
 )
 
+sealed class WalletNavigationEvent {
+    data class NavigateToSending(val currencyCode: String) : WalletNavigationEvent()
+    data object NavigateToCharging : WalletNavigationEvent() // 충전 화면 이동 이벤트 추가
+}
+
 class MyWalletViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(MyWalletUiState())
     val uiState = _uiState.asStateFlow()
+
+    // 내비게이션 이벤트를 전달할 SharedFlow를 추가
+    private val _navigationEvent = MutableSharedFlow<WalletNavigationEvent>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
 
     init {
         // 임시 데이터 로드
@@ -84,7 +111,12 @@ class MyWalletViewModel : ViewModel() {
             Currency("CAD", "캐나다 달러"),
             Currency("AUD", "호주 달러")
         )
-        _uiState.update { it.copy(transactions = transactions, currencies = sampleCurrencies) }
+        _uiState.update {
+            it.copy(
+                transactions = transactions,
+                currencies = sampleCurrencies
+            )
+        }
     }
 
 
@@ -112,7 +144,8 @@ class MyWalletViewModel : ViewModel() {
             }
         }
         // 잔액을 업데이트하고, 바텀시트를 닫습니다.
-        _uiState.update { it.copy(totalBalance = newBalance, showCurrencySheet = false) }
+        _uiState.update { it.copy(totalBalance = newBalance, showCurrencySheet = false,
+            choosenCurrencyCode = currency!!.code) }  // 코드 테스트
     }
 
 
@@ -128,6 +161,23 @@ class MyWalletViewModel : ViewModel() {
     fun onFilterConfirm(newFilters: WalletFilterOptions) {
         _uiState.update { it.copy(filters = newFilters, showFilterSheet = false) }
         // TODO: 변경된 필터에 따라 거래내역 다시 불러오기
+    }
+
+    // 보내기 버튼 클릭시 호출
+    fun onSendingClick() {
+        val code = uiState.value.choosenCurrencyCode
+        // 이 코드를 가지고 SendingScreen으로 진입해야 함
+        viewModelScope.launch {
+            _navigationEvent.emit(WalletNavigationEvent.NavigateToSending(code))
+        }
+    }
+
+
+    // 충전 플로팅 버튼 클릭 시 호출
+    fun onChargingClick() {
+        viewModelScope.launch {
+            _navigationEvent.emit(WalletNavigationEvent.NavigateToCharging)
+        }
     }
 
 }

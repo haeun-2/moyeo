@@ -56,6 +56,31 @@ sealed class AppScreen(
         fun createRoute(currencyId: String) = "sending/$currencyId"
     }
 
+    // 충전화 관련된 화면
+    object Charging: AppScreen(route = "charging", title = "충전")
+
+    // 모으기와 관련된 화면
+    object Collecting : AppScreen(route = "collecting/{boxId}?currencyCode={currencyCode}", title = "모으기") {
+        fun createRoute(boxId: String, currencyCode: String? = null): String {
+            return if (currencyCode != null) {
+                "collecting/$boxId?currencyCode=$currencyCode"
+            } else {
+                "collecting/$boxId"
+            }
+        }
+    }
+
+    // 정산하기와 관련된 화면
+    object Calculating: AppScreen(route="calculating/{boxId}?currencyCode={currencyCode}", title = "정산하기") {
+        fun createRoute(boxId: String, currencyCode: String? = null): String {
+            return if (currencyCode != null) {
+                "calculating/$boxId?currencyCode=$currencyCode"
+            } else {
+                "calculating/$boxId"
+            }
+        }
+    }
+
     // 환율 스크린 관련
     object Exchange: AppScreen(route = "exchange", title = "환율", iconResId = R.drawable.outline_currency_exchange_24)
 
@@ -70,6 +95,7 @@ sealed class AppScreen(
 
     // 통장 히스토리 관련
     object History: AppScreen(route = "history", title = "기록", icon = Icons.Default.AccountBox)
+    object HistoryBoxes : AppScreen(route = "history_boxes", title = "기록 박스 선택")
 
 
     // 삼점바 관련
@@ -85,5 +111,6 @@ sealed class AppScreen(
     // '내 문의 내역'의 상세 화면 경로. {consultationId} 부분이 파라미터
     object ConsultationDetail: AppScreen(route = "consultation_detail/{consultationId}", title = "상담 내용 상세")
 
-
+    // 그룹 박스 추가 관련
+    object CreateBox: AppScreen(route = "create_box", title = "그룹 박스 생성")
 }

@@ -1,8 +1,10 @@
 package com.mo.moyeo.domain.exchange.rate.repository;
 
+import java.math.BigDecimal;
+
 public interface ExchangeRateProjection {
-    Double getBuyRate();
-    Double getSellRate();
-    Double getOriginalRate();
+    BigDecimal getBuyRate();
+    BigDecimal getSellRate();
+    BigDecimal getOriginalRate();
     String getPeriod();
 }

@@ -3,37 +3,58 @@ package com.d108.moyeo.presentation.ui.screen.home
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.*
-import com.d108.moyeo.presentation.ui.component.home.WalletEditBottomSheet
+import com.d108.moyeo.presentation.ui.component.home.BoxEditBottomSheet
+import com.d108.moyeo.util.textColorUtil
 
+private val TAG = "HomeScreen"
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController,
-               viewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(
+    navController: NavController,
+    viewModel: HomeViewModel = hiltViewModel()
+) {
+    // lifecycle 관리
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.onResumed()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     // ViewModel의 상태를 구독합니다.
     val uiState by viewModel.uiState.collectAsState()
@@ -56,26 +77,26 @@ fun HomeScreen(navController: NavController,
                 is HomeNavigationEvent.NavigateToSending -> {
                     navController.navigate(AppScreen.Sending.createRoute(event.currencyId))
                 }
+
+                is HomeNavigationEvent.NavigateToCollecting -> {
+                    navController.navigate(AppScreen.Collecting.createRoute(event.BoxId, event.currencyId))
+                }
             }
         }
     }
 
-    // 컬러칩
-    // 바텀시트에서 사용할 색상 목록
-    val availableColors = listOf(
-        Color(0xFFF44336), Color(0xFFE91E63), Color(0xFF9C27B0), Color(0xFF673AB7),
-        Color(0xFF3F51B5), Color(0xFF2196F3), Color(0xFF03A9F4), Color(0xFF00BCD4),
-        Color(0xFF009688), Color(0xFF4CAF50), Color(0xFF8BC34A), Color(0xFFCDDC39)
-    )
+    // 최상단에서 아래로 당겨 새로고침
+    val pullToRefreshState = rememberPullToRefreshState()
+    val isRefreshing = uiState.isRefreshing
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = Spacing.Medium)
         ) {
             // --- 고정된 상단 영역 ---
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(Spacing.SmallMedium))
             // 헤더
             HomeHeader(
                 title = "동찬",
@@ -83,7 +104,7 @@ fun HomeScreen(navController: NavController,
                     navController.navigate(AppScreen.Notification.route)
                 }
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(Spacing.Medium))
             // 지갑 요약 카드
             WalletSummaryCard(
                 data = uiState.wallet,
@@ -94,45 +115,69 @@ fun HomeScreen(navController: NavController,
                     viewModel.onWalletCurrencyClick()
                 }
             )
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(Spacing.Large))
 
-            // --- 스크롤되는 메인 콘텐츠 영역 ---
-            // 이 LazyColumn이 남은 공간을 모두 차지합니다.
-            LazyColumn(
+            // 최상단에서 아래로 당겨 새로고침
+            PullToRefreshBox(
+                state = pullToRefreshState,
+                isRefreshing = isRefreshing,
+                onRefresh = { viewModel.refresh() }, // 새로고침 동작
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(bottom = 24.dp)
             ) {
-                // 그룹별 포켓 카드들
-                items(uiState.groups) { item ->
-                    GroupBoxCard(
-                        data = item,
-                        onDepositClick = { /* TODO: 입금 */ },
-                        onMoreClick = { /* TODO: 메뉴 */ },
-                        onColumnClick = { viewModel.onGroupBoxClick(item.id) }
-                    )
-                    Spacer(Modifier.height(24.dp))
+                // --- 스크롤되는 메인 콘텐츠 영역 ---
+                // 이 LazyColumn이 남은 공간을 모두 차지합니다.
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // 그룹별 포켓 카드들
+                    itemsIndexed(uiState.groups) { index, item ->
+                        GroupBoxCard(
+                            data = item,
+                            onDepositClick = { viewModel.onDepositClick(item.id) },
+                            onMoreClick = { viewModel.onGroupMoreClick(item.id.toLong()) },
+                            onColumnClick = { viewModel.onGroupBoxClick(item.id) }
+                        )
+                        if (index < uiState.groups.lastIndex) {
+                            Spacer(Modifier.height(Spacing.Large))
+                        }
+                    }
                 }
             }
 
             // --- 고정된 하단 영역 ---
             // 하단 + 버튼형 영역
+            Spacer(Modifier.height(Spacing.Large))
             AddBar(
                 label = "추가",
-                onClick = { navController.navigate(AppScreen.Exchange.route) }
+                onClick = { navController.navigate(AppScreen.CreateBox.route) }
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(Spacing.Small))
         }
 
         // 바텀 시트 영역 (Box의 자식이므로 LazyColumn 위에 오버레이)
         if (uiState.showWalletEditSheet) {
-            WalletEditBottomSheet(
+            BoxEditBottomSheet (
                 initialName = uiState.wallet.title,
-                initialColor = uiState.wallet.color,
-                availableColors = availableColors,
+                initialColor = uiState.wallet.bg,
+                availableColors = boxAvailableColors,
                 onConfirm = viewModel::onWalletEditConfirm, // ViewModel 함수 호출
                 onDismiss = viewModel::onWalletEditDismiss // ViewModel 함수 호출
             )
         }
+
+        if (uiState.showGroupEditSheet) {
+            val target = uiState.groups.firstOrNull { it.id == uiState.editingGroupId?.toString() }
+            if (target != null) {
+                BoxEditBottomSheet(
+                    initialName = target.title,
+                    initialColor = target.bg,
+                    availableColors = boxAvailableColors,
+                    onConfirm = { name, color -> viewModel.onGroupEditConfirm(name, color) },
+                    onDismiss = viewModel::onGroupEditDismiss
+                )
+            }
+        }
+
     }
 }
 
@@ -152,7 +197,7 @@ private fun HomeHeader(
             style = Typography.headlineSmall,
             modifier = Modifier
                 .weight(1f)
-                .padding(start = 8.dp)
+                .padding(start = Spacing.Small)
         )
         IconButton(onClick = onBellClick) {
             Icon(
@@ -175,33 +220,38 @@ private fun WalletSummaryCard(
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = surfaceContainerLight)
+        colors = CardDefaults.cardColors(containerColor = data.bg)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, top = 12.dp, end = 8.dp, bottom = 8.dp),
+                    .padding(
+                        start = Spacing.Large,
+                        top = Spacing.SmallMedium,
+                        end = Spacing.Small,
+                        bottom = Spacing.Small
+                    ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
                     modifier = Modifier
                         .weight(1f)
                         .clickable { onTitleClick() }
-                        .padding(end = 16.dp), // '>'와 '이체' 버튼 사이의 간격
+                        .padding(end = Spacing.Medium), // '>'와 '이체' 버튼 사이의 간격
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = data.title,
                         style = Typography.titleMedium,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        color = textColorUtil(data.bg)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = ">",
-                        modifier = Modifier.weight(1f), // > 글자가 남은 공간을 모두 차지하도록
-                        style = Typography.titleMedium,
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "back",
+                        tint = textColorUtil(data.bg)
                     )
                 }
                 AssistChip(
@@ -210,11 +260,15 @@ private fun WalletSummaryCard(
                     shape = CircleShape
                 )
                 IconButton(onClick = onMoreClick) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "더보기")
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "더보기",
+                        tint = textColorUtil(data.bg)
+                    )
                 }
             }
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(Spacing.ExtraSmall))
 
             LazyColumn(
                 modifier = Modifier.height(180.dp) // 스크롤 영역의 최대 높이 지정
@@ -223,14 +277,18 @@ private fun WalletSummaryCard(
                     WalletRow(
                         label = row.label,
                         value = row.value,
-                        onClick = { onRowClick(row) }
+                        onClick = { onRowClick(row) },
+                        bg = data.bg
                     )
                     if (index < data.balances.lastIndex) {
-                        HorizontalDivider(thickness = 0.5.dp, color = Color.White)
+                        HorizontalDivider(
+                            thickness = 0.5.dp,
+                            color = textColorUtil(data.bg).copy(alpha = 0.5f)
+                        )
                     }
                 }
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(Spacing.Small))
         }
     }
 }
@@ -239,19 +297,35 @@ private fun WalletSummaryCard(
 private fun WalletRow(
     label: String,
     value: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    bg: Color
 ) {
+    val textColor = textColorUtil(bg)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick) // Row 전체를 클릭 가능하게 만듭니다.
-            .padding(16.dp),
+            .padding(Spacing.Medium),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        Text(text = value, style = MaterialTheme.typography.bodyMedium)
-        Spacer(Modifier.width(4.dp))
-        Text(">", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6C6C6C))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = textColor,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = textColor
+        )
+        Spacer(Modifier.width(Spacing.ExtraSmall))
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = "back",
+            tint = textColor
+        )
     }
 }
 
@@ -272,23 +346,23 @@ private fun GroupBoxCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(Spacing.Medium)
                     .clickable { onColumnClick() }
             ) {// 이 컬럼 영역을 클릭했을 때 상세 화면으로 이동
                 Text(  // 모여 박스 이름
                     text = data.title,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF4A4A4A),
+                    color = textColorUtil(data.bg),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(Spacing.Small))
 
 
                 Text(  // 금액
                     text = data.amount,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = Color.Black
+                    color = textColorUtil(data.bg)
                 )
             }
 
@@ -296,9 +370,10 @@ private fun GroupBoxCard(
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(4.dp),
+                    .padding(Spacing.ExtraSmall),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // TODO: 입금 색상 변경
                 AssistChip(
                     onClick = onDepositClick,
                     label = { Text("입금") },
@@ -310,7 +385,11 @@ private fun GroupBoxCard(
                     )
                 )
                 IconButton(onClick = onMoreClick) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "더보기")
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "더보기",
+                        tint = textColorUtil(data.bg)
+                    )
                 }
             }
         }
@@ -339,7 +418,7 @@ private fun AddBar(
             horizontalArrangement = Arrangement.Center
         ) {
             Icon(Icons.Default.Add, contentDescription = "추가")
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(Spacing.ExtraSmall))
             Text(label, style = MaterialTheme.typography.bodyMedium)
         }
     }

@@ -70,7 +70,21 @@ public enum ErrorCode {
      * Box Error Code
      */
     BOX_NOT_FOUND(HttpStatus.NOT_FOUND, "BOX_404_01", "요청한 박스를 찾을 수 없습니다."),
+    
+    // ======================================
+    // FCM 알림
+    // ======================================
 
+    /**
+     * 404 NOT_FOUND - 리소스 없음
+     */
+    FCM_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "FCM_404_01", "해당 유저의 FCM 토큰이 존재하지 않습니다."),
+
+    /**
+     * 500 INTERNAL_SERVER_ERROR - FCM 서버 오류
+     */
+    FCM_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FCM_500_01", "FCM 메시지 전송 중 오류가 발생했습니다."),
+    
 
     // ======================================
     // BANK TRANSACTION (은행 입/출금)
@@ -82,11 +96,17 @@ public enum ErrorCode {
     INVALID_ACCOUNT_NUMBER(HttpStatus.BAD_REQUEST, "BANK_400_01", "유효하지 않은 계좌번호 입니다."),
     TRANSFER_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "BANK_400_02", "이체 한도 초과입니다."),
     INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "BANK_400_03", "잔액이 부족합니다."),
+    EXPIRED_PAYMENT_TOKEN(HttpStatus.BAD_REQUEST, "PAYMENT_400_01", "결제 토큰이 만료됨"),
+    /**
+     *
+     */
+    LOCK_ACQUISITION_FAILED(HttpStatus.CONFLICT, "LOCK_409_01", "일시적 오류입니다. 잠시 후 다시 시도해주세요."),
 
     /**
      * 500 INTERNAL_SERVER_ERROR - 서버 공통 오류
      */
     BANK_TRANSFER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "BANK_500_01", "거래에 실패하였습니다.");
+
 
     private final HttpStatus status;
     private final String code;

@@ -22,8 +22,11 @@ import com.d108.moyeo.presentation.navigation.AppNavHost
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.MoYeoTheme
 import com.d108.moyeo.presentation.ui.component.MoyeoBottomNavigation
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.HiltAndroidApp
 import kotlin.getValue
 
+@AndroidEntryPoint  // MainActivity는 Hilt의 관리를 받음
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
 

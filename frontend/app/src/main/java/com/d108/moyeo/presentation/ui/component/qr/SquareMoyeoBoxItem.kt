@@ -25,13 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.ui.screen.qr.MoyeoBox
 
 @Composable
 fun SquareMoyeoBoxItem(
-    moyeoBox: MoyeoBox,
+    box: Box,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -58,7 +58,7 @@ fun SquareMoyeoBoxItem(
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = moyeoBox.name, // 파라미터로 받은 데이터 사용
+                    text = box.name, // 파라미터로 받은 데이터 사용
                     style = Typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = Spacing.Small)
@@ -73,12 +73,8 @@ fun SquareMoyeoBoxItem(
                 modifier = Modifier.weight(0.8f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // 스크롤을 테스트하기 위해 아이템 수를 늘림
-                items(moyeoBox.balances) { balance ->
-                    CurrencyItem(
-                        currencyName = balance.name,
-                        amount = balance.amount
-                    )
+                items(box.balances) { balance ->
+                    CurrencyItem(balance = balance)
                 }
             }
         }

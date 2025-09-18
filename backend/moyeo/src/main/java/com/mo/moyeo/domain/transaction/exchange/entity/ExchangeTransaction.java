@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity(name="exchange_transactions")
 @Builder
 @AllArgsConstructor
@@ -19,7 +21,7 @@ public class ExchangeTransaction {
     @Column(name = "exchange_transaction_id")
     private Long id;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_id")
     private Transaction transaction;
 
@@ -32,12 +34,12 @@ public class ExchangeTransaction {
     private Currency toCurrency;
 
     @Column(name="exchange_rate")
-    private Double exchangeRate;
+    private BigDecimal exchangeRate;
 
     @Column(name = "from_amount")
-    private Double fromAmount;
+    private BigDecimal fromAmount;
 
     @Column(name = "to_amount")
-    private Double toAmount;
+    private BigDecimal toAmount;
 
 }

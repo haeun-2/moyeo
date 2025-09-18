@@ -24,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.LocalDateTime;
@@ -70,11 +72,11 @@ public class ExchangeRateService {
                     CurrencyType currencyType = CurrencyType.valueOf(rec.getCurrency());
                     Currency currency = currencyRepository.getReferenceById(currencyType);
 
-                    double originalRate;
+                    BigDecimal originalRate;
                     try {
-                        originalRate = NumberFormat.getNumberInstance(Locale.US)
-                                .parse(rec.getExchangeRate())
-                                .doubleValue();
+                        Number number = NumberFormat.getNumberInstance(Locale.US)
+                                .parse(rec.getExchangeRate());
+                        originalRate = new BigDecimal(number.toString());
                     } catch (ParseException e) {
                         throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
                     }
@@ -82,8 +84,8 @@ public class ExchangeRateService {
                     return ExchangeRate.builder()
                             .currency(currency)
                             .originalRate(originalRate)
-                            .buyRate(originalRate * 1.01)
-                            .sellRate(originalRate * 0.99)
+                            .buyRate(originalRate.multiply(BigDecimal.valueOf(1.01)))
+                            .sellRate(originalRate.multiply(BigDecimal.valueOf(0.99)))
                             .recordedAt(recordedAt)
                             .build();
                 })

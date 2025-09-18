@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,7 +40,7 @@ fun ExchangeTypeModal(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
+                .padding(Spacing.ExtraLarge),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 제목
@@ -84,7 +85,7 @@ fun ExchangeTypeModal(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.Medium))
 
             // 취소 버튼
             TextButton(onClick = onDismiss) {
@@ -95,7 +96,7 @@ fun ExchangeTypeModal(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.Medium))
         }
     }
 }

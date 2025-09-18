@@ -5,9 +5,11 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Getter
 @AllArgsConstructor
 public class ExchangeVolumeDto {
     private String period;
-    private Double totalAmount;
+    private BigDecimal totalAmount;
 }

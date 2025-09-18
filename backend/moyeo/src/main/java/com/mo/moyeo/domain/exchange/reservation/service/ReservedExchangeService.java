@@ -2,11 +2,11 @@ package com.mo.moyeo.domain.exchange.reservation.service;
 
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
-import com.mo.moyeo.domain.box.entity.Box;
-import com.mo.moyeo.domain.box.entity.BoxBalance;
-import com.mo.moyeo.domain.box.service.BoxBalanceService;
-import com.mo.moyeo.domain.box.service.BoxMemberService;
-import com.mo.moyeo.domain.box.service.BoxService;
+import com.mo.moyeo.domain.box.box.entity.Box;
+import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
+import com.mo.moyeo.domain.box.balance.service.BoxBalanceService;
+import com.mo.moyeo.domain.box.member.service.BoxMemberService;
+import com.mo.moyeo.domain.box.box.service.BoxService;
 import com.mo.moyeo.domain.currency.entity.Currency;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.service.CurrencyService;
@@ -16,6 +16,8 @@ import com.mo.moyeo.domain.exchange.reservation.dto.ExchangeReserveDto;
 import com.mo.moyeo.domain.exchange.reservation.dto.ExchangeReserveListDto;
 import com.mo.moyeo.domain.exchange.reservation.entity.ReservedExchange;
 import com.mo.moyeo.domain.exchange.reservation.repository.ReservedExchangeRepository;
+import com.mo.moyeo.domain.transaction.category.entity.CategoryType;
+import com.mo.moyeo.domain.transaction.category.service.CategoryCacheService;
 import com.mo.moyeo.domain.transaction.exchange.dto.ExchangeRequestDto;
 import com.mo.moyeo.domain.transaction.exchange.service.ExchangeService;
 import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
@@ -28,6 +30,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +47,7 @@ public class ReservedExchangeService {
     private final BoxMemberService boxMemberService;
     private final ExchangeService exchangeService;
     private final ExchangeRateCacheService exchangeRateCacheService;
+    private final CategoryCacheService categoryCacheService;
 
     @Transactional
     public void reserveExchange(User user, ExchangeReserveDto exchangeReserveDto) {
@@ -53,9 +57,11 @@ public class ReservedExchangeService {
         validateCondition(user, exchangeReserveDto, box);
 
         //예약 환전 저장
+        Transaction transaction = transactionService.makeExchangeReservationTransaction(box, user);
         ReservedExchange reservedExchange =
                 ReservedExchange.builder()
                         .box(box)
+                        .transaction(transaction)
                         .fromCurrency(fromCurrency)
                         .toCurrency(toCurrency)
                         .targetRate(exchangeReserveDto.targetRate())
@@ -64,14 +70,13 @@ public class ReservedExchangeService {
         reservedExchangeRepository.save(reservedExchange);
 
         //예상 금액 차감
-        Double amount = reservedExchange.getTargetRate() * reservedExchange.getAmount();
-        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(box, exchangeReserveDto.fromCurrency());
-        if(fromBoxBalance.getBalance() < amount)
+        BigDecimal amount = reservedExchange.getTargetRate().multiply(reservedExchange.getAmount());
+        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(box, exchangeReserveDto.fromCurrency());
+        if(fromBoxBalance.checkSufficientBalance(amount))
             throw new CustomException(ErrorCode.BAD_REQUEST, "환전에 필요한 금액이 부족합니다.");
         fromBoxBalance.decreaseBalance(amount);
 
         //트랜잭션 및 내역 저장
-        Transaction transaction = transactionService.makeExchangeReservationTransaction(box, user);
         BoxHistory boxHistory = BoxHistory.builder()
                 .box(box)
                 .transaction(transaction)
@@ -80,6 +85,8 @@ public class ReservedExchangeService {
                 .totalAmount(fromBoxBalance.getBalance())
                 .title("예약 환전")
                 .type(Transaction.Type.EXCHANGE_RESERVATION)
+                .category(categoryCacheService.getByName(CategoryType.EXCHANGE))
+                .createdAt(transaction.getCreatedAt())
                 .build();
 
         boxHistoryService.saveHistory(boxHistory);
@@ -89,40 +96,47 @@ public class ReservedExchangeService {
         if (exchangeReserveDto.fromCurrency() != CurrencyType.KRW && exchangeReserveDto.toCurrency() != CurrencyType.KRW)
             throw new CustomException(ErrorCode.BAD_REQUEST, "외화 간 환전은 예약이 지원되지 않습니다.");
 
-        if (box.isPersonal() && !box.getOwnerId().equals(user.getId()))//개인 통장이면 주인인지 체크
-            throw new CustomException(ErrorCode.ACCESS_DENIED, "권한이 없습니다.");
+        boxMemberService.validateExchangePermission(box, user);
 
-        if (!box.isPersonal() && !boxMemberService.getMyPermission(box.getId(), user.getId()).getCanExchange())//모임 통장이면 환전 권한 있는지
-            throw new CustomException(ErrorCode.ACCESS_DENIED, "권한이 없습니다.");
+        BigDecimal amount = exchangeReserveDto.amount();
+        BigDecimal ten = BigDecimal.TEN;
+        BigDecimal minExchange = BigDecimal.valueOf(100);
 
-        if (exchangeReserveDto.amount() % 10 != 0)
+        if (amount.remainder(ten).compareTo(BigDecimal.ZERO) != 0) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "10 단위로만 환전 가능합니다.");
+        }
 
-        double minExchange = 100.0;
-        if (minExchange > exchangeReserveDto.amount())
+        if (amount.compareTo(minExchange) < 0) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "최소 환전금액보다 작게 환전할 수 없습니다. " + minExchange);
+        }
     }
 
     public List<ExchangeReserveListDto> getReservations(User user, Long boxId) {
         //멤버인지 체크하기
-        boxMemberService.getMyPermission(boxId, user.getId());
+        boxMemberService.validateJoinedBoxMember(boxId, user.getId());
         return reservedExchangeRepository.findReservationList(boxId);
     }
 
     @Transactional
     public void cancelReservation(User user, Long reservationId) {
         ReservedExchange reservedExchange = getReservationById(reservationId);
-        boxMemberService.getMyPermission(reservedExchange.getBox().getId(), user.getId());
+        boxMemberService.validateJoinedBoxMember(reservedExchange.getBox().getId(), user.getId());
 
         reservedExchange.cancelReservation();
 
-        //차감 금액 복원
-        Double amount = reservedExchange.getTargetRate() * reservedExchange.getAmount();
-        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(reservedExchange.getBox(), reservedExchange.getFromCurrency().getCode());
+        // 차감 금액 복원
+        BigDecimal amount = reservedExchange.getTargetRate().multiply(reservedExchange.getAmount());
+        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(
+                reservedExchange.getBox(),
+                reservedExchange.getFromCurrency().getCode()
+        );
         fromBoxBalance.increaseBalance(amount);
 
-        //트랜잭션 및 내역 저장
-        Transaction transaction = transactionService.makeExchangeReservationTransaction(reservedExchange.getBox(), user);
+    // 트랜잭션 및 내역 저장
+        Transaction transaction = transactionService.makeExchangeReservationTransaction(
+                reservedExchange.getBox(), user
+        );
+
         BoxHistory boxHistory = BoxHistory.builder()
                 .box(reservedExchange.getBox())
                 .transaction(transaction)
@@ -131,7 +145,9 @@ public class ReservedExchangeService {
                 .totalAmount(fromBoxBalance.getBalance())
                 .title("예약 환전 취소")
                 .type(Transaction.Type.EXCHANGE_RESERVATION)
+                .createdAt(transaction.getCreatedAt())
                 .build();
+
         boxHistoryService.saveHistory(boxHistory);
     }
 
@@ -144,33 +160,41 @@ public class ReservedExchangeService {
         return reservedExchangeRepository.findWaitingReservation();
     }
 
-
     @Transactional
     public void checkReservation() {
         Map<String, CurrentExchangeRateDto> currentExchangeRate = exchangeRateCacheService.getCurrentExchangeRate();
 
         List<ReservedExchange> reservations = getWaitingReservation();
         for (ReservedExchange reservedExchange : reservations) {
-            //한->외 사는거
+            BigDecimal currentRate;
+            BigDecimal targetRate = reservedExchange.getTargetRate();
+
+            CurrentExchangeRateDto rateDto = currentExchangeRate.get(reservedExchange.getFromCurrency().getCode().name());
+
             if (reservedExchange.getFromCurrency().getCode() == CurrencyType.KRW) {
-                if (currentExchangeRate.get(reservedExchange.getFromCurrency().getCode().name()).getBuyRate() >= reservedExchange.getTargetRate()) {
+                // 한->외, 사는 경우
+                currentRate = rateDto.getBuyRate();
+                if (currentRate.compareTo(targetRate) >= 0) { // currentRate >= targetRate
                     completeReservation(reservedExchange);
                 }
-            } else {//외->한 파는거
-                if (currentExchangeRate.get(reservedExchange.getFromCurrency().getCode().name()).getSellRate() <= reservedExchange.getTargetRate()) {
+            } else {
+                // 외->한, 파는 경우
+                currentRate = rateDto.getSellRate();
+                if (currentRate.compareTo(targetRate) <= 0) { // currentRate <= targetRate
                     completeReservation(reservedExchange);
                 }
             }
         }
     }
 
+
     private void completeReservation(ReservedExchange reservedExchange) {
         //완성 처리
         reservedExchange.completeReservation();
 
         //차감 금액 복원
-        Double amount = reservedExchange.getTargetRate() * reservedExchange.getAmount();
-        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxIdAndCurrencyType(reservedExchange.getBox(), reservedExchange.getFromCurrency().getCode());
+        BigDecimal amount = reservedExchange.getTargetRate().multiply(reservedExchange.getAmount());
+        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(reservedExchange.getBox(), reservedExchange.getFromCurrency().getCode());
         fromBoxBalance.increaseBalance(amount);
 
         exchangeService.exchange(reservedExchange.getUser(), new ExchangeRequestDto(reservedExchange));

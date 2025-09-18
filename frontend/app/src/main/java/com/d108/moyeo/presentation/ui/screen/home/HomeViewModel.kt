@@ -1,133 +1,327 @@
 package com.d108.moyeo.presentation.ui.screen.home
 
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.d108.moyeo.presentation.theme.brown
-import com.d108.moyeo.presentation.theme.pink
-import com.d108.moyeo.presentation.theme.purple
+import com.d108.moyeo.core.BoxStore
+import com.d108.moyeo.data.local.UserDataManager
+import com.d108.moyeo.domain.model.box.Box
+import com.d108.moyeo.domain.usecase.box.GetGroupBoxesUseCase
+import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
+import com.d108.moyeo.domain.repository.AuthRepository
+import com.d108.moyeo.presentation.theme.boxAvailableColors
+import com.d108.moyeo.presentation.ui.screen.home.sending.CurrencyData
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-
-// TODO: 이 데이터 클래스들은 domain/model 패키지로 이동해야 합니다.
-data class WalletSummary(
-    val title: String,
-    val color: Color,
-    val balances: List<CurrencyBalance>
-)
-
-data class CurrencyBalance(val label: String, val value: String, val code: String)
-
-data class GroupBox(
-    val id: String,  // 그룹 박스 구분을 위한 아이디 추가
-    val title: String,
-    val amount: String,
-    val bg: Color
-)
-
-// HomeScreen의 모든 UI 상태를 담는 데이터 클래스
-data class HomeUiState(
-    val wallet: WalletSummary,
-    val groups: List<GroupBox> = emptyList(),
-    val showWalletEditSheet: Boolean = false
-)
-
-// 화면 전환
-sealed class HomeNavigationEvent {
-    // 단순히 이동하고자 하면 object로 선언 가능
-    object NavigateToMyWallet : HomeNavigationEvent()
-
-    // 구체적으로 어디로 가야하는지 알고 싶으면 data class로 선언 및 파라미터 전달
-    data class NavigateToMyBox(val boxId: String, val bgColor: Int) : HomeNavigationEvent()
-
-    data class NavigateToSending(val currencyId: String) : HomeNavigationEvent() // 이체 화면 이동
-}
+import javax.inject.Inject
+import kotlin.math.abs
 
 
-class HomeViewModel : ViewModel() {
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val getPersonalBox: GetPersonalBoxUseCase,
+    private val getGroupBoxes: GetGroupBoxesUseCase,
+    private val userDataManager: UserDataManager,
+    private val boxStore: BoxStore
+) : ViewModel() {
 
-    private val _uiState: MutableStateFlow<HomeUiState>
+    private var didHandleFirstResume: Boolean = false
 
-    // 화면 이동 이벤트를 전달할 SharedFlow
+    fun onResumed() {
+        if (didHandleFirstResume) {
+            refresh()
+        } else {
+            didHandleFirstResume = true
+        }
+    }
+
+    private val _uiState = MutableStateFlow(
+        HomeUiState(
+            wallet = WalletSummary(
+                title = "",
+                bg = boxAvailableColors[1],
+                balances = emptyList()
+            ),
+            groups = emptyList(),
+            showWalletEditSheet = false,
+            isRefreshing = false
+        )
+    )
+    val uiState = _uiState.asStateFlow()
+
+    // 화면 이동 이벤트
     private val _navigationEvent = MutableSharedFlow<HomeNavigationEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
     init {
-        // 샘플 데이터 (이미지와 동일한 분위기/텍스트)
-        val initialWallet = WalletSummary(
-            title = "일론머스크 딱 대",
-            color = Color.Blue, // 임시 대표 색상
-            balances = listOf(
-                CurrencyBalance("한국 원", "120,000 KRW", "KRW"),
-                CurrencyBalance("미국 달러", "20 USD", "USD"),
-                CurrencyBalance("일본 엔", "400 JPY", "JPY"),
-                CurrencyBalance("영국 파운드", "30 GBP", "GBP"),
-                CurrencyBalance("유럽 유로", "15 EUR", "EUR"), // 스크롤 테스트를 위해 추가
-                CurrencyBalance("중국 위안", "100 CNY", "CNY")  // 스크롤 테스트를 위해 추가
-            )
-        )
-        val initialGroups = listOf(  // GroupBox의 생성자 변경 및 아이디 추가
-            GroupBox("box_1", "상훈 풍헌 동찬 일본 여행", "50,000 JPY", pink), // 연한 핑크
-            GroupBox("box_2", "미국 도대체 언제 감", "1,500 USD", brown),    // 브라운
-            GroupBox("box_3", "오아시스", "1,000 GBP", purple),               // 라일락
-            GroupBox("box_4", "유럽 갈끄니까", "2,000 EUR", Color.Cyan),     // 스크롤 테스트를 위해 추가
-            GroupBox("box_5", "중국 출장비", "5,000 CNY", Color.Yellow)   // 스크롤 테스트를 위해 추가
-        )
+        // 토큰 로깅 (기존 흐름 유지)
+        viewModelScope.launch {
+            authRepository.accessToken.collect {
+                Log.d("TOKEN_CHECK", "현재 AccessToken: $it")
+            }
+        }
+        viewModelScope.launch {
+            authRepository.refreshToken.collect {
+                Log.d("TOKEN_CHECK", "현재 RefreshToken: $it")
+            }
+        }
 
-        _uiState = MutableStateFlow(HomeUiState(wallet = initialWallet, groups = initialGroups))
+        // 색상 로딩
+        viewModelScope.launch {
+            userDataManager.walletColorFlow.collect { savedColor ->
+                if (savedColor != null) {
+                    _uiState.update { state ->
+                        state.copy(wallet = state.wallet.copy(bg = Color(savedColor)))
+                    }
+                }
+            }
+        }
+
+        // 박스 이름 로딩
+        viewModelScope.launch {
+            userDataManager.walletNameFlow.collect { savedName ->
+                if (!savedName.isNullOrBlank()) {
+                    _uiState.update { s -> s.copy(wallet = s.wallet.copy(title = savedName)) }
+                }
+            }
+        }
+        
+        // 첫 로딩
+        refresh()
     }
 
-    val uiState = _uiState.asStateFlow()
+    fun refresh() = viewModelScope.launch {
+        _uiState.update { it.copy(isRefreshing = true) }
 
-    fun onWalletTitleClick() {  // 내 지갑 "제목 >" 영역 클릭 시
+        val personal: Job = loadPersonal()
+        val group: Job = loadGroups()
+        joinAll(personal, group)
+
+        _uiState.update { it.copy(isRefreshing = false) }
+    }
+
+    // refresh 단계에서 개인 정보를 불러올 때 불러온 정보를 BoxStore 에 저장.
+    private fun loadPersonal() = viewModelScope.launch {
+        getPersonalBox()
+            .onSuccess { box -> // 성공 시, 상자 안의 내용물(Box)을 꺼냅니다.
+                _uiState.update {
+                    it.copy(wallet = mapPersonalBoxToWalletSummary(box))
+                }
+                val currencies = box.balances
+                    .filter { it.balance != 0.0 }
+                    .sortedByDescending { it.balance } // TODO: 정렬 삭제
+                    .map {
+                        CurrencyData(
+                            name = currencyLabel(it.currency),
+                            code = it.currency
+                        )
+                    }
+                boxStore.setPersonalCurrencies(currencies)
+            }
+            .onFailure { e ->
+                Log.e("HomeVM", "getPersonalBox failed", e)
+            }
+    }
+
+    private fun loadGroups(): Job =  viewModelScope.launch {
+        getGroupBoxes(size = 30)
+            .onSuccess { list ->
+                val base: List<GroupBox> = list.map(::mapGroupBoxToUi)
+
+                val mapped = kotlinx.coroutines.coroutineScope {
+                    base.map { groupBox ->
+                        async {
+                            val id = groupBox.id.toLong()
+                            val savedName  = userDataManager.getGroupName(id)
+                            val savedColor = userDataManager.getGroupColor(id)?.let { Color(it) }
+                            val patchedBg = savedColor ?: groupBox.bg
+                            val patchedName = savedName ?: groupBox.title
+                            groupBox.copy(title = patchedName, bg = patchedBg)
+                        }
+                    }.awaitAll()
+                }
+
+                _uiState.update { it.copy(groups = mapped) }
+                boxStore.setGroupBoxes(mapped)
+            }
+            .onFailure { e -> Log.e("HomeViewModel", "loadGroups failed", e) }
+    }
+
+    // ---------- 매핑 ----------
+
+    private fun mapPersonalBoxToWalletSummary(box: Box): WalletSummary {
+        val balances = box.balances
+            .filter { it.balance != 0.0 } // 0이 아닌 통화만 출력
+            .sortedByDescending { it.balance } // TODO: 정렬 삭제
+            .map {
+                CurrencyBalance(
+                    label = currencyLabel(it.currency),
+                    value = formatAmount(it.currency, it.balance),
+                    code = it.currency)
+            }
+        val title = _uiState.value.wallet.title
+            .takeIf { it.isNotBlank() }?: box.name
+
+        return WalletSummary(
+            title = title,
+            bg = _uiState.value.wallet.bg,
+            balances = balances
+        )
+    }
+
+    private fun mapGroupBoxToUi(box: Box): GroupBox {
+        val repr = box.balances
+            .maxByOrNull {
+                if (it.currency == "KRW") Double.MAX_VALUE else it.balance
+            }
+            ?: box.balances.maxByOrNull { it.balance }
+
+        val amountText = if (repr == null) "잔액 없음" else formatAmount(repr.currency, repr.balance)
+
+        return GroupBox(
+            id = box.id.toString(),
+            title = box.name,
+            amount = amountText,
+            bg = colorFromId(box.id)
+        )
+    }
+
+    // ---------- 유틸 ----------
+
+    private fun currencyLabel(code: String): String = when (code) {
+        "KRW" -> "한국 원"
+        "USD" -> "미국 달러"
+        "JPY" -> "일본 엔"
+        "EUR" -> "유럽 유로"
+        "GBP" -> "영국 파운드"
+        "CNY" -> "중국 위안"
+        "CHF" -> "스위스 프랑"
+        "CAD" -> "캐나다 달러"
+        else  -> code
+    }
+
+    private fun formatAmount(code: String, amount: Double): String {
+        val rounded = if (amount % 1.0 == 0.0) amount.toLong().toString() else String.format("%.4f", amount)
+        return "$rounded $code"
+    }
+
+    private fun colorFromId(id: Long): Color {
+        val base = abs(id.hashCode())
+        return boxAvailableColors[base % boxAvailableColors.size]
+    }
+
+    // ---------- 네비게이션 ----------
+
+    fun onWalletTitleClick() {
         viewModelScope.launch {
-            _navigationEvent.emit(HomeNavigationEvent.NavigateToMyWallet)
+            _navigationEvent.emit(
+                HomeNavigationEvent.NavigateToMyWallet
+            )
         }
     }
 
     fun onWalletMoreClick() {
-        _uiState.update { it.copy(showWalletEditSheet = true) }
+        _uiState.update {
+            it.copy(showWalletEditSheet = true)
+        }
     }
-
     fun onWalletEditDismiss() {
-        _uiState.update { it.copy(showWalletEditSheet = false) }
-    }
-
-    fun onWalletEditConfirm(newName: String, newColor: Color) {
-        _uiState.update { currentState ->
-            val updatedWallet = currentState.wallet.copy(title = newName, color = newColor)
-            currentState.copy(wallet = updatedWallet, showWalletEditSheet = false)
+        _uiState.update {
+            it.copy(showWalletEditSheet = false)
         }
     }
 
-    fun onWalletCurrencyClick() {  // 나중에 여기에 파라미터 넣어서 뭘 보이게 할지 해야겠네
+    fun onWalletEditConfirm(
+        newName: String,
+        newColor: Color
+    ) {
+        _uiState.update { current ->
+            current.copy(
+                wallet = current.wallet.copy(
+                    title = newName,
+                    bg = newColor
+                ),
+                showWalletEditSheet = false
+            )
+        }
         viewModelScope.launch {
-            _navigationEvent.emit(HomeNavigationEvent.NavigateToMyWallet)
+            userDataManager.saveWalletColor(newColor.toArgb())
+            userDataManager.saveWalletName(newName)
         }
     }
 
-    // 그룹 박스에서 클릭되었을 때 해당 박스 ID로 이동
+    fun onWalletCurrencyClick() {
+        viewModelScope.launch {
+            _navigationEvent.emit(
+                HomeNavigationEvent.NavigateToMyWallet
+            )
+        }
+    }
+
     fun onGroupBoxClick(boxId: String) {
         viewModelScope.launch {
-            // 클릭된 ID에 해당하는 박스를 찾아 색상 정보도 함께 이벤트에 담아 전송
-            val clickedBox = _uiState.value.groups.find { it.id == boxId }
-            if (clickedBox != null) {
-                // Color 객체를 Int로 변환하여 전달
-                _navigationEvent.emit(HomeNavigationEvent.NavigateToMyBox(boxId, clickedBox.bg.toArgb()))
+            val clicked = _uiState.value.groups.find { it.id == boxId }
+            if (clicked != null) {
+                _navigationEvent.emit(
+                    HomeNavigationEvent.NavigateToMyBox(
+                        boxId, clicked.bg.toArgb()
+                    )
+                )
             }
         }
     }
 
+    fun onGroupMoreClick(boxId: Long) {
+        _uiState.update { it.copy(editingGroupId = boxId, showGroupEditSheet = true) }
+    }
 
-    // 돈 보내는 함수
-    fun onTransferClicked(currencyId: String) {
-        viewModelScope.launch {
-            _navigationEvent.emit(HomeNavigationEvent.NavigateToSending(currencyId))
+    fun onGroupEditDismiss() {
+        _uiState.update { it.copy(editingGroupId = null, showGroupEditSheet = false) }
+    }
+
+    // 박스 정보를 수정했을 때 해당 정보를 BoxStore 에 저장
+    fun onGroupEditConfirm(newName: String, newColor: Color) {
+        val id = _uiState.value.editingGroupId ?: return
+        _uiState.update { state ->
+            state.copy(
+                groups = state.groups.map { group ->
+                    if (group.id == id.toString()) group.copy(
+                        title = newName,
+                        bg = newColor
+                    ) else group
+                },
+                editingGroupId = null,
+                showGroupEditSheet = false
+            )
         }
+        viewModelScope.launch {
+            userDataManager.saveGroupName(id, newName)
+            userDataManager.saveGroupColor(id, newColor.toArgb())
+        }
+        boxStore.patchBox(
+            id = id.toString(),
+            newName = newName,
+            newBg = newColor
+        )
+    }
+
+    fun onDepositClick(boxId: String) {
+        viewModelScope.launch { _navigationEvent.emit(HomeNavigationEvent.NavigateToCollecting(boxId)) }
+    }
+
+    fun onTransferClicked(currencyId: String) {
+        viewModelScope.launch { _navigationEvent.emit(HomeNavigationEvent.NavigateToSending(currencyId)) }
     }
 }

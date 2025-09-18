@@ -6,14 +6,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class CurrentExchangeRateDto {
     private CurrencyType currencyCode;
-    private double buyRate;
-    private double sellRate;
-    private double originalRate;
+    private BigDecimal buyRate;
+    private BigDecimal sellRate;
+    private BigDecimal originalRate;
     private String countryFlag;
 
     public CurrentExchangeRateDto(ExchangeRate exchangeRate) {

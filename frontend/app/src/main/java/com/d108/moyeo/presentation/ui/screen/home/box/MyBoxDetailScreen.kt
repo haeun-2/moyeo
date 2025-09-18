@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -43,14 +42,13 @@ fun MyBoxDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = Spacing.Medium, vertical = Spacing.Large),
+            .padding(Spacing.Large),
         horizontalAlignment = Alignment.CenterHorizontally // 각 요소들은 가운데 정렬
     ) {
         // 클릭해서 들어온 멤버 이름이 맨 위에 있음
         Text(
             text = transaction.description,
-            style = Typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            style = Typography.titleLarge,
         )
 
         Spacer(modifier = Modifier.height(Spacing.Medium))
@@ -79,7 +77,7 @@ fun MyBoxDetailScreen(
         )
 
         // 거래시각
-        DetailInfoRow(label = "거래시각", content = { Text("2025.09.08 13:42", style = Typography.bodyLarge) }) // TODO: 실제 timestamp로 변경
+        DetailInfoRow(label = "거래시각", content = { Text(transaction.timestamp, style = Typography.bodyLarge) }) // TODO: 실제 timestamp로 변경
         // 거래 금액: +- 얼마
         DetailInfoRow(label = "거래 금액", content = { Text(transaction.amount, style = Typography.bodyLarge, color = MaterialTheme.colorScheme.primary) })
         // 거래 잔액: 얼마
@@ -91,11 +89,11 @@ fun MyBoxDetailScreen(
         HorizontalDivider()
 
         // "{들어온 제목}" 검색하기
-        SearchActionRow(text = "\"${transaction.description}\" 입금 내역 검색하기", onClick = { /* TODO */ })
+        SearchActionRow(text = "\"${transaction.description}\" 검색하기", onClick = { /* TODO */ })
         // 호리젠탈 디바이더
         HorizontalDivider()
         // "{저장된 카테고리}" 검색하기 가장 오른쪽엔 > 아이콘
-        SearchActionRow(text = "\"${uiState.selectedCategory}\" 검색하기", onClick = { /* TODO */ })
+        SearchActionRow(text = "\"${uiState.selectedCategory}\" 카테고리 검색하기", onClick = { /* TODO */ })
 
 
         // 그냥 여백
@@ -103,7 +101,10 @@ fun MyBoxDetailScreen(
 
         // 제일 아래쪽엔 확인 버튼
         Button(
-            onClick = { navController.popBackStack() }, // 이전 화면으로 돌아가기
+            onClick = {
+                viewModel.saveChanges()
+                navController.popBackStack()
+            }, // 이전 화면으로 돌아가기
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("확인")
@@ -139,7 +140,7 @@ private fun SearchActionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = Spacing.Medium),
+            .padding(vertical = Spacing.Large),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(text = text, style = Typography.bodyLarge, modifier = Modifier.weight(1f))

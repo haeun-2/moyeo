@@ -1,7 +1,6 @@
 package com.mo.moyeo.domain.transaction.transaction.entity;
 
-import com.mo.moyeo.domain.box.entity.Box;
-import com.mo.moyeo.domain.transaction.category.entity.Category;
+import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -46,7 +45,22 @@ public class Transaction {
     private LocalDateTime createdAt;
 
     public enum Type {
-        EXCHANGE, PAYMENT, DEPOSIT, WITHDRAW, TRANSFER, EXCHANGE_RESERVATION
+        EXCHANGE("환전"),
+        PAYMENT("결제"),
+        DEPOSIT("입금"),
+        WITHDRAW("출금"),
+        TRANSFER("이체"),
+        EXCHANGE_RESERVATION("환전 예약");
+
+        private final String label;
+
+        Type(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return this.label;
+        }
     }
 
 }

@@ -9,8 +9,15 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.d108.moyeo.presentation.ui.screen.exchange.CurrencySelectionScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeAddScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeCompleteScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeHistoryScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeKeypadScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ReservationCompleteScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeReservationScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
+import com.d108.moyeo.presentation.ui.screen.history.HistoryBoxesScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxScreen
@@ -18,6 +25,10 @@ import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletDetailScreen
 import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletScreen
 import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxDetailScreen
+import com.d108.moyeo.presentation.ui.screen.home.box.calculating.CalculatingScreen
+import com.d108.moyeo.presentation.ui.screen.home.box.collecting.CollectingScreen
+import com.d108.moyeo.presentation.ui.screen.home.charging.ChargingScreen
+import com.d108.moyeo.presentation.ui.screen.home.creating.CreateBoxScreen
 import com.d108.moyeo.presentation.ui.screen.home.sending.SendingScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
@@ -62,6 +73,16 @@ fun AppNavHost(
 
         composable(AppScreen.Notification.route) {
             NotificationScreen(navController = navController)
+        }
+
+        composable(AppScreen.CreateBox.route) {
+            CreateBoxScreen(
+                onBackClick = { navController.popBackStack() },
+                onFinishClick = {
+                    // 결과 화면의 "닫기" 동작: 홈으로 복귀
+                    navController.popBackStack(AppScreen.Home.route, inclusive = false)
+                }
+            )
         }
 
         // 후에 마이 월렛으로 어떤 화폐를 타고 들어왔는지 파라미터 도입...아니다 지금 할까?
@@ -128,18 +149,168 @@ fun AppNavHost(
             SendingScreen(navController = navController)
         }
 
+        // 페이머니 충전 화면
+        composable(route = AppScreen.Charging.route) {
+            ChargingScreen(navController = navController)
+        }
 
+        // 모으기 화면
+        composable(
+            route = AppScreen.Collecting.route,
+            arguments = listOf(
+                navArgument("boxId") { type = NavType.StringType },
+                // currencyCode는 null일 수 있는 선택적 인자임을 정의
+                navArgument("currencyCode") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = "KRW"
+                }
+            )
+        ) { backStackEntry ->
+            // CollectingScreen은 ViewModel에서 SavedStateHandle을 통해 boxId를 직접 받으므로,
+            // 여기서 따로 전달해 줄 필요는 없습니다.
+            CollectingScreen(navController = navController)
+        }
+
+        // 정산하기 화면
+        composable(
+            route = AppScreen.Calculating.route,
+            arguments = listOf(
+                navArgument("boxId") { type = NavType.StringType },
+                // currencyCode는 null일 수 있는 선택적 인자임을 정의
+                navArgument("currencyCode") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = "KRW"
+                }
+            )
+        ) { backStackEntry ->
+            // ViewModel에서 SavedStateHandle을 통해 boxId를 직접 받으므로,
+            //
+            CalculatingScreen(navController = navController)
+        }
 
         // 환율 화면
         composable(AppScreen.Exchange.route) {
             ExchangeScreen(navController = navController)
         }
-        composable("exchange_keypad/charge") {
-            ExchangeKeypadScreen(navController, "charge")
+
+        composable(
+            "exchange_keypad/{mode}?currencyCode={currencyCode}&currencyName={currencyName}",
+            arguments= listOf(
+                navArgument("mode") {type = NavType.StringType},
+                navArgument("currencyCode") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("currencyName") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )) { backStackEntry ->
+            ExchangeKeypadScreen(
+                navController = navController,
+                mode = backStackEntry.arguments?.getString("mode") ?: "charge",
+                currencyCode = backStackEntry.arguments?.getString("currencyCode"),
+                currencyName = backStackEntry.arguments?.getString("currencyName")
+            )
         }
-        composable("exchange_keypad/refund") {
-            ExchangeKeypadScreen(navController, "refund")
+
+        // 환율의 추가 버튼을 누르면 이동
+        composable("exchange_add") {
+            ExchangeAddScreen(navController)
         }
+
+        // 예약 환전
+        composable("currency_selection") {
+            CurrencySelectionScreen(navController)
+        }
+
+        // 국가별 환전
+        composable(
+            route = "exchange_reservation/{currencyCode}/{currencyName}",
+            arguments = listOf(
+                navArgument("currencyCode") { type = NavType.StringType },
+                navArgument("currencyName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
+            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
+            ExchangeReservationScreen(
+                navController = navController,
+                currencyCode = currencyCode,
+                currencyName = currencyName
+            )
+        }
+        // 예약환전 완료
+        // Navigation에 추가
+        composable(
+            route = "reservation_complete/{currencyCode}/{currencyName}/{foreignAmount}/{krwAmount}",
+            arguments = listOf(
+                navArgument("currencyCode") { type = NavType.StringType },
+                navArgument("currencyName") { type = NavType.StringType },
+                navArgument("foreignAmount") { type = NavType.StringType },
+                navArgument("krwAmount") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
+            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
+            val foreignAmount = backStackEntry.arguments?.getString("foreignAmount") ?: ""
+            val krwAmount = backStackEntry.arguments?.getString("krwAmount") ?: ""
+
+            ReservationCompleteScreen(
+                navController = navController,
+                currencyCode = currencyCode,
+                currencyName = currencyName,
+                foreignAmount = foreignAmount,
+                krwAmount = krwAmount
+            )
+        }
+
+        // 환전 완료 화면
+        composable(
+            route = "exchange_complete/{mode}/{amount}/{currencyUnit}",
+            arguments = listOf(
+                navArgument("mode") { type = NavType.StringType },
+                navArgument("amount") { type = NavType.StringType },
+                navArgument("currencyUnit") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val mode = backStackEntry.arguments?.getString("mode") ?: "charge"
+            val amount = backStackEntry.arguments?.getString("amount") ?: "0"
+            val currencyUnit = backStackEntry.arguments?.getString("currencyUnit") ?: "JPY"
+
+            ExchangeCompleteScreen(
+                navController = navController,
+                mode = mode,
+                amount = amount,
+                currencyUnit = currencyUnit
+            )
+        }
+
+        // 환율 히스토리
+        composable(
+            route = "exchange_history/{currencyCode}/{currencyName}/{mode}",
+            arguments = listOf(
+                navArgument("currencyCode") { type = NavType.StringType },
+                navArgument("currencyName") { type = NavType.StringType },
+                navArgument("mode") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
+            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
+            val mode = backStackEntry.arguments?.getString("mode") ?: "charge"
+
+            ExchangeHistoryScreen(
+                navController = navController,
+                currencyCode = currencyCode,
+                currencyName = currencyName,
+                mode = mode
+            )
+        }
+
 
         // QR 화면
         composable(AppScreen.QR.route) {
@@ -154,6 +325,10 @@ fun AppNavHost(
         // 기록 화면
         composable(AppScreen.History.route) {
             HistoryScreen(navController = navController)
+        }
+
+        composable(AppScreen.HistoryBoxes.route) {
+            HistoryBoxesScreen(navController = navController)
         }
 
 
