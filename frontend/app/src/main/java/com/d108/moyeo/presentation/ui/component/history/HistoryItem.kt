@@ -15,15 +15,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.d108.moyeo.domain.model.stats.CategoryStat
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.primaryLight
+import java.text.DecimalFormat
 
 @Composable
-fun HistoryItem() {
+fun HistoryItem(  // 히스토리 탭에서 하단에 레이지컬럼으로 표시될 카테고리별 사용량
+    stat: CategoryStat
+) {
+
+    val formattedAmount = "${DecimalFormat("#,###").format(stat.amount)}원"
+    val formattedRatio = "${String.format("%.1f", stat.ratio)}%"
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -42,30 +49,13 @@ fun HistoryItem() {
 
         // 가운데: 품목 이름과 퍼센테이지
         Column {
-            Text(
-                text = "식비", // 임시 데이터
-                style = Typography.bodyMedium
-            )
-            Text(
-                text = "45%", // 임시 데이터
-                style = Typography.bodyMedium,
-            )
+            Text(text = stat.category, style = Typography.bodyMedium)
+            Text(text = formattedRatio, style = Typography.bodyMedium)
         }
 
         // 우측: 지출액 (오른쪽 끝으로 밀어내기 위해 Spacer 사용)
         Spacer(Modifier.weight(1f))
 
-        Text(
-            text = "50,000원", // 임시 데이터
-            style = Typography.bodyMedium,
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HistoryItemPreview() {
-    Box(modifier = Modifier.padding(16.dp)) {
-        HistoryItem()
+        Text(text = formattedAmount, style = Typography.bodyMedium)
     }
 }

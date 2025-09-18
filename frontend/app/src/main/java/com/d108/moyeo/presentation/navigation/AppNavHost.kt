@@ -17,6 +17,7 @@ import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeKeypadScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ReservationCompleteScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeReservationScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
+import com.d108.moyeo.presentation.ui.screen.history.HistoryBoxesScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxScreen
@@ -324,6 +325,10 @@ fun AppNavHost(
         // 기록 화면
         composable(AppScreen.History.route) {
             HistoryScreen(navController = navController)
+        }
+
+        composable(AppScreen.HistoryBoxes.route) {
+            HistoryBoxesScreen(navController = navController)
         }
 
 
