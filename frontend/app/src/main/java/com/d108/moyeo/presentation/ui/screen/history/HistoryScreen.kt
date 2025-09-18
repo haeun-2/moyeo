@@ -50,6 +50,7 @@ import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.surfaceLight
 import com.d108.moyeo.presentation.ui.component.history.HistoryItem
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.ui.component.common.DateRangePickerModal
@@ -84,7 +85,10 @@ fun HistoryScreen(navController: NavController,
     LaunchedEffect(savedStateHandle) {
         savedStateHandle?.getLiveData<Long>("selected_box_id_for_history")?.observeForever { newId ->
             if (newId != null) {
-                viewModel.onBoxSelected(newId)
+                viewModel.onBoxSelected(newId)  // 박스를 선택하고 돌아오면 상세 조회를 한다
+                // 뷰모델의 loadCategoryStats 함수는 startDate와 endDate에 default로 빈 문자열("")을 전해주므로 전체 기간 조회가 된다
+
+
                 Log.d(TAG, "HistoryScreen: 전달받은 박스 아이디: $newId")
                 savedStateHandle.remove<Long>("selected_box_id_for_history")
             }
@@ -166,48 +170,40 @@ fun HistoryScreen(navController: NavController,
                     }
 
 
-                    // 콤보박스 메뉴가 있어서, 클릭하면 드랍다운 메뉴가 열리고 화폐를 선택할 수 있음
-                    var isMenuExpanded by remember { mutableStateOf(false) }
-                    val currencyOptions = listOf("KRW", "USD", "JPY", "EUR")
-                    var selectedCurrency by remember { mutableStateOf(currencyOptions[0]) }
-
-                    ExposedDropdownMenuBox(
-                        expanded = isMenuExpanded,
-                        onExpandedChange = { isMenuExpanded = it },
-                    ) {
-                        // 선택된 항목을 보여주는 텍스트 필드 부분
-                        OutlinedTextField(
-                            value = selectedCurrency,
-                            onValueChange = {},
-                            readOnly = true,
-                            trailingIcon = {
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = "메뉴 열기")
-                            },
-                            modifier = Modifier
-                                .menuAnchor() // 이 필드가 메뉴의 '기준점'임을 알립니다.
-                                .width(100.dp),
-                            textStyle = Typography.bodySmall,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color.Transparent
-                            )
-                        )
-                        // 실제 드롭다운 메뉴
-                        ExposedDropdownMenu(
-                            expanded = isMenuExpanded,
-                            onDismissRequest = { isMenuExpanded = false }
+                    // currencyOptions가 비어있지 않을 때만 드롭다운 메뉴를 보여줍니다.
+                    if (uiState.currencyOptions.isNotEmpty()) {
+                        ExposedDropdownMenuBox(
+                            expanded = uiState.isCurrencyMenuExpanded,
+                            onExpandedChange = viewModel::onCurrencyMenuExpanded,
                         ) {
-                            currencyOptions.forEach { option ->
-                                DropdownMenuItem(
-                                    text = { Text(option) },
-                                    onClick = {
-                                        selectedCurrency = option
-                                        isMenuExpanded = false
-                                        // TODO: 나중에 viewModel.onCurrencySelected(option) 호출
-                                    }
-                                )
+                            OutlinedTextField(
+                                value = uiState.selectedCurrency ?: "통화",
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = "메뉴 열기") },
+                                modifier = Modifier.menuAnchor().width(100.dp),
+                                textStyle = Typography.bodySmall,
+                                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color.Transparent)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = uiState.isCurrencyMenuExpanded,
+                                onDismissRequest = { viewModel.onCurrencyMenuExpanded(false) }
+                            ) {
+                                uiState.currencyOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = { viewModel.onCurrencySelected(option) }
+                                    )
+                                }
                             }
                         }
                     }
+
+                    else {
+                        Text("거래 내역이 없습니다")
+                    }
+
+
                 }
             }
 
@@ -255,17 +251,31 @@ fun HistoryScreen(navController: NavController,
 
             Spacer(modifier = Modifier.height(Spacing.Large))
 
-            LazyColumn(
-                modifier = Modifier.width(248.dp),
-                verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
-            ) {
-                items(
-                    // TODO: 이거 key를 뭘로 잡을지 고민하기. 나중 가면 카테고리는 고유할 것이기 떄문에 카테고리 고유로 해도 됨
-                    // 그러니까 key = { it.category } 해도 될 거임 실제로는
-                    items = uiState.historyItems,
-                    key = { it.hashCode() }
-                ) { statItem ->
-                    HistoryItem(stat = statItem)
+            // 5. 리스트 영역 - 상태에 따른 분기 처리
+            if (uiState.isLoading) {
+                CircularProgressIndicator()
+            } else if (uiState.errorMessage != null) {
+                Text(text = uiState.errorMessage!!)
+            } else if (uiState.selectedToggleIndex == 1 && !uiState.hasSelectedDateRange) {
+                // 일자 모드이면서 날짜를 선택하지 않은 경우
+                Text(
+                    text = "날짜 범위를 선택해주세요",
+                    style = Typography.bodyLarge
+                )
+            } else if (uiState.currentStats?.content?.isEmpty() == true || uiState.currentStats == null) {
+                // 데이터는 있지만 거래 내역이 비어있는 경우
+                Text(
+                    text = "거래 내역이 없습니다",
+                    style = Typography.bodyLarge
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.width(248.dp),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
+                ) {
+                    items(items = uiState.currentStats?.content ?: emptyList()) { statItem ->
+                        HistoryItem(stat = statItem)
+                    }
                 }
             }
         }

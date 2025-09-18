@@ -2,6 +2,7 @@ package com.d108.moyeo.presentation.ui.screen.history
 
 import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.domain.model.stats.CategoryStat
+import com.d108.moyeo.domain.model.stats.CategoryStats
 
 data class HistoryUiState(
     val selectedBox: Box? = null,
@@ -10,15 +11,18 @@ data class HistoryUiState(
     // 전체 일자 토글 버튼
     val selectedToggleIndex: Int = 0,
 
-    // TODO: 화폐 선택 옵션은 서버에서 만들어준다고 했음. 기간 설정하면 그 기간동안 사용된 화폐를 가져와줌.
+    // 드롭 다운 메뉴
     val isCurrencyMenuExpanded: Boolean = false,
-    val currencyOptions: List<String> = listOf("KRW", "USD", "JPY", "EUR"),
-    val selectedCurrency: String = "KRW",
+    val currencyOptions: List<String> = emptyList(), // 서버 응답에 따라 동적으로 채워짐
+    val selectedCurrency: String = "",
 
-    //
-    val historyItems: List<CategoryStat> = emptyList(),
+    // 서버 응답 및 캐시된 데이터 관리
+    val allPeriodStatsMap: Map<String, CategoryStats> = emptyMap(), // 전체 기간 데이터
+    val dateRangeStatsMap: Map<String, CategoryStats> = emptyMap(), // 선택된 기간 데이터
+    val currentStats: CategoryStats? = null, // 현재 화면에 표시할 데이터
 
     // 데이트피커 관련
+    val hasSelectedDateRange: Boolean = false, // 사용자가 날짜를 선택했는지
     val showDateRangePicker: Boolean = false,
     val startDateMillis: Long? = null,
     val endDateMillis: Long? = null,
