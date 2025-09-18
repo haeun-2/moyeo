@@ -4,6 +4,7 @@ import android.content.Context
 import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.data.remote.api.AuthService
 import com.d108.moyeo.data.remote.api.BankService
+import com.d108.moyeo.data.remote.api.BankingService
 import com.d108.moyeo.data.remote.api.BoxService
 import com.d108.moyeo.data.remote.api.BoxStatisticsService
 import com.d108.moyeo.data.remote.api.PaymentService
@@ -98,6 +99,12 @@ object NetworkModule {  // 여러 부품을 조립해서 새로운 것을 '만�
     fun providePaymentService(retrofit: Retrofit): PaymentService {
         return retrofit.create(PaymentService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideBankingService(retrofit: Retrofit): BankingService =
+        retrofit.create(BankingService::class.java)
+
 
     /*
     히스토리와 관련된 서비스

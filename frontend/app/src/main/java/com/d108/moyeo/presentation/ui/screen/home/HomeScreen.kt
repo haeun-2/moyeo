@@ -33,7 +33,7 @@ import androidx.navigation.NavController
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.*
 import com.d108.moyeo.presentation.ui.component.home.BoxEditBottomSheet
-import com.d108.moyeo.presentation.ui.component.textColorUtil
+import com.d108.moyeo.util.textColorUtil
 
 private val TAG = "HomeScreen"
 
