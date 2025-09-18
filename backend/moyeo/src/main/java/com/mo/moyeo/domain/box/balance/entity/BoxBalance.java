@@ -52,7 +52,7 @@ public class BoxBalance {
 
     // 금액 증가
     public void increaseBalance(BigDecimal amount) {
-        this.balance.add(amount);
+        this.balance = this.balance.add(amount);
     }
 
     // 금액 감소
@@ -60,7 +60,7 @@ public class BoxBalance {
         if (checkSufficientBalance(amount)) {
             throw new IllegalStateException("잔액이 부족합니다");
         }
-        this.balance.subtract(amount);
+        this.balance = this.balance.subtract(amount);
     }
 
     public boolean checkSufficientBalance(BigDecimal amount) {
