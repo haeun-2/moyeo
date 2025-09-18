@@ -4,7 +4,6 @@ import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.domain.box.box.dto.*;
 import com.mo.moyeo.domain.box.box.entity.Box;
-import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
 import com.mo.moyeo.domain.box.member.entity.BoxMember;
 import com.mo.moyeo.domain.box.balance.service.BoxBalanceService;
 import com.mo.moyeo.domain.box.member.service.BoxMemberService;
@@ -27,13 +26,20 @@ public class BoxApplicationService {
     private static final int MAX_BOX_COUNT = 30;
 
     public MyBoxResponse getMyBox(User user) {
-        Box box = boxService.getPersonalBoxByOwnerId(user.getId());
+        Box box = boxService.getPersonalBoxByUserId(user.getId());
         return MyBoxResponse.from(box);
     }
 
     public List<GroupBoxResponse> getGroupBoxList(User user) {
         List<BoxMember> boxes = boxMemberService.getJoinedGroupBoxByUser(user);
         return GroupBoxResponse.from(boxes);
+    }
+
+    public BoxDetailResponse getBoxDetail(Long boxId, User user) {
+        Box box = boxService.getBoxWithBalanceById(boxId);
+        BoxPermissionResponse myBoxPermissions = getMyBoxPermissions(box.getId(), user);
+        List<BoxMember> boxMembers = boxMemberService.getJoinedMembersByBoxId(boxId);
+        return BoxDetailResponse.from(box, myBoxPermissions, boxMembers);
     }
 
     public BoxPermissionResponse getMyBoxPermissions(Long boxId, User user) {
