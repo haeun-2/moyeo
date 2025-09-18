@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 @Getter
@@ -64,6 +65,15 @@ public class Box extends BaseTimeEntity {
         this.balances = Arrays.stream(CurrencyType.values())
                 .map(type -> new BoxBalance(this, type))
                 .toList();
+    }
+
+    @PostLoad
+    private void sortBalances() {
+        if (balances != null) {
+            // KRW 를 가장 앞에 오도록 정렬
+            balances.sort(Comparator.comparing((BoxBalance b) -> !b.getCurrencyCode().equals(CurrencyType.KRW))
+                    .thenComparing(BoxBalance::getCurrencyCode));
+        }
     }
 
     public enum Type {
