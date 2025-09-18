@@ -17,7 +17,7 @@ import com.mo.moyeo.domain.exchange.reservation.dto.ExchangeReserveListDto;
 import com.mo.moyeo.domain.exchange.reservation.entity.ReservedExchange;
 import com.mo.moyeo.domain.exchange.reservation.repository.ReservedExchangeRepository;
 import com.mo.moyeo.domain.transaction.category.entity.CategoryType;
-import com.mo.moyeo.domain.transaction.category.service.CategoryService;
+import com.mo.moyeo.domain.transaction.category.service.CategoryCacheService;
 import com.mo.moyeo.domain.transaction.exchange.dto.ExchangeRequestDto;
 import com.mo.moyeo.domain.transaction.exchange.service.ExchangeService;
 import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
@@ -47,7 +47,7 @@ public class ReservedExchangeService {
     private final BoxMemberService boxMemberService;
     private final ExchangeService exchangeService;
     private final ExchangeRateCacheService exchangeRateCacheService;
-    private final CategoryService categoryService;
+    private final CategoryCacheService categoryService;
 
     @Transactional
     public void reserveExchange(User user, ExchangeReserveDto exchangeReserveDto) {

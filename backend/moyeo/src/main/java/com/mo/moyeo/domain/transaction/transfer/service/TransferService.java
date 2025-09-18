@@ -10,7 +10,7 @@ import com.mo.moyeo.domain.box.box.service.BoxService;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.service.CurrencyService;
 import com.mo.moyeo.domain.transaction.category.entity.CategoryType;
-import com.mo.moyeo.domain.transaction.category.service.CategoryService;
+import com.mo.moyeo.domain.transaction.category.service.CategoryCacheService;
 import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
 import com.mo.moyeo.domain.transaction.history.service.BoxHistoryService;
 import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
@@ -37,7 +37,7 @@ public class TransferService {
     private final CurrencyService currencyService;
     private final BoxBalanceService boxBalanceService;
     private final BoxHistoryService boxHistoryService;
-    private final CategoryService categoryService;
+    private final CategoryCacheService categoryService;
 
     @Transactional
     public void transfer(User user, TransferRequest request) {

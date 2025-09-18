@@ -14,7 +14,7 @@ import com.mo.moyeo.domain.currency.service.CurrencyService;
 import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
 import com.mo.moyeo.domain.exchange.rate.service.ExchangeRateCacheService;
 import com.mo.moyeo.domain.transaction.category.entity.CategoryType;
-import com.mo.moyeo.domain.transaction.category.service.CategoryService;
+import com.mo.moyeo.domain.transaction.category.service.CategoryCacheService;
 import com.mo.moyeo.domain.transaction.exchange.dto.ExchangeRequestDto;
 import com.mo.moyeo.domain.transaction.exchange.entity.ExchangeTransaction;
 import com.mo.moyeo.domain.transaction.exchange.repository.ExchangeRepository;
@@ -43,7 +43,7 @@ public class ExchangeService {
     private final AccountUtil accountUtil;
     private final BoxBalanceService boxBalanceService;
     private final BatchInsert batchInsert;
-    private final CategoryService categoryService;
+    private final CategoryCacheService categoryService;
 
     @Transactional
     public void exchange(User user, ExchangeRequestDto exchangeRequestDto) {
