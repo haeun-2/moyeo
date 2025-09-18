@@ -1,5 +1,6 @@
 package com.mo.moyeo.domain.transaction.payment.entity;
 
+import com.mo.moyeo.domain.currency.entity.Currency;
 import com.mo.moyeo.domain.merchant.entity.Merchant;
 import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import jakarta.persistence.*;
@@ -28,6 +29,10 @@ public class Payment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "merchant_id", nullable = false)
     private Merchant merchant;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "currency_code", nullable = false)
+    private Currency currency;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
