@@ -6,6 +6,7 @@ build/
 !**/src/test/**/build/
 .env
 src/main/resources/firebase
+pinpoint-agent-2.2.2
 
 ### STS ###
 .apt_generated
