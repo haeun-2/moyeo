@@ -1,6 +1,7 @@
 package com.mo.moyeo.domain.box.box.repository;
 
 import com.mo.moyeo.domain.box.box.entity.Box;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,6 +20,9 @@ public interface BoxRepository extends JpaRepository<Box, Long> {
         WHERE b.ownerId = :ownerId
         AND b.type = 'PERSONAL'
     """)
-    Optional<Box> selectPersonalBoxByOwnerId(@Param("ownerId") Long ownerId);
+    Optional<Box> findPersonalBoxByOwnerId(@Param("ownerId") Long ownerId);
+
+    @EntityGraph(attributePaths = "balances")
+    Optional<Box> findWithBalancesById(Long id);
 
 }

@@ -59,7 +59,7 @@ public class BankTransactionService {
      * 트랜잭션 생성 & 거래 처리
      */
     private BankTransactionResponse processBankTransaction(User user, BigDecimal amount, Transaction.Type type) {
-        Box box = boxService.getBoxByUserId(user.getId());
+        Box box = boxService.getPersonalBoxByUserId(user.getId());
 
         // 트랜잭션 생성
         Transaction transaction = (type == Transaction.Type.DEPOSIT)

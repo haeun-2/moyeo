@@ -21,7 +21,7 @@ public class BoxMemberService {
 
     private final BoxMemberRepository boxMemberRepository;
 
-    private BoxPermissionDto getBoxPermission(Box box, User user){
+    public BoxPermissionDto getBoxPermission(Box box, User user){
         if (box.isPersonalOwner(user.getId())) {
             return BoxPermissionDto.fromAllTrue();
         }

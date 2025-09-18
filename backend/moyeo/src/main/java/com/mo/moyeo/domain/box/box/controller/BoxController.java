@@ -35,6 +35,13 @@ public class BoxController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "박스 상세 조회", description = "특정 박스를 상세 조회합니다. 박스 기본 정보, 박스 권한, 박스 회원 목록을 반환합니다.")
+    @GetMapping("/{boxId}")
+    public ResponseEntity<BoxDetailResponse> getBoxDetail(@PathVariable Long boxId, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        BoxDetailResponse response = boxApplicationService.getBoxDetail(boxId, userDetails.getUser());
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "박스 권한 조회", description = "유저가 가진 박스의 이체/결제/환전 권한을 조회합니다.")
     @GetMapping("/{boxId}/permissions")
     public ResponseEntity<BoxPermissionResponse> getMyBoxPermissions(@PathVariable Long boxId, @AuthenticationPrincipal CustomUserDetails userDetails) {

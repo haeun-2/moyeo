@@ -3,15 +3,10 @@ package com.mo.moyeo.domain.box.box.service;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.domain.box.box.entity.Box;
-import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
 import com.mo.moyeo.domain.box.box.repository.BoxRepository;
-import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,8 +20,13 @@ public class BoxService {
                 .orElseThrow(()-> new CustomException(ErrorCode.BOX_NOT_FOUND));
     }
 
-    public Box getBoxByUserId(Long userId){
-        return boxRepository.selectPersonalBoxByOwnerId(userId)
+    public Box getBoxWithBalanceById(Long boxId){
+        return boxRepository.findWithBalancesById(boxId)
+                .orElseThrow(()-> new CustomException(ErrorCode.BOX_NOT_FOUND));
+    }
+
+    public Box getPersonalBoxByUserId(Long userId){
+        return boxRepository.findPersonalBoxByOwnerId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
     }
 
@@ -36,11 +36,6 @@ public class BoxService {
 
     public Long getOwnerIdById(Long boxId) {
         return boxRepository.findOwnerIdByBoxId(boxId).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
-    }
-
-    public Box getPersonalBoxByOwnerId(Long ownerId) {
-        return boxRepository.selectPersonalBoxByOwnerId(ownerId)
-                .orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
     }
 
     @Transactional
