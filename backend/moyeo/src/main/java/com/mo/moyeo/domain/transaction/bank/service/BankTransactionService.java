@@ -11,6 +11,8 @@ import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.transaction.bank.dto.*;
 import com.mo.moyeo.domain.transaction.bank.entity.BankTransaction;
 import com.mo.moyeo.domain.transaction.bank.repository.BankTransactionRepository;
+import com.mo.moyeo.domain.transaction.category.entity.CategoryType;
+import com.mo.moyeo.domain.transaction.category.service.CategoryCacheService;
 import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
 import com.mo.moyeo.domain.transaction.history.service.BoxHistoryService;
 import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
@@ -35,6 +37,7 @@ public class BankTransactionService {
     private final BankService bankService;
     private final BankApiService bankApiService;
     private final BoxHistoryService boxHistoryService;
+    private final CategoryCacheService categoryService;
 
     private final String TITLE = "연결 계좌";
     private static final CurrencyType DEFAULT_CURRENCY = CurrencyType.KRW;
@@ -135,6 +138,7 @@ public class BankTransactionService {
                 .totalAmount(boxBalance.getBalance())
                 .title(TITLE)
                 .type(type)
+                .category(type == Transaction.Type.DEPOSIT ? categoryService.getByName(CategoryType.DEPOSIT) : categoryService.getByName(CategoryType.WITHDRAW))
                 .build();
     }
 

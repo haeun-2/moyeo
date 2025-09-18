@@ -1,5 +1,6 @@
 package com.mo.moyeo.domain.transaction.statistics.dto;
 
+import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.transaction.category.entity.CategoryType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 @ToString
 public class CategoryStatisticsDto {
 
+    private CurrencyType currencyCode;
     private Long categoryId;
     private CategoryType category;
     private BigDecimal amount;

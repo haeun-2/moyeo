@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class BoxStatisticsService {
     private final MerchantRepository merchantRepository;
     private final BoxHistoryRepository boxHistoryRepository;
 
-    public BoxStatisticsResponse getCategoryStatistics(Long boxId, LocalDate startDate, LocalDate endDate, CurrencyType currency) {
+    public Map<CurrencyType, BoxStatisticsResponse> getCategoryStatistics(Long boxId, LocalDate startDate, LocalDate endDate, CurrencyType currency) {
         Box box = boxService.getBoxById(boxId);
         if (startDate == null) {
             startDate = box.getCreatedAt().toLocalDate();
@@ -34,8 +36,16 @@ public class BoxStatisticsService {
         if (endDate == null) {
             endDate = LocalDate.now();
         }
-        List<CategoryStatisticsDto> dtoList = boxHistoryRepository.findCategoryStatistics(boxId, startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX), currency);
-        return BoxStatisticsResponse.from(dtoList);
+        List<CategoryStatisticsDto> dtoList = boxHistoryRepository.findCategoryStatistics(boxId, startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
+        Map<CurrencyType, BoxStatisticsResponse> response = dtoList.stream()
+                .collect(Collectors.groupingBy(
+                        CategoryStatisticsDto::getCurrencyCode,
+                        Collectors.collectingAndThen(
+                                Collectors.toList(),
+                                BoxStatisticsResponse::from
+                        )
+                ));
+        return response;
     }
 
     public List<MerchantLocationResponse> getPaidMerchantLocation(Long boxId) {
