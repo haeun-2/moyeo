@@ -4,5 +4,11 @@ public enum ApiType {
     exchangeRate,
     exchange,
     estimate,
-    updateForeignCurrencyDemandDepositAccountTransfer
+    updateForeignCurrencyDemandDepositAccountTransfer,
+    updateDemandDepositAccountTransfer,
+    updateDemandDepositAccountWithdrawal,
+    updateDemandDepositAccountDeposit,
+    updateForeignCurrencyDemandDepositAccountWithdrawal,
+    updateForeignCurrencyDemandDepositAccountDeposit;
+
 }

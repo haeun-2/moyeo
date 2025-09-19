@@ -15,6 +15,7 @@ import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.service.CurrencyService;
 import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
 import com.mo.moyeo.domain.exchange.rate.service.ExchangeRateCacheService;
+import com.mo.moyeo.domain.transaction.bank.service.BankApiService;
 import com.mo.moyeo.domain.transaction.category.entity.CategoryType;
 import com.mo.moyeo.domain.transaction.category.service.CategoryCacheService;
 import com.mo.moyeo.domain.transaction.exchange.dto.ExchangeRequestDto;
@@ -48,6 +49,7 @@ public class ExchangeService {
     private final BoxBalanceService boxBalanceService;
     private final BatchInsert batchInsert;
     private final CategoryCacheService categoryCacheService;
+    private final BankApiService bankApiService;
 
     @BoxDistributedLock({
             @BoxLockParam(boxId = "#exchangeRequestDto.fromBoxId", currencyCode = "#exchangeRequestDto.fromCurrency"),
@@ -79,14 +81,18 @@ public class ExchangeService {
             fromAmount = exchangeTransactions.get(0).getFromAmount();
             toAmount = exchangeTransactions.get(1).getToAmount();
         }
+        fromAmount = fromAmount.setScale(0, RoundingMode.HALF_UP);
+        toAmount = toAmount.setScale(0, RoundingMode.HALF_UP);
 
         log.debug("환전 {} -> {}", fromAmount, toAmount);
         updateBoxBalanceAndSaveHistory(exchangeRequestDto, box, toAmount, fromAmount, transaction);
 
 
-        //TODO: 수시입출금으로 account 에서 amount 빼고 더해주기
         String toAccount = accountUtil.getAccountByType(exchangeRequestDto.getToCurrency());
         String fromAccount = accountUtil.getAccountByType(exchangeRequestDto.getFromCurrency());
+
+        bankApiService.deposit(toAccount, toAmount, exchangeRequestDto.getToCurrency());
+        bankApiService.withdraw(fromAccount, fromAmount, exchangeRequestDto.getFromCurrency());
     }
 
     private void updateBoxBalanceAndSaveHistory(ExchangeRequestDto exchangeRequestDto, Box box, BigDecimal toAmount, BigDecimal fromAmount, Transaction transaction) {
@@ -147,11 +153,12 @@ public class ExchangeService {
         BigDecimal toAmount = exchangeRequestDto.getAmount();
         BigDecimal fromAmount;
 
+        log.debug("환율{}",sellRate);
         if (fromCurrency == CurrencyType.JPY) {
             // JPY는 100엔 기준이므로 나눠줘야 함
-            fromAmount = sellRate
-                    .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP) // 100으로 나누기
-                    .multiply(toAmount);
+            fromAmount = toAmount
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(sellRate, 0, RoundingMode.HALF_UP);
         } else {
             // USD, EUR 같은 경우는 1 단위 기준
             fromAmount = sellRate.multiply(toAmount);

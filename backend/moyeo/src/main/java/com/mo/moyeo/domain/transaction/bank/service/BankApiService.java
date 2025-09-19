@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
-import com.mo.moyeo.common.util.finance_api.AccountUtil;
 import com.mo.moyeo.common.util.finance_api.ApiType;
 import com.mo.moyeo.common.util.finance_api.ApiUtil;
 import com.mo.moyeo.domain.auth.signup.service.EncryptionService;
@@ -49,13 +48,18 @@ public class BankApiService {
     @Value("${moyeo.api.user_key}")
     private String MOYEO_USER_KEY;
 
-    private final String ENDPOINT = "updateDemandDepositAccountTransfer";
-    private final String FOREIGN_CURRENCY_URL = "foreignCurrency/";
-    private final String FOREIGN_CURRENCY_WITHDRAWAL_ENDPOINT = "updateForeignCurrencyDemandDepositAccountDeposit";
-    private final String FOREIGN_CURRENCY_DEPOSIT_ENDPOINT = "updateForeignCurrencyDemandDepositAccountWithdrawal";
-
+    @Value("${FOREIGN_WITHDRAW_ENDPOINT}")
+    private String FOREIGN_CURRENCY_WITHDRAWAL_ENDPOINT;
+    @Value("${FOREIGN_DEPOSIT_ENDPOINT}")
+    private String FOREIGN_CURRENCY_DEPOSIT_ENDPOINT ;
+    @Value("${KOREAN_DEPOSIT_ENDPOINT}")
+    private String KOREAN_DEPOSIT_ENDPOINT;
+    @Value("${KOREAN_WITHDRAW_ENDPOINT}")
+    private String KOREAN_WITHDRAW_ENDPOINT;
     @Value("${FOREIGN_CURRENCY_TRANSFER_ENDPOINT}")
     private String FOREIGN_CURRENCY_TRANSFER;
+    @Value("${KOREAN_TRANSFER_ENDPOINT}")
+    private String KOREAN_TRANSFER_ENDPOINT;
 
     /**
      * 박스로 입금 (연결 계좌 -> 법인 계좌 -> 박스)
@@ -95,7 +99,7 @@ public class BankApiService {
      * 은행 이체 실행
      */
     public void executeTransfer(BankTransferDTO transferRequestBody) {
-        String url = BASE_URL + DEMAND_DEPOSIT_URL + ENDPOINT;
+        String url = KOREAN_TRANSFER_ENDPOINT;
 
         Map<String, Object> requestBody = createTransferRequestBody(transferRequestBody);
         HttpEntity<Map<String, Object>> apiRequest = createHttpEntity(requestBody);
@@ -114,26 +118,31 @@ public class BankApiService {
     }
 
     /**
-     * 법인 외화 계좌 입금
+     * 법인 계좌 입금
      */
-    public void foreignCurrencyDeposit(String account, Double amount) {
-        executeForeignCurrencyTransfer(FOREIGN_CURRENCY_DEPOSIT_ENDPOINT, account, amount);
+    public void deposit(String account, BigDecimal amount, CurrencyType currencyType) {
+        if(currencyType == CurrencyType.KRW){
+            executeForeignCurrencyTransfer(KOREAN_DEPOSIT_ENDPOINT, account, amount, ApiType.updateDemandDepositAccountDeposit);
+        }else{
+            executeForeignCurrencyTransfer(FOREIGN_CURRENCY_DEPOSIT_ENDPOINT, account, amount, ApiType.updateForeignCurrencyDemandDepositAccountDeposit);
+        }
     }
 
-    /**
-     * 법인 외화 계좌 출금
-     */
-    public void foreignCurrencyWithdraw(String account, Double amount) {
-        executeForeignCurrencyTransfer(FOREIGN_CURRENCY_WITHDRAWAL_ENDPOINT, account, amount);
+    public void withdraw(String account, BigDecimal amount, CurrencyType currencyType){
+        if(currencyType == CurrencyType.KRW){
+            executeForeignCurrencyTransfer(KOREAN_WITHDRAW_ENDPOINT, account, amount, ApiType.updateDemandDepositAccountWithdrawal);
+        }else{
+            executeForeignCurrencyTransfer(FOREIGN_CURRENCY_WITHDRAWAL_ENDPOINT, account, amount, ApiType.updateForeignCurrencyDemandDepositAccountWithdrawal);
+        }
     }
+
 
     /**
      * 법인 외화 계좌 입/출금 작업
      */
-    public void executeForeignCurrencyTransfer(String endpoint, String account, Double amount) {
-        String url = BASE_URL + DEMAND_DEPOSIT_URL + FOREIGN_CURRENCY_URL + endpoint;
-
-        Map<String, Object> requestBody = createApiRequestBody(endpoint, MOYEO_USER_KEY);
+    private void executeForeignCurrencyTransfer(String endpoint, String account, BigDecimal amount, ApiType type) {
+        log.debug("transfer {}, {}", endpoint, type.name());
+        Map<String, Object> requestBody = createApiRequestBody(type.name(), MOYEO_USER_KEY);
         requestBody.put("accountNo", account);
         requestBody.put("transactionBalance", amount);
         requestBody.put("transactionSummary", "외화 <-> 외화");
@@ -141,7 +150,7 @@ public class BankApiService {
         HttpEntity<Map<String, Object>> apiRequest = createHttpEntity(requestBody);
 
         try {
-            restTemplate.postForEntity(url, apiRequest, Map.class);
+            restTemplate.postForEntity(endpoint, apiRequest, Map.class);
         } catch (HttpClientErrorException e) {
             // HTTP 4xx 에러의 응답 body 추출
             log.debug(e.getMessage());
@@ -206,7 +215,7 @@ public class BankApiService {
      * 이체 요청 바디 생성
      */
     private Map<String, Object> createTransferRequestBody(BankTransferDTO dto) {
-        Map<String, Object> requestBody = createApiRequestBody(ENDPOINT, dto.getUserKey());
+        Map<String, Object> requestBody = createApiRequestBody(ApiType.updateDemandDepositAccountTransfer.name(), dto.getUserKey());
         requestBody.put("depositAccountNo", dto.getDepositAccountNo());
         requestBody.put("depositTransactionSummary", dto.getDepositTransactionSummary());
         requestBody.put("transactionBalance", dto.getTransactionBalance());
