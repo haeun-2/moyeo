@@ -16,7 +16,7 @@ import javax.inject.Inject
  */
 class AuthRepositoryImpl @Inject constructor(
     private val authService: AuthService,
-    private val userDataManager: UserDataManager // 입받는 타입을 UserDataManager로 변경
+    private val userDataManager: UserDataManager // 받는 타입을 UserDataManager로 변경
 ) : AuthRepository {
 
     // 실시간 FLow를 그대로 외부에 노출

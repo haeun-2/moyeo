@@ -1,11 +1,19 @@
 package com.d108.moyeo.presentation.ui.screen.exchange
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.domain.repository.ExchangeRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ExchangeHistoryViewModel : ViewModel() {
+@HiltViewModel
+class ExchangeHistoryViewModel @Inject constructor(
+    private val exchangeRepository: ExchangeRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExchangeHistoryUiState())
     val uiState = _uiState.asStateFlow()
@@ -13,13 +21,42 @@ class ExchangeHistoryViewModel : ViewModel() {
     fun loadData(currencyCode: String, mode: String) {
         _uiState.update { it.copy(isLoading = true, currencyCode = currencyCode) }
 
-        // 모드별 샘플 데이터
+        viewModelScope.launch {
+            exchangeRepository.getExchangeRateHistory(currencyCode)
+                .onSuccess { history ->
+                    _uiState.update {
+                        it.copy(
+                            currencyCode = currencyCode,
+                            currentRate = "${history.originalRate.toInt()} ${currencyCode} = 1,000 KRW",
+                            userCount = "1,247명", // 실제로는 API에서 가져와야 함
+                            averageAmount = "245만원", // 실제로는 API에서 가져와야 함
+                            chartData = history.chartData.map { data -> data.rate },
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    }
+                }
+                .onFailure { exception ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = exception.message
+                        )
+                    }
+                    // 에러 발생 시 기본 데이터 로드
+                    loadSampleData(currencyCode, mode)
+                }
+        }
+    }
+
+    /**
+     * 에러 발생 시 기본 샘플 데이터 로드
+     */
+    private fun loadSampleData(currencyCode: String, mode: String) {
         when (mode) {
             "charge" -> loadChargeData(currencyCode)
             "refund" -> loadRefundData(currencyCode)
         }
-
-        _uiState.update { it.copy(isLoading = false) }
     }
 
     private fun loadChargeData(currencyCode: String) {
@@ -54,7 +91,7 @@ class ExchangeHistoryViewModel : ViewModel() {
             )
         }
 
-        _uiState.update { sampleData }
+        _uiState.update { sampleData.copy(isLoading = false) }
     }
 
     private fun loadRefundData(currencyCode: String) {
@@ -89,7 +126,7 @@ class ExchangeHistoryViewModel : ViewModel() {
             )
         }
 
-        _uiState.update { sampleData }
+        _uiState.update { sampleData.copy(isLoading = false) }
     }
 
     fun clearError() {
