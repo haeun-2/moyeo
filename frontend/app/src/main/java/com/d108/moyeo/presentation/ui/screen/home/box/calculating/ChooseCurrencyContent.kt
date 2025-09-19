@@ -23,7 +23,7 @@ import com.d108.moyeo.presentation.theme.onPrimaryLight
 import com.d108.moyeo.presentation.theme.onSurfaceVariantLight
 import com.d108.moyeo.presentation.theme.primaryLight
 import com.d108.moyeo.presentation.theme.surfaceVariantLight
-import com.d108.moyeo.presentation.ui.screen.home.sending.CurrencyData
+import com.d108.moyeo.presentation.ui.screen.home.transfer.CurrencyData
 
 @Composable
 fun ChooseCurrencyContent(

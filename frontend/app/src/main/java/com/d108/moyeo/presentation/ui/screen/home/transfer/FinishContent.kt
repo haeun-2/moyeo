@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.charging
+package com.d108.moyeo.presentation.ui.screen.home.transfer
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,8 +21,7 @@ import com.d108.moyeo.presentation.theme.primaryLight
 import java.text.DecimalFormat
 
 @Composable
-fun FinishContent(viewModel: ChargingViewModel) {
-
+fun FinishContent(viewModel: SendingViewModel) {
     val uiState by viewModel.uiState.collectAsState()
     // 금액에 천 단위 쉼표를 추가하기 위한 포맷터
     val formattedAmount = try {
@@ -38,7 +37,7 @@ fun FinishContent(viewModel: ChargingViewModel) {
     ) {
 
         Text(
-            "충전 완료!",
+            "송금 완료!",
             style = typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -46,6 +45,16 @@ fun FinishContent(viewModel: ChargingViewModel) {
         Spacer(modifier = Modifier.height(Spacing.Medium))
 
         // buildAnnotatedString을 사용하여 텍스트의 특정 부분만 강조합니다.
+        Text(
+            text = buildAnnotatedString {
+                // TODO: targetBox ID를 실제 이름으로 변환하는 로직 필요
+                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append("'${uiState.targetBox}'")
+                }
+                append("(으)로")
+            },
+            style = typography.bodyLarge
+        )
 
         Text(
             text = buildAnnotatedString {
@@ -54,9 +63,9 @@ fun FinishContent(viewModel: ChargingViewModel) {
                     color = primaryLight
                 )
                 ) {
-                    append("$formattedAmount ${uiState.howMuch}")
+                    append("$formattedAmount ${uiState.currency}")
                 }
-                append("원이 충전되었어요")
+                append("를 보냈어요")
             },
             style = typography.bodyLarge
         )

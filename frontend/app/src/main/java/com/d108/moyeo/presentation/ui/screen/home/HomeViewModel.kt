@@ -12,7 +12,7 @@ import com.d108.moyeo.domain.usecase.box.GetGroupBoxesUseCase
 import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import com.d108.moyeo.domain.repository.AuthRepository
 import com.d108.moyeo.presentation.theme.boxAvailableColors
-import com.d108.moyeo.presentation.ui.screen.home.sending.CurrencyData
+import com.d108.moyeo.presentation.ui.screen.home.transfer.CurrencyData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async

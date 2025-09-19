@@ -1,5 +1,6 @@
-package com.d108.moyeo.presentation.ui.screen.home.sending
+package com.d108.moyeo.presentation.ui.screen.home.transfer
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -132,7 +133,7 @@ class SendingViewModel @Inject constructor(
      */
     fun skipBiometrics() {
         // PIN 입력 단계로 이동합니다.
-        _uiState.update { it.copy(currentStep = SendingStep.PIN) }
+        _uiState.update { it.copy(currentStep = TransferStep.PIN) }
     }
 
 
@@ -202,6 +203,8 @@ class SendingViewModel @Inject constructor(
         val amount = state.howMuch.toLongOrNull()
         val currency = state.currency
 
+        Log.d("SendingViewModel", "fromBoxId=$from, toBoxId=$to, amount=$amount, currency=$currency")
+
         // 입력 검증
         if (from == null || to == null || amount == null || currency.isBlank()) {
             _uiState.update { it.copy(pinError = "이체 정보가 올바르지 않습니다.") }
@@ -212,7 +215,7 @@ class SendingViewModel @Inject constructor(
         viewModelScope.launch {
             sendTransfer(fromBoxId = from, toBoxId = to, currency = currency, amount = amount)
                 .onSuccess {
-                    _uiState.update { it.copy(currentStep = SendingStep.FINISH) }
+                    _uiState.update { it.copy(currentStep = TransferStep.FINISH) }
                 }
                 .onFailure { e ->
                     _uiState.update { it.copy(pinError = "이체 실패: ${e.message ?: "알 수 없는 오류"}") }
@@ -228,36 +231,36 @@ class SendingViewModel @Inject constructor(
      */
     fun onNextClicked() {
         when (_uiState.value.currentStep) {
-            SendingStep.TARGET_BOX -> {
-                _uiState.update { it.copy(currentStep = SendingStep.CHOOSE_CURRENCY) }
+            TransferStep.TARGET_BOX -> {
+                _uiState.update { it.copy(currentStep = TransferStep.CHOOSE_CURRENCY) }
             }
-            SendingStep.CHOOSE_CURRENCY -> {
-                _uiState.update { it.copy(currentStep = SendingStep.HOW_MUCH) }
+            TransferStep.CHOOSE_CURRENCY -> {
+                _uiState.update { it.copy(currentStep = TransferStep.HOW_MUCH) }
             }
-            SendingStep.HOW_MUCH -> {
+            TransferStep.HOW_MUCH -> {
                 // 금액 입력 후 다음 버튼을 누르면 인증을 시작합니다.
                 // 사용자가 생체 인식을 설정했는지 확인합니다.
                 if (isBiometricsEnabledByUser) {
                     // 설정했다면, BIOMETRIC 단계로 상태를 바꾸고
-                    _uiState.update { it.copy(currentStep = SendingStep.BIOMETRIC) }
+                    _uiState.update { it.copy(currentStep = TransferStep.BIOMETRIC) }
                     // 화면에 생체 인증 창을 띄우라는 이벤트를 보냅니다.
                     viewModelScope.launch {
                         _navigationEvent.emit(SendingNavEvent.ShowBiometricPrompt)
                     }
                 } else {
                     // 설정하지 않았다면, 바로 PIN 입력 단계로 넘어갑니다.
-                    _uiState.update { it.copy(currentStep = SendingStep.PIN) }
+                    _uiState.update { it.copy(currentStep = TransferStep.PIN) }
                 }
             }
-            SendingStep.BIOMETRIC -> {  // 이 버튼은 사용자가 다 실패하면 뜸
+            TransferStep.BIOMETRIC -> {  // 이 버튼은 사용자가 다 실패하면 뜸
                 skipBiometrics()  // 스킵하고 핀 인증
             }
-            SendingStep.PIN -> {
+            TransferStep.PIN -> {
                 if (!_uiState.value.isPinLocked) {
                     checkPin() // PIN 검증 로직 호출
                 }
             }
-            SendingStep.FINISH -> {
+            TransferStep.FINISH -> {
                 // 완료 화면에서 버튼을 누르면 화면 닫기
                 viewModelScope.launch {
                     _navigationEvent.emit(SendingNavEvent.NavigateBack)
@@ -270,15 +273,15 @@ class SendingViewModel @Inject constructor(
     fun onBackClick() {
         val currentStep = _uiState.value.currentStep
 
-        if (currentStep == SendingStep.TARGET_BOX || currentStep == SendingStep.FINISH) {
+        if (currentStep == TransferStep.TARGET_BOX || currentStep == TransferStep.FINISH) {
             viewModelScope.launch {
                 _navigationEvent.emit(SendingNavEvent.NavigateBack)
             }
         } else {
             val previousStep = when (currentStep) {
-                SendingStep.CHOOSE_CURRENCY -> SendingStep.TARGET_BOX
-                SendingStep.HOW_MUCH -> SendingStep.CHOOSE_CURRENCY
-                SendingStep.BIOMETRIC, SendingStep.PIN -> SendingStep.HOW_MUCH // 인증 단계에서는 금액 입력으로
+                TransferStep.CHOOSE_CURRENCY -> TransferStep.TARGET_BOX
+                TransferStep.HOW_MUCH -> TransferStep.CHOOSE_CURRENCY
+                TransferStep.BIOMETRIC, TransferStep.PIN -> TransferStep.HOW_MUCH // 인증 단계에서는 금액 입력으로
                 else -> currentStep
             }
             _uiState.update { it.copy(currentStep = previousStep) }

@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.sending
+package com.d108.moyeo.presentation.ui.screen.home.transfer
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -117,32 +117,32 @@ fun SendingScreen(
             .weight(1f)
             .padding(Spacing.Medium)) {
             when (uiState.currentStep) {
-                SendingStep.TARGET_BOX -> TargetBoxContent(
+                TransferStep.TARGET_BOX -> TargetBoxContent(
                     boxes = boxes,
                     selectedBoxId = uiState.targetBox,
                     onBoxSelect = viewModel::onTargetBoxSelected
                 )
-                SendingStep.CHOOSE_CURRENCY -> ChooseCurrencyContent(
+                TransferStep.CHOOSE_CURRENCY -> ChooseCurrencyContent(
                     selectedCurrency = uiState.currency,
                     onCurrencySelect = viewModel::onCurrencySelected,
                     currencies = currencies
                 )
                 //  TODO: 뷰모델 이렇게 하는 거 맞아?
-                SendingStep.HOW_MUCH -> HowMuchContent(viewModel = viewModel)
-                SendingStep.BIOMETRIC -> BiometricContent()
-                SendingStep.PIN -> PinContent(viewModel = viewModel)
-                SendingStep.FINISH -> FinishContent(viewModel = viewModel)
+                TransferStep.HOW_MUCH -> HowMuchContent(viewModel = viewModel)
+                TransferStep.BIOMETRIC -> BiometricContent()
+                TransferStep.PIN -> PinContent(viewModel = viewModel)
+                TransferStep.FINISH -> FinishContent(viewModel = viewModel)
             }
 
         }
 
         val isButtonEnabled = when(uiState.currentStep) {
-            SendingStep.TARGET_BOX -> uiState.targetBox.isNotBlank()
-            SendingStep.CHOOSE_CURRENCY -> uiState.currency.isNotBlank()
-            SendingStep.HOW_MUCH -> uiState.howMuch.isNotBlank()
-            SendingStep.BIOMETRIC -> true // 이 단계는 자동 진행되므로 버튼 비활성화도 가능
-            SendingStep.PIN -> uiState.pin.length == 6 // 6자리로 완료
-            SendingStep.FINISH -> true
+            TransferStep.TARGET_BOX -> uiState.targetBox.isNotBlank()
+            TransferStep.CHOOSE_CURRENCY -> uiState.currency.isNotBlank()
+            TransferStep.HOW_MUCH -> uiState.howMuch.isNotBlank()
+            TransferStep.BIOMETRIC -> true // 이 단계는 자동 진행되므로 버튼 비활성화도 가능
+            TransferStep.PIN -> uiState.pin.length == 6 // 6자리로 완료
+            TransferStep.FINISH -> true
         }
 
         Button(
@@ -154,10 +154,10 @@ fun SendingScreen(
         ) {
             // 2. 버튼 텍스트 로직 수정 (SendingStep에 맞게 수정)
             val buttonText = when(uiState.currentStep) {
-                SendingStep.FINISH -> "확인"
-                SendingStep.HOW_MUCH -> "보내기"
-                SendingStep.BIOMETRIC -> "PIN으로 인증하기"  // 어차피 가려지니까 이렇게 하면 될듯
-                SendingStep.PIN -> "인증하기"
+                TransferStep.FINISH -> "확인"
+                TransferStep.HOW_MUCH -> "보내기"
+                TransferStep.BIOMETRIC -> "PIN으로 인증하기"  // 어차피 가려지니까 이렇게 하면 될듯
+                TransferStep.PIN -> "인증하기"
                 else -> "다음"
             }
             Text(buttonText)

@@ -1,6 +1,6 @@
-package com.d108.moyeo.presentation.ui.screen.home.charging
+package com.d108.moyeo.presentation.ui.screen.home.charge
 
-enum class ChargingStep {
+enum class ChargeStep {
     HOW_MUCH, // 얼마를 충전하나요
     BIOMETRIC, // 지문 인증 시도
 
