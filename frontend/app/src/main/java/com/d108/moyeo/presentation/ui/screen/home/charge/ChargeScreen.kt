@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.charging
+package com.d108.moyeo.presentation.ui.screen.home.charge
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -105,18 +105,18 @@ fun ChargingScreen(navController: NavController,
                 .padding(Spacing.Medium)
         ) {
             when (uiState.currentStep) {
-                ChargingStep.HOW_MUCH -> HowMuchContent(viewModel = viewModel)
-                ChargingStep.BIOMETRIC -> BiometricContent()
-                ChargingStep.PIN -> PinContent(viewModel = viewModel)
-                ChargingStep.FINISH -> FinishContent(viewModel = viewModel)
+                ChargeStep.HOW_MUCH -> HowMuchContent(viewModel = viewModel)
+                ChargeStep.BIOMETRIC -> BiometricContent()
+                ChargeStep.PIN -> PinContent(viewModel = viewModel)
+                ChargeStep.FINISH -> FinishContent(viewModel = viewModel)
             }
         }
 
         val isButtonEnabled = when (uiState.currentStep) {
-            ChargingStep.HOW_MUCH -> uiState.howMuch.isNotBlank() && uiState.howMuch != "0"
-            ChargingStep.BIOMETRIC -> true
-            ChargingStep.PIN -> uiState.pin.length == 6
-            ChargingStep.FINISH -> true
+            ChargeStep.HOW_MUCH -> uiState.howMuch.isNotBlank() && uiState.howMuch != "0"
+            ChargeStep.BIOMETRIC -> true
+            ChargeStep.PIN -> uiState.pin.length == 6
+            ChargeStep.FINISH -> true
         }
 
         Button(
@@ -127,10 +127,10 @@ fun ChargingScreen(navController: NavController,
             enabled = isButtonEnabled
         ) {
             val buttonText = when (uiState.currentStep) {
-                ChargingStep.FINISH -> "확인"
-                ChargingStep.HOW_MUCH -> "충전하기"
-                ChargingStep.BIOMETRIC -> "PIN으로 인증하기"
-                ChargingStep.PIN -> "인증하기"
+                ChargeStep.FINISH -> "확인"
+                ChargeStep.HOW_MUCH -> "충전하기"
+                ChargeStep.BIOMETRIC -> "PIN으로 인증하기"
+                ChargeStep.PIN -> "인증하기"
             }
             Text(buttonText)
         }

@@ -27,9 +27,9 @@ import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxDetailScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.calculating.CalculatingScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.collecting.CollectingScreen
-import com.d108.moyeo.presentation.ui.screen.home.charging.ChargingScreen
-import com.d108.moyeo.presentation.ui.screen.home.creating.CreateBoxScreen
-import com.d108.moyeo.presentation.ui.screen.home.sending.SendingScreen
+import com.d108.moyeo.presentation.ui.screen.home.charge.ChargingScreen
+import com.d108.moyeo.presentation.ui.screen.home.create.CreateBoxScreen
+import com.d108.moyeo.presentation.ui.screen.home.transfer.SendingScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChatConsultationScreen

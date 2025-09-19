@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.sending
+package com.d108.moyeo.presentation.ui.screen.home.transfer
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column

@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.charging
+package com.d108.moyeo.presentation.ui.screen.home.charge
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 
 data class ChargingUiState(
-    val currentStep: ChargingStep = ChargingStep.HOW_MUCH,
+    val currentStep: ChargeStep = ChargeStep.HOW_MUCH,
     val howMuch: String = "",
     val pin: String = "",
     // PIN 검증을 위한 상태
@@ -59,11 +59,11 @@ class ChargingViewModel: ViewModel() {
     // --- 인증 관련 함수 ---
     fun onBiometricsSucceeded() {
         // TODO: 실제 서버에 충전 요청 API 호출
-        _uiState.update { it.copy(currentStep = ChargingStep.FINISH) }
+        _uiState.update { it.copy(currentStep = ChargeStep.FINISH) }
     }
 
     fun skipBiometrics() {
-        _uiState.update { it.copy(currentStep = ChargingStep.PIN) }
+        _uiState.update { it.copy(currentStep = ChargeStep.PIN) }
     }
 
     fun onPinInput(digit: String) {
@@ -100,31 +100,31 @@ class ChargingViewModel: ViewModel() {
 
     private fun onPinSucceeded() {
         // TODO: 실제 서버에 충전 요청 API 호출
-        _uiState.update { it.copy(currentStep = ChargingStep.FINISH) }
+        _uiState.update { it.copy(currentStep = ChargeStep.FINISH) }
     }
 
     // --- 내비게이션 로직 ---
     fun onNextClicked() {
         when (_uiState.value.currentStep) {
-            ChargingStep.HOW_MUCH -> {
+            ChargeStep.HOW_MUCH -> {
                 if (isBiometricsEnabledByUser) {
-                    _uiState.update { it.copy(currentStep = ChargingStep.BIOMETRIC) }
+                    _uiState.update { it.copy(currentStep = ChargeStep.BIOMETRIC) }
                     viewModelScope.launch {
                         _navigationEvent.emit(ChargingNavEvent.ShowBiometricPrompt)
                     }
                 } else {
-                    _uiState.update { it.copy(currentStep = ChargingStep.PIN) }
+                    _uiState.update { it.copy(currentStep = ChargeStep.PIN) }
                 }
             }
-            ChargingStep.BIOMETRIC -> {
+            ChargeStep.BIOMETRIC -> {
                 skipBiometrics()
             }
-            ChargingStep.PIN -> {
+            ChargeStep.PIN -> {
                 if (!_uiState.value.isPinLocked) {
                     checkPin()
                 }
             }
-            ChargingStep.FINISH -> {
+            ChargeStep.FINISH -> {
                 viewModelScope.launch {
                     _navigationEvent.emit(ChargingNavEvent.NavigateBack)
                 }
@@ -134,12 +134,12 @@ class ChargingViewModel: ViewModel() {
 
     fun onBackClick() {
         val currentStep = _uiState.value.currentStep
-        if (currentStep == ChargingStep.HOW_MUCH || currentStep == ChargingStep.FINISH) {
+        if (currentStep == ChargeStep.HOW_MUCH || currentStep == ChargeStep.FINISH) {
             viewModelScope.launch {
                 _navigationEvent.emit(ChargingNavEvent.NavigateBack)
             }
         } else {
-            _uiState.update { it.copy(currentStep = ChargingStep.HOW_MUCH) }
+            _uiState.update { it.copy(currentStep = ChargeStep.HOW_MUCH) }
         }
     }
 

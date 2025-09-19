@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.creating
+package com.d108.moyeo.presentation.ui.screen.home.create
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons

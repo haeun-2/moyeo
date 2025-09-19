@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.charging
+package com.d108.moyeo.presentation.ui.screen.home.charge
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column

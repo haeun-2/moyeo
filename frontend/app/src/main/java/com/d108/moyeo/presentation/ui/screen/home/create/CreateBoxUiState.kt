@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.creating
+package com.d108.moyeo.presentation.ui.screen.home.create
 
 data class CreateBoxUiState(
     val name: String = "",

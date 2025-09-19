@@ -2,7 +2,7 @@ package com.d108.moyeo.core
 
 import androidx.compose.ui.graphics.Color
 import com.d108.moyeo.presentation.ui.screen.home.GroupBox
-import com.d108.moyeo.presentation.ui.screen.home.sending.CurrencyData
+import com.d108.moyeo.presentation.ui.screen.home.transfer.CurrencyData
 import com.d108.moyeo.util.textColorUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

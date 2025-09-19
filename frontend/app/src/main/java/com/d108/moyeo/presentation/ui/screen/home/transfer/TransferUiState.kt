@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.sending
+package com.d108.moyeo.presentation.ui.screen.home.transfer
 
 /**
  * 이체 화면의 상태(State)를 정의합니다.
@@ -9,7 +9,7 @@ package com.d108.moyeo.presentation.ui.screen.home.sending
  * @property howMuch 사용자가 입력한 보낼 금액
  */
 data class SendingUiState(
-    val currentStep: SendingStep = SendingStep.TARGET_BOX,
+    val currentStep: TransferStep = TransferStep.TARGET_BOX,
     val currency: String = "",
     val targetBox: String = "",
     val howMuch: String = "",
