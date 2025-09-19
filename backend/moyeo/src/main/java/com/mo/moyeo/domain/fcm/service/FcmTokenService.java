@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -76,5 +77,12 @@ public class FcmTokenService {
     public FcmToken getActiveToken(Long userId) {
         return fcmTokenRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.FCM_TOKEN_NOT_FOUND));
+    }
+
+    /**
+     * 모여 박스 멤버 토큰 전체 조회
+     */
+    public List<String> getGroupMemberTokens(Long boxId) {
+        return fcmTokenRepository.findDeviceTokensByBoxId(boxId);
     }
 }

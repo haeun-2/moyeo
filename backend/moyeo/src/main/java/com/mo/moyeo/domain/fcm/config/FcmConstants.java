@@ -26,6 +26,7 @@ public final class FcmConstants {
     public static final String DATA_BODY = "body";
     public static final String DATA_TYPE = "type";
     public static final String DATA_TIMESTAMP = "timestamp";
+    public static final String DATA_BOX = "box";
 
     /**
      * 배치 크기
