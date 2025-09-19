@@ -23,6 +23,11 @@ import java.text.DecimalFormat
 @Composable
 fun FinishContent(viewModel: TransferViewModel) {
     val uiState by viewModel.uiState.collectAsState()
+    val groupBoxes = viewModel.groupBoxesUi.collectAsState(initial = emptyList()).value
+
+    val targetBoxId = uiState.targetBox
+    val targetBoxName = groupBoxes.find { it.id == targetBoxId }?.title ?: "알 수 없는 박스"
+
     // 금액에 천 단위 쉼표를 추가하기 위한 포맷터
     val formattedAmount = try {
         DecimalFormat("#,###").format(uiState.howMuch.toLong())
@@ -47,9 +52,8 @@ fun FinishContent(viewModel: TransferViewModel) {
         // buildAnnotatedString을 사용하여 텍스트의 특정 부분만 강조합니다.
         Text(
             text = buildAnnotatedString {
-                // TODO: targetBox ID를 실제 이름으로 변환하는 로직 필요
                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append("'${uiState.targetBox}'")
+                    append("$targetBoxName ")
                 }
                 append("(으)로")
             },
