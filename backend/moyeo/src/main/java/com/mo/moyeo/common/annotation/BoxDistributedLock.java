@@ -17,6 +17,6 @@ public @interface BoxDistributedLock {
 
     long waitTime() default 5; // 락 획득 대기 시간
 
-    long leaseTime() default 3; // 락 자동 해제 시간
+    long leaseTime() default 10; // 락 자동 해제 시간
 
 }

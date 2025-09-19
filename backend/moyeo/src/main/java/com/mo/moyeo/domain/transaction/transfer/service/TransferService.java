@@ -1,5 +1,7 @@
 package com.mo.moyeo.domain.transaction.transfer.service;
 
+import com.mo.moyeo.common.annotation.BoxDistributedLock;
+import com.mo.moyeo.common.annotation.BoxLockParam;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.domain.box.box.entity.Box;
@@ -39,7 +41,10 @@ public class TransferService {
     private final BoxHistoryService boxHistoryService;
     private final CategoryCacheService categoryCacheService;
 
-    @Transactional
+    @BoxDistributedLock({
+            @BoxLockParam(boxId = "#request.fromBoxId", currencyCode = "#request.currency"),
+            @BoxLockParam(boxId = "#request.toBoxId", currencyCode = "#request.currency"),
+    })
     public void transfer(User user, TransferRequest request) {
         // 요청 검증
         if (request.getFromBoxId().equals(request.getToBoxId())) {

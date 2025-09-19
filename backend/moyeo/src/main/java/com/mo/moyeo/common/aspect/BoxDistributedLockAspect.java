@@ -2,25 +2,17 @@ package com.mo.moyeo.common.aspect;
 
 import com.mo.moyeo.common.annotation.BoxDistributedLock;
 import com.mo.moyeo.common.annotation.BoxLockParam;
-import com.mo.moyeo.common.annotation.DistributedLock;
-import com.mo.moyeo.common.exception.CustomException;
-import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.common.util.CustomSpringELParser;
+import com.mo.moyeo.common.util.lock.LockManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.redisson.RedissonMultiLock;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Aspect
 @Component
@@ -28,9 +20,9 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class BoxDistributedLockAspect {
 
-    private static final String BOX_LOCK_PREFIX = "box:";
+    private final LockManager lockManager;
 
-    private final DistributedLockAspect distributedLockAspect;
+    private static final String BOX_LOCK_PREFIX = "box:";
 
     @Around("@annotation(com.mo.moyeo.common.annotation.BoxDistributedLock)")
     public Object lock(final ProceedingJoinPoint joinPoint) throws Throwable {
@@ -44,20 +36,30 @@ public class BoxDistributedLockAspect {
             throw new IllegalArgumentException("@BoxDistributedLock lockParams 값이 비어있습니다. " + method.getName());
         }
 
-        // 2. BoxLockParam을 기반으로 락 키 배열 생성
-        String[] lockKeys = Arrays.stream(lockParams)
-                .map(param -> {
-                    // SpEL 파싱으로 boxId와 currency 값 추출
-                    String boxId = CustomSpringELParser.getParsedKey(signature.getParameterNames(), joinPoint.getArgs(), param.boxId());
-                    String currencyCode = CustomSpringELParser.getParsedKey(signature.getParameterNames(), joinPoint.getArgs(), param.currencyCode());
+        // 2. boxId, currencyCode 배열 생성
+        String[] boxIds = new String[lockParams.length];
+        String[] currencyCodes = new String[lockParams.length];
 
-                    // 락 키 생성: "box:{boxId}:{currencyCode}"
-                    return BOX_LOCK_PREFIX + boxId + ":" + currencyCode;
-                })
-                .toArray(String[]::new);
+        for (int i = 0; i < lockParams.length; i++) {
+            String boxIdKey = lockParams[i].boxId();
+            boxIds[i] = boxIdKey.startsWith("#")
+                    ? CustomSpringELParser.getParsedKey(signature.getParameterNames(), joinPoint.getArgs(), boxIdKey)
+                    : boxIdKey;
 
-        // 3. 공통 락 로직 실행
-        return distributedLockAspect.executeLockWithKeys(joinPoint, lockKeys, boxDistributedLock.waitTime(), boxDistributedLock.leaseTime(), boxDistributedLock.timeUnit());
+            String currencyKey = lockParams[i].currencyCode();
+            currencyCodes[i] = currencyKey.startsWith("#")
+                    ? CustomSpringELParser.getParsedKey(signature.getParameterNames(), joinPoint.getArgs(), currencyKey)
+                    : currencyKey;
+        }
+
+        // 3. 락 key 배열 생성
+        String[] keys = new String[boxIds.length];
+        for (int i = 0; i < boxIds.length; i++) {
+            keys[i] = BOX_LOCK_PREFIX + boxIds[i] + ":" + currencyCodes[i];
+        }
+
+        // 3. LockManager로 락 수행
+        return lockManager.executeWithLock(keys, boxDistributedLock.waitTime(), boxDistributedLock.leaseTime(), boxDistributedLock.timeUnit(), joinPoint::proceed);
     }
 
 }

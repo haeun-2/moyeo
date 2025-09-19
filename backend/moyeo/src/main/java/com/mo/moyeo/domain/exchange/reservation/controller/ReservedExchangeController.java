@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -36,7 +35,8 @@ public class ReservedExchangeController {
     @Operation(summary = "박스에 걸린 예약환전 조회", description = "박스에 걸렸던 예약환전 목록 조회")
     public ResponseEntity<List<ExchangeReserveListDto>> getReservations(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @RequestParam Long boxId){
+            @PathVariable Long boxId
+    ) {
         User user = customUserDetails.getUser();
         return ResponseEntity.ok(reservedExchangeService.getReservations(user, boxId));
     }
@@ -45,7 +45,7 @@ public class ReservedExchangeController {
     @Operation(summary = "예약 환전 취소", description = "예약 환전 취소.")
     public ResponseEntity<?> cancelReservation(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @RequestParam Long reservationId
+            @PathVariable Long reservationId
     ){
         User user = customUserDetails.getUser();
         reservedExchangeService.cancelReservation(user, reservationId);

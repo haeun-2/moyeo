@@ -2,6 +2,7 @@ package com.mo.moyeo.domain.transaction.bank.service;
 
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
+import com.mo.moyeo.common.util.lock.LockManager;
 import com.mo.moyeo.domain.bank.service.BankService;
 import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
@@ -31,6 +32,7 @@ public class BankTransactionService {
 
     private final BankTransactionRepository bankTransactionRepository;
 
+    private final LockManager lockManager;
     private final BoxBalanceService boxBalanceService;
     private final TransactionService transactionService;
     private final BoxService boxService;
@@ -47,7 +49,7 @@ public class BankTransactionService {
      */
     @Transactional
     public BankTransactionResponse charge(User user, DepositRequest request) {
-        return processBankTransaction(user, request.getBalance(), Transaction.Type.DEPOSIT);
+        return lockBankTransaction(user, request.getBalance(), Transaction.Type.DEPOSIT);
     }
 
     /**
@@ -55,15 +57,22 @@ public class BankTransactionService {
      */
     @Transactional
     public BankTransactionResponse discharge(User user, WithdrawRequest request) {
-        return processBankTransaction(user, request.getBalance(), Transaction.Type.WITHDRAW);
+        return lockBankTransaction(user, request.getBalance(), Transaction.Type.WITHDRAW);
+    }
+
+    private BankTransactionResponse lockBankTransaction(User user, BigDecimal amount, Transaction.Type type) {
+        Box box = boxService.getPersonalBoxByUserId(user.getId());
+
+        return lockManager.executeWithLock(
+                new String[]{"box:" + box.getId() + ":KRW"},
+                () -> processBankTransaction(user, box, amount, type)
+        );
     }
 
     /**
      * 트랜잭션 생성 & 거래 처리
      */
-    private BankTransactionResponse processBankTransaction(User user, BigDecimal amount, Transaction.Type type) {
-        Box box = boxService.getPersonalBoxByUserId(user.getId());
-
+    private BankTransactionResponse processBankTransaction(User user, Box box, BigDecimal amount, Transaction.Type type) {
         // 트랜잭션 생성
         Transaction transaction = (type == Transaction.Type.DEPOSIT)
                 ? transactionService.makeDepositTransaction(box, user)
@@ -92,7 +101,6 @@ public class BankTransactionService {
                 boxBalance.increaseBalance(amount);
             } else {
                 boxBalance.decreaseBalance(amount);
-                amount.subtract(amount);
             }
 
             // 히스토리 기록
