@@ -91,10 +91,10 @@ public class PaymentService {
 
         // 매핑 저장
         String tokenBoxKey = TOKEN_BOX_KEY + ":" + token; // 예: "payment_tokens:abc123"
-        redisTemplate.opsForValue().set(tokenBoxKey, String.valueOf(boxId), Duration.ofSeconds(30));
+        redisTemplate.opsForValue().set(tokenBoxKey, String.valueOf(boxId), Duration.ofSeconds(3600));
 
         String tokenUserKey = TOKEN_USER_KEY + ":" + token; // 예: "payment_tokens:abc123"
-        redisTemplate.opsForValue().set(tokenUserKey, String.valueOf(user.getId()), Duration.ofSeconds(30));
+        redisTemplate.opsForValue().set(tokenUserKey, String.valueOf(user.getId()), Duration.ofSeconds(3600));
         return token;
     }
 

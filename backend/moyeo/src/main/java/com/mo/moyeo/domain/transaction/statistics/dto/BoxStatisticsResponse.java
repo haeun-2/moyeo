@@ -33,7 +33,7 @@ public class BoxStatisticsResponse {
                     .categoryId(dto.getCategoryId())
                     .category(dto.getCategory().getLabel())
                     .amount(dto.getAmount())
-                    .ratio(dto.getAmount().divide(totalAmount, 4, RoundingMode.HALF_UP)) // BigDecimal 나눗셈
+                    .ratio(dto.getAmount().divide(totalAmount, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100))) // BigDecimal 나눗셈
                     .build();
         }
     }
