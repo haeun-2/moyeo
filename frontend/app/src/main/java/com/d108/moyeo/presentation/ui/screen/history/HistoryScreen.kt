@@ -33,9 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +52,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.ui.component.common.DateRangePickerModal
+import com.d108.moyeo.presentation.ui.component.history.MainPieChart
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -209,15 +208,24 @@ fun HistoryScreen(navController: NavController,
 
             Spacer(modifier = Modifier.height(Spacing.SmallMedium))
 
-            // 2. 원형 그래프 (임시 플레이스홀더)
-            Box(
-                modifier = Modifier
-                    .size(214.dp)  // 이 크기를 상수화 할 것!!
-                    .clip(CircleShape)
-                    .background(surfaceLight),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("원형 그래프")
+            // 2. 원형 그래프
+            if (uiState.currentStats?.content?.isNotEmpty() == true) {
+                val totalAmount = uiState.currentStats!!.content.sumOf { it.amount }
+                MainPieChart(
+                    stats = uiState.currentStats!!.content,
+                    totalAmount = totalAmount,
+                    currency = uiState.selectedCurrency ?: "원"
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(214.dp)
+                        .clip(CircleShape)
+                        .background(surfaceLight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("", style = Typography.bodyMedium)
+                }
             }
 
             Spacer(modifier = Modifier.height(Spacing.Medium))
@@ -274,7 +282,10 @@ fun HistoryScreen(navController: NavController,
                     verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
                 ) {
                     items(items = uiState.currentStats?.content ?: emptyList()) { statItem ->
-                        HistoryItem(stat = statItem)
+                        HistoryItem(
+                            stat = statItem,
+                            allStats = uiState.currentStats?.content ?: emptyList(),
+                            currencyUnit = uiState.selectedCurrency)
                     }
                 }
             }

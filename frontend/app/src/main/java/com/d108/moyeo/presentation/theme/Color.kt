@@ -86,3 +86,18 @@ val boxAvailableColors = listOf(
     Color(0xFFD2B6FF), Color(0xFF63B5B1), Color(0xFF74D0C1), Color(0xFF7FB77E),
     Color(0xFFA9C266), Color(0xFFC9E39A), Color(0xFFFFC9C9), Color(0xFFB89563)
 )
+
+val chartColors = listOf(
+    Color(0xFF6366F1),
+    Color(0xFFEC4899),
+    Color(0xFF8B5CF6),
+    Color(0xFFF59E0B),
+    Color(0xFF10B981),
+    Color(0xFF3B82F6),
+    Color(0xFFEF4444),
+    Color(0xFF84CC16),
+    Color(0xFFFF6B6B),
+    Color(0xFF4ECDC4),
+    Color(0xFF45B7D1),
+    Color(0xFF96CEB4)
+)
