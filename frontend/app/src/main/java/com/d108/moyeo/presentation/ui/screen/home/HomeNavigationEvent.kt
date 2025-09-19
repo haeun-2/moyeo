@@ -6,5 +6,5 @@ sealed class HomeNavigationEvent {
     data class NavigateToMyBox(val boxId: Long, val bgColor: Int) : HomeNavigationEvent()
     data class NavigateToTransfer(val currencyId: String) : HomeNavigationEvent()
     // 기본 통화는 KRW
-    data class NavigateToCollecting(val boxId: Long, val currencyId: String = "KRW"): HomeNavigationEvent()
+    data class NavigateToDeposit(val boxId: Long, val currencyId: String = "KRW"): HomeNavigationEvent()
 }

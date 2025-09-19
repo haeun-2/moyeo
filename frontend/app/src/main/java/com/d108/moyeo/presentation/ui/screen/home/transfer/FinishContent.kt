@@ -25,6 +25,10 @@ fun FinishContent(viewModel: TransferViewModel) {
     val uiState by viewModel.uiState.collectAsState()
     val groupBoxes = viewModel.groupBoxesUi.collectAsState(initial = emptyList()).value
 
+    val isDeposit = uiState.mode == TransferMode.DEPOSIT
+    val titleText = if (isDeposit) "입금 완료!" else "이체 완료!"
+    val tailVerb = if (isDeposit) "를 입금했어요" else "를 이체했어요"
+
     val targetBoxId = uiState.targetBox
     val targetBoxName = groupBoxes.find { it.id == targetBoxId }?.title ?: "알 수 없는 박스"
 
@@ -41,11 +45,7 @@ fun FinishContent(viewModel: TransferViewModel) {
         modifier = Modifier.fillMaxSize()
     ) {
 
-        Text(
-            "송금 완료!",
-            style = typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
+        Text(titleText, style = typography.titleMedium, fontWeight = FontWeight.Bold)
 
         Spacer(modifier = Modifier.height(Spacing.Medium))
 
@@ -69,7 +69,7 @@ fun FinishContent(viewModel: TransferViewModel) {
                 ) {
                     append("$formattedAmount ${uiState.currency}")
                 }
-                append("를 보냈어요")
+                append(tailVerb)
             },
             style = typography.bodyLarge
         )

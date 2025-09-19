@@ -22,6 +22,12 @@ import java.text.DecimalFormat
 fun HowMuchContent(viewModel: TransferViewModel) {
 
     val uiState by viewModel.uiState.collectAsState()
+    val title = if (uiState.mode == TransferMode.DEPOSIT) {
+        "입금할 금액을\n입력해주세요"
+    } else {
+        "이체할 금액을\n입력해주세요"
+    }
+
 
     // 입력된 숫자 문자열을 천 단위 쉼표가 있는 형식으로 변환합니다.
     // TODO: 이거 유틸로 뺄 수 있지 않나? 일단 보류
@@ -39,7 +45,7 @@ fun HowMuchContent(viewModel: TransferViewModel) {
 
     Column {
         Text(
-            text = "보낼 금액을\n입력해주세요",
+            text = title,
             style = Typography.titleLarge,
         )
 
