@@ -3,6 +3,8 @@ package com.mo.moyeo.domain.box.member.service;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.domain.box.box.entity.Box;
+import com.mo.moyeo.domain.box.box.repository.BoxRepository;
+import com.mo.moyeo.domain.box.box.service.BoxService;
 import com.mo.moyeo.domain.box.member.dto.BoxPermissionDto;
 import com.mo.moyeo.domain.box.member.entity.BoxMember;
 import com.mo.moyeo.domain.box.member.repository.BoxMemberRepository;
@@ -19,6 +21,7 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class BoxMemberService {
 
+    private final BoxService boxRepository;
     private final BoxMemberRepository boxMemberRepository;
 
     public BoxPermissionDto getBoxPermission(Box box, User user){
@@ -67,8 +70,9 @@ public class BoxMemberService {
         return boxMemberRepository.findJoinedByBoxIdAndUserId(boxId, userId).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
     }
 
-    public void validateJoinedBoxMember(Long boxId, Long userId) {
-        if (!boxMemberRepository.existsJoinedBoxMember(boxId, userId)) {
+    public void validateJoinedBoxMember(Box box, User user) {
+        if (box.isPersonalOwner(user.getId())) return;
+        if (!boxMemberRepository.existsJoinedBoxMember(box, user)) {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
     }

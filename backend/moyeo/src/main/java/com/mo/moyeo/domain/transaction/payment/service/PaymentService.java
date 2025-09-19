@@ -3,6 +3,7 @@ package com.mo.moyeo.domain.transaction.payment.service;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.common.util.finance_api.AccountUtil;
+import com.mo.moyeo.common.util.lock.LockManager;
 import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
 import com.mo.moyeo.domain.box.balance.service.BoxBalanceService;
@@ -55,6 +56,7 @@ public class PaymentService {
     private final BoxHistoryService boxHistoryService;
     private final UserService userService;
     private final CurrencyService currencyService;
+    private final LockManager lockManager;
 
     // 랜덤 시드 생성
     private static final SecureRandom random = new SecureRandom();
@@ -117,7 +119,22 @@ public class PaymentService {
 
     @Transactional
     public void payment(PaymentRequestDto paymentRequestDto) {
+        lockPaymentTransaction(paymentRequestDto);
+    }
+
+    public void lockPaymentTransaction(PaymentRequestDto paymentRequestDto) {
         Long boxId = getTokenBoxId(paymentRequestDto.token());
+
+        lockManager.executeWithLock(
+                new String[]{"box:" + boxId + ":" + paymentRequestDto.currencyType()},
+                () -> {
+                    processPaymentTransaction(boxId, paymentRequestDto);
+                    return null;
+                }
+        );
+    }
+
+    public void processPaymentTransaction(Long boxId, PaymentRequestDto paymentRequestDto) {
         Long userId = getTokenUserId(paymentRequestDto.token());
         User user = userService.getById(userId);
 

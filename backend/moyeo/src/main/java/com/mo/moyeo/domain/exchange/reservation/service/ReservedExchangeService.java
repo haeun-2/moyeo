@@ -1,7 +1,10 @@
 package com.mo.moyeo.domain.exchange.reservation.service;
 
+import com.mo.moyeo.common.annotation.BoxDistributedLock;
+import com.mo.moyeo.common.annotation.BoxLockParam;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
+import com.mo.moyeo.common.util.lock.LockManager;
 import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
 import com.mo.moyeo.domain.box.balance.service.BoxBalanceService;
@@ -48,7 +51,12 @@ public class ReservedExchangeService {
     private final ExchangeService exchangeService;
     private final ExchangeRateCacheService exchangeRateCacheService;
     private final CategoryCacheService categoryCacheService;
+    private final LockManager lockManager;
 
+    @BoxDistributedLock({
+            @BoxLockParam(boxId = "#exchangeReserveDto.boxId", currencyCode = "#exchangeReserveDto.fromCurrency"),
+            @BoxLockParam(boxId = "#exchangeReserveDto.boxId", currencyCode = "#exchangeReserveDto.toCurrency")
+    })
     @Transactional
     public void reserveExchange(User user, ExchangeReserveDto exchangeReserveDto) {
         Box box = boxService.getBoxById(exchangeReserveDto.boxId());
@@ -61,6 +69,7 @@ public class ReservedExchangeService {
         ReservedExchange reservedExchange =
                 ReservedExchange.builder()
                         .box(box)
+                        .user(user)
                         .transaction(transaction)
                         .fromCurrency(fromCurrency)
                         .toCurrency(toCurrency)
@@ -113,14 +122,29 @@ public class ReservedExchangeService {
 
     public List<ExchangeReserveListDto> getReservations(User user, Long boxId) {
         //멤버인지 체크하기
-        boxMemberService.validateJoinedBoxMember(boxId, user.getId());
+        Box box = boxService.getBoxById(boxId);
+        boxMemberService.validateJoinedBoxMember(box, user);
         return reservedExchangeRepository.findReservationList(boxId);
     }
 
     @Transactional
     public void cancelReservation(User user, Long reservationId) {
         ReservedExchange reservedExchange = getReservationById(reservationId);
-        boxMemberService.validateJoinedBoxMember(reservedExchange.getBox().getId(), user.getId());
+
+        Long boxId = reservedExchange.getBox().getId();
+        CurrencyType currencyCode = reservedExchange.getFromCurrency().getCode();
+
+        lockManager.executeWithLock(
+                new String[]{"box:" + boxId + ":" + currencyCode},
+                () -> {
+                    processCancelReservation(reservedExchange, user);
+                    return null;
+                }
+        );
+    }
+
+    public void processCancelReservation(ReservedExchange reservedExchange, User user) {
+        boxMemberService.validateJoinedBoxMember(reservedExchange.getBox(), user);
 
         reservedExchange.cancelReservation();
 
@@ -132,7 +156,7 @@ public class ReservedExchangeService {
         );
         fromBoxBalance.increaseBalance(amount);
 
-    // 트랜잭션 및 내역 저장
+        // 트랜잭션 및 내역 저장
         Transaction transaction = transactionService.makeExchangeReservationTransaction(
                 reservedExchange.getBox(), user
         );
@@ -188,6 +212,9 @@ public class ReservedExchangeService {
     }
 
 
+    @BoxDistributedLock({
+            @BoxLockParam(boxId = "#reservedExchange.box.id", currencyCode = "reservedExchange.fromCurrency.code")
+    })
     private void completeReservation(ReservedExchange reservedExchange) {
         //완성 처리
         reservedExchange.completeReservation();

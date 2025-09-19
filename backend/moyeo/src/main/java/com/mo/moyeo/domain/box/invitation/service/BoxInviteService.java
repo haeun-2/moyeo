@@ -38,7 +38,7 @@ public class BoxInviteService {
 
     public BoxInviteResponse createBoxInviteLink(Long boxId, User user) {
         Box box = boxService.getBoxById(boxId);
-        boxMemberService.validateJoinedBoxMember(boxId, user.getId());
+        boxMemberService.validateJoinedBoxMember(box, user);
 
         // 1. UUID로 초대코드 생성
         String inviteCode = UUID.randomUUID().toString();

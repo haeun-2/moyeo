@@ -1,14 +1,16 @@
 package com.mo.moyeo.domain.transaction.exchange.service;
 
+import com.mo.moyeo.common.annotation.BoxDistributedLock;
+import com.mo.moyeo.common.annotation.BoxLockParam;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.common.util.batch.BatchInsert;
 import com.mo.moyeo.common.util.finance_api.AccountUtil;
-import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
 import com.mo.moyeo.domain.box.balance.service.BoxBalanceService;
-import com.mo.moyeo.domain.box.member.service.BoxMemberService;
+import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.box.box.service.BoxService;
+import com.mo.moyeo.domain.box.member.service.BoxMemberService;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.service.CurrencyService;
 import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
@@ -47,6 +49,10 @@ public class ExchangeService {
     private final BatchInsert batchInsert;
     private final CategoryCacheService categoryCacheService;
 
+    @BoxDistributedLock({
+            @BoxLockParam(boxId = "#exchangeRequestDto.fromBoxId", currencyCode = "#exchangeRequestDto.fromCurrency"),
+            @BoxLockParam(boxId = "#exchangeRequestDto.fromBoxId", currencyCode = "#exchangeRequestDto.toCurrency")
+    })
     @Transactional
     public void exchange(User user, ExchangeRequestDto exchangeRequestDto) {
         Box box = boxService.getBoxById(exchangeRequestDto.getFromBoxId());

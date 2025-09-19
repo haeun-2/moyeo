@@ -79,10 +79,10 @@ public interface BoxMemberRepository extends JpaRepository<BoxMember, Long> {
     @Query("""
         SELECT CASE WHEN COUNT(bm) > 0 THEN true ELSE false END
         FROM BoxMember bm
-        WHERE bm.box.id = :boxId
-          AND bm.user.id = :userId
+        WHERE bm.box = :box
+          AND bm.user = :user
           AND bm.status = 'JOINED'
     """)
-    boolean existsJoinedBoxMember(@Param("boxId") Long boxId, @Param("userId") Long userId);
+    boolean existsJoinedBoxMember(Box box, User user);
 
 }
