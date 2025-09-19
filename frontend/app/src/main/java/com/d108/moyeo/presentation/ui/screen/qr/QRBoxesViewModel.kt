@@ -2,7 +2,8 @@ package com.d108.moyeo.presentation.ui.screen.qr
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.d108.moyeo.domain.model.box.Box
+import com.d108.moyeo.core.BoxStore
+import com.d108.moyeo.core.BoxStoreUiState
 import com.d108.moyeo.domain.usecase.box.AddBookmarkUseCase
 import com.d108.moyeo.domain.usecase.box.GetGroupBoxesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,10 +23,12 @@ sealed class QRBoxesNavEvent {
 @HiltViewModel
 class QRBoxesViewModel @Inject constructor(
     private val getGroupBoxesUseCase: GetGroupBoxesUseCase,
-    private val addBookmarkUseCase: AddBookmarkUseCase
+    private val addBookmarkUseCase: AddBookmarkUseCase,
+    private val boxStore: BoxStore  // 새롭게 박스 스토어를 주입받음
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(QRBoxesUiState())
     val uiState = _uiState.asStateFlow()
+    val groupBoxesUi = boxStore.groupBoxesUi  // 이미 스테이트플로우 처리가 되어서 들어옴
 
     private val _navigationEvent = MutableSharedFlow<QRBoxesNavEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
@@ -49,7 +52,7 @@ class QRBoxesViewModel @Inject constructor(
         }
     }
 
-    fun onBoxClick(box: Box) {
+    fun onBoxClick(box: BoxStoreUiState) {
         // 이미 북마크된 박스는 선택 불가
         if (box.isBookmarked) return
 

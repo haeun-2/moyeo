@@ -98,7 +98,7 @@ class TransferViewModel @Inject constructor(
     /**
      * 사용자가 보낼 박스를 선택했을 때 호출됩니다.
      */
-    fun onTargetBoxSelected(boxId: String) {
+    fun onTargetBoxSelected(boxId: Long) {
         _uiState.update { currentState ->
             currentState.copy(targetBox = boxId)
         }
@@ -199,7 +199,7 @@ class TransferViewModel @Inject constructor(
         if (isSubmitting) return
         val state = _uiState.value
         val from = myPersonalBoxId
-        val to = state.targetBox.toLongOrNull()
+        val to = state.targetBox
         val amount = state.howMuch.toLongOrNull()
         val currency = state.currency
 

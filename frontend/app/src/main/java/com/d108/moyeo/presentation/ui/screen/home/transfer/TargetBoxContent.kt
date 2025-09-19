@@ -35,8 +35,8 @@ import com.d108.moyeo.presentation.theme.surfaceLight
 
 @Composable
 fun TargetBoxContent(
-    selectedBoxId: String,
-    onBoxSelect: (String) -> Unit,
+    selectedBoxId: Long,
+    onBoxSelect: (Long) -> Unit,
     boxes: List<BoxStoreUiState> // textColor 가 추가된 모임 박스 목록
 ) {
 

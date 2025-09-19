@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,7 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.d108.moyeo.domain.model.box.Box
+import com.d108.moyeo.core.BoxStoreUiState
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.onSurfaceVariantLight
@@ -34,7 +33,7 @@ import com.d108.moyeo.presentation.theme.surfaceVariantLight
 
 @Composable
 fun GridMoyeoBoxesItem(
-    box: Box,
+    box: BoxStoreUiState,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -82,7 +81,7 @@ fun GridMoyeoBoxesItem(
 
             // 오른쪽엔 이 모여 박스의 이름. 이 모여 박스의 이름이 남은 공간을 모두 차지함
             Text(
-                text = box.name,
+                text = box.title,
                 style = Typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 maxLines = 2,
