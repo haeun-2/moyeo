@@ -150,7 +150,7 @@ public class PaymentService {
         BoxHistory boxHistory = BoxHistory.builder()
                 .box(box)
                 .transaction(transaction)
-                .amount(paymentRequestDto.amount())
+                .amount(paymentRequestDto.amount().negate())
                 .currencyCode(paymentRequestDto.currencyType())
                 .totalAmount(boxBalance.getBalance())
                 .type(Transaction.Type.PAYMENT)
