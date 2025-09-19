@@ -164,10 +164,7 @@ class HistoryViewModel @Inject constructor(
             }
         } else { // 전체 모드
             // 캐시된 전체 기간 데이터 사용
-            val selectedCurrency = currentState.selectedCurrency
-            _uiState.update {
-                it.copy(currentStats = it.allPeriodStatsMap[selectedCurrency])
-            }
+            loadAllPeriodStats(_uiState.value.selectedBoxId!!)
         }
     }
 
