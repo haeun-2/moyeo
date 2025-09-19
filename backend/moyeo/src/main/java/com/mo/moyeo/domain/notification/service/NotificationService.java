@@ -30,6 +30,7 @@ public class NotificationService {
                 .transactionId(transactionId)
                 .title(message.getTitle())
                 .body(message.getBody())
+                .data(message.getData())
                 .receivedAt(LocalDateTime.now())
                 .build();
 

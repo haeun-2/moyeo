@@ -21,7 +21,7 @@ public class FcmMessageBuilder {
         Map<String, String> data = new HashMap<>();
         data.put(FcmConstants.DATA_TITLE, message.getTitle());
         data.put(FcmConstants.DATA_BODY, message.getBody());
-        data.put(FcmConstants.DATA_TYPE, message.getType().toString());
+        data.put(FcmConstants.DATA_TYPE, message.getType());
         data.put(FcmConstants.DATA_TIMESTAMP, LocalDateTime.now().toString());
         if(message.getData() != null) data.putAll(message.getData());
         return data;

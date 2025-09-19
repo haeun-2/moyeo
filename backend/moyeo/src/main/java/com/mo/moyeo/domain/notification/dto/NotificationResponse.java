@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Getter
 @Builder
@@ -17,6 +18,7 @@ public class NotificationResponse {
     private Long transactionId;
     private String title;
     private String body;
+    private Map<String, String> data;
     private LocalDateTime receivedAt;
 
     public static NotificationResponse from(Notification notification) {
@@ -24,6 +26,7 @@ public class NotificationResponse {
                 .transactionId(notification.getTransactionId())
                 .title(notification.getTitle())
                 .body(notification.getBody())
+                .data(notification.getData())
                 .receivedAt(notification.getReceivedAt())
                 .build();
     }

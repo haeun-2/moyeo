@@ -4,8 +4,11 @@ import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import com.mo.moyeo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Getter
 @Entity
@@ -31,6 +34,10 @@ public class Notification {
 
     @Column(name = "body", nullable = false)
     private String body;
+
+    @Column(name = "data")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, String> data;
 
     @Column(name = "received_at")
     private LocalDateTime receivedAt;
