@@ -143,7 +143,7 @@ class HomeViewModel @Inject constructor(
                 val mapped = kotlinx.coroutines.coroutineScope {
                     base.map { groupBox ->
                         async {
-                            val id = groupBox.id.toLong()
+                            val id = groupBox.id
                             val savedName  = userDataManager.getGroupName(id)
                             val savedColor = userDataManager.getGroupColor(id)?.let { Color(it) }
                             val patchedBg = savedColor ?: groupBox.bg
@@ -317,11 +317,11 @@ class HomeViewModel @Inject constructor(
         )
     }
 
-    fun onDepositClick(boxId: Long) {
-        viewModelScope.launch { _navigationEvent.emit(HomeNavigationEvent.NavigateToCollecting(boxId)) }
-    }
-
     fun onTransferClicked(currencyId: String) {
         viewModelScope.launch { _navigationEvent.emit(HomeNavigationEvent.NavigateToTransfer(currencyId)) }
+    }
+
+    fun onDepositClick(boxId: Long) {
+        viewModelScope.launch { _navigationEvent.emit(HomeNavigationEvent.NavigateToDeposit(boxId)) }
     }
 }

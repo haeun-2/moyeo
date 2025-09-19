@@ -139,9 +139,11 @@ fun AppNavHost(
         composable(
             route = AppScreen.Transfer.route,
             // 1단계에서 정의한 {currencyId}가 어떤 타입인지 알려줍니다.
-            arguments = listOf(navArgument("currencyId") {
-                type = NavType.StringType
-            })
+            arguments = listOf(
+                navArgument("mode") { type = NavType.StringType; defaultValue = "TRANSFER" },
+                navArgument("targetBoxId") { type = NavType.LongType; defaultValue = -1L },
+                navArgument("currencyId") { type = NavType.StringType; nullable = true; defaultValue = null }
+            )
         ) {
             // TransferScreen을 호출
             // TransferViewModel은 hiltViewModel() 또는 viewModel()을 통해

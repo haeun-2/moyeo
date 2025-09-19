@@ -125,7 +125,12 @@ fun TransferScreen(
                 TransferStep.CHOOSE_CURRENCY -> ChooseCurrencyContent(
                     selectedCurrency = uiState.currency,
                     onCurrencySelect = viewModel::onCurrencySelected,
-                    currencies = currencies
+                    currencies = currencies,
+                    title = if (uiState.mode == TransferMode.DEPOSIT) {
+                        "어떤 통화로 입금할까요?"
+                    } else {
+                        "어떤 통화로 이체할까요?"
+                    }
                 )
                 //  TODO: 뷰모델 이렇게 하는 거 맞아?
                 TransferStep.HOW_MUCH -> HowMuchContent(viewModel = viewModel)

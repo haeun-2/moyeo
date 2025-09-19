@@ -47,13 +47,23 @@ sealed class AppScreen(
     object MyBoxDetail : AppScreen(route = "my_box_detail/{transactionId}", title = "내 박스 상세")
 
     // 이체 또는 보내기 버튼을 클릭됐을 때 넘어갈 화면
-    object Transfer : AppScreen(route = "transfer/{currencyId}", title = "보내기") {
+    object Transfer : AppScreen(
+        route = "transfer?mode={mode}&targetBoxId={targetBoxId}&currencyId={currencyId}",
+        title = "보내기"
+    ) {
         /**
          * '이체' 화면으로 이동할 때 사용할 실제 경로를 만드는 함수입니다.
          * 이렇게 하면 navigate 호출 시 오타를 방지할 수 있어 안전합니다.
          * 사용 예: AppScreen.Transfer.createRoute("KRW") -> "transfer/KRW"
          */
-        fun createRoute(currencyId: String) = "transfer/$currencyId"
+        fun createRouteForTransfer(currencyId: String? = null): String {
+            val base = "transfer?mode=transfer"
+            return if (!currencyId.isNullOrBlank()) "$base&currencyId=$currencyId" else base
+        }
+        fun createRouteForDeposit(boxId: Long, currencyId: String? = null): String {
+            val base = "transfer?mode=deposit&targetBoxId=$boxId"
+            return if (!currencyId.isNullOrBlank()) "$base&currencyId=$currencyId" else base
+        }
     }
 
     // 충전화 관련된 화면

@@ -75,11 +75,11 @@ fun HomeScreen(
                 }
 
                 is HomeNavigationEvent.NavigateToTransfer -> {
-                    navController.navigate(AppScreen.Transfer.createRoute(event.currencyId))
+                    navController.navigate(AppScreen.Transfer.createRouteForTransfer(event.currencyId))
                 }
 
-                is HomeNavigationEvent.NavigateToCollecting -> {
-                    navController.navigate(AppScreen.Collecting.createRoute(event.boxId.toString(), event.currencyId))
+                is HomeNavigationEvent.NavigateToDeposit -> {
+                    navController.navigate(AppScreen.Transfer.createRouteForDeposit(event.boxId, event.currencyId))
                 }
             }
         }
@@ -134,7 +134,7 @@ fun HomeScreen(
                         GroupBoxCard(
                             data = item,
                             onDepositClick = { viewModel.onDepositClick(item.id) },
-                            onMoreClick = { viewModel.onGroupMoreClick(item.id.toLong()) },
+                            onMoreClick = { viewModel.onGroupMoreClick(item.id) },
                             onColumnClick = { viewModel.onGroupBoxClick(item.id) }
                         )
                         if (index < uiState.groups.lastIndex) {
@@ -334,7 +334,7 @@ private fun WalletRow(
 @Composable
 private fun GroupBoxCard(
     data: GroupBox,
-    onDepositClick: () -> Unit,
+    onDepositClick: () -> Unit, // 입금 클릭
     onMoreClick: () -> Unit,
     onColumnClick: () -> Unit  // 클릭 시 상세 화면으로 이동
 ) {

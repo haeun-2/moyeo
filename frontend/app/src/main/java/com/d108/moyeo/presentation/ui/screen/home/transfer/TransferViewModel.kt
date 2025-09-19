@@ -39,7 +39,7 @@ class TransferViewModel @Inject constructor(
     // 임시 정답 PIN 추가
     private val correctPin = "111111"
 
-    private val _uiState = MutableStateFlow(TransferUiState())
+    private val _uiState = MutableStateFlow(TransferUiState(mode = TransferMode.TRANSFER))
     val uiState = _uiState.asStateFlow()
 
     // 사용자가 생체 인식을 활성화했는지 여부.
@@ -66,15 +66,28 @@ class TransferViewModel @Inject constructor(
 
     // ViewModel이 처음 생성될 때 실행되는 초기화 블록
     init {
-        // NavHost로부터 전달받은 'currencyId' 파라미터를 꺼냄
-        // navigate("transfer/{currencyId}") 에서의 "currencyId"와 이름이 같아야 함.
-        val initialCurrency = savedStateHandle.get<String>("currencyId") ?: ""  // 할당함
 
-        // 파라미터로 받은 값이 있다면, 초기 상태의 currency 값으로 설정
-        if (initialCurrency.isNotBlank()) {
-            _uiState.update { currentState ->
-                currentState.copy(currency = initialCurrency)
-            }
+        // nav 인자 파싱 (mode, targetBoxId, currencyId)
+        val modeArg = (savedStateHandle.get<String>("mode") ?: "TRANSFER").uppercase()
+        val initialMode = runCatching { TransferMode.valueOf(modeArg) }.getOrElse { TransferMode.TRANSFER }
+        val initialTargetBoxId = savedStateHandle.get<Long>("targetBoxId") ?: -1L
+        val initialCurrency = savedStateHandle.get<String>("currencyId") ?: ""
+
+        // 모드 별 시작 스텝 설정
+        val startStep = if (initialMode == TransferMode.DEPOSIT) {
+            TransferStep.CHOOSE_CURRENCY
+        } else {
+            TransferStep.TARGET_BOX
+        }
+
+        // 초기 상태 세팅
+        _uiState.update {
+            it.copy(
+                mode = initialMode,
+                currentStep = startStep,
+                targetBox = initialTargetBoxId,
+                currency = initialCurrency
+            )
         }
 
         //
@@ -203,11 +216,14 @@ class TransferViewModel @Inject constructor(
         val amount = state.howMuch.toLongOrNull()
         val currency = state.currency
 
-        Log.d("TransferViewModel", "fromBoxId=$from, toBoxId=$to, amount=$amount, currency=$currency")
+        // 오류 분기 처리
+        val action = if (state.mode == TransferMode.DEPOSIT) "입금" else "이체"
+
+        Log.d("TransferViewModel", "mode = $action, fromBoxId=$from, toBoxId=$to, amount=$amount, currency=$currency")
 
         // 입력 검증
-        if (from == null || to == null || amount == null || currency.isBlank()) {
-            _uiState.update { it.copy(pinError = "이체 정보가 올바르지 않습니다.") }
+        if (from == null || amount == null || currency.isBlank()) {
+            _uiState.update { it.copy(pinError = "$action 정보가 올바르지 않습니다.") }
             return
         }
 
@@ -218,7 +234,7 @@ class TransferViewModel @Inject constructor(
                     _uiState.update { it.copy(currentStep = TransferStep.FINISH) }
                 }
                 .onFailure { e ->
-                    _uiState.update { it.copy(pinError = "이체 실패: ${e.message ?: "알 수 없는 오류"}") }
+                    _uiState.update { it.copy(pinError = "$action 실패: ${e.message ?: "알 수 없는 오류"}") }
                 }
             isSubmitting = false
         }
@@ -272,14 +288,23 @@ class TransferViewModel @Inject constructor(
 
     fun onBackClick() {
         val currentStep = _uiState.value.currentStep
+        val rootStep = if (_uiState.value.mode == TransferMode.DEPOSIT) {
+            TransferStep.CHOOSE_CURRENCY
+        } else {
+            TransferStep.TARGET_BOX
+        }
 
-        if (currentStep == TransferStep.TARGET_BOX || currentStep == TransferStep.FINISH) {
+        if (currentStep == rootStep || currentStep == TransferStep.FINISH) {
             viewModelScope.launch {
                 _navigationEvent.emit(TransferNavEvent.NavigateBack)
             }
         } else {
             val previousStep = when (currentStep) {
-                TransferStep.CHOOSE_CURRENCY -> TransferStep.TARGET_BOX
+                TransferStep.CHOOSE_CURRENCY -> if (
+                    _uiState.value.mode == TransferMode.TRANSFER
+                ) {
+                    TransferStep.TARGET_BOX
+                } else rootStep
                 TransferStep.HOW_MUCH -> TransferStep.CHOOSE_CURRENCY
                 TransferStep.BIOMETRIC, TransferStep.PIN -> TransferStep.HOW_MUCH // 인증 단계에서는 금액 입력으로
                 else -> currentStep

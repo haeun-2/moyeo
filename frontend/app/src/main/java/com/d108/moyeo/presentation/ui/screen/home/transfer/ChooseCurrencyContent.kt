@@ -29,11 +29,12 @@ import com.d108.moyeo.presentation.theme.surfaceVariantLight
 fun ChooseCurrencyContent(
     selectedCurrency: String,
     onCurrencySelect: (String) -> Unit,
-    currencies: List<CurrencyData> // 선택 가능한 통화 리스트
+    currencies: List<CurrencyData>,  // 선택 가능한 통화 리스트
+    title: String
 ) {
     Column {
         Text(
-            text = "어떤 통화로 보낼까요?",
+            text = title,
             style = Typography.titleLarge
         )
         Spacer(Modifier.height(Spacing.Large))
