@@ -1,6 +1,5 @@
 package com.d108.moyeo.presentation.ui.screen.exchange
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -26,15 +25,15 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,7 +41,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import android.widget.Toast
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
@@ -50,21 +51,19 @@ import com.d108.moyeo.presentation.ui.component.exchange.ExchangeRateData
 import com.d108.moyeo.presentation.ui.component.exchange.ExchangeTypeModal
 
 @Composable
-fun ExchangeScreen(navController: NavController) {
+fun ExchangeScreen(
+    navController: NavController,
+    viewModel: ExchangeViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
-    var showModal by remember { mutableStateOf(false) }
-    var isEditMode by remember { mutableStateOf(false) }
-    var draggedItem by remember {mutableStateOf<Int?>(null)}
+    val uiState by viewModel.uiState.collectAsState()
 
-    // 샘플 데이터
-    var ratesList by remember {
-        mutableStateOf(listOf(
-            ExchangeRateData("🇯🇵", "보스니아 헤르체고비나", "927 JPY = 1,000 KRW", "6.15 (+0.59%)", true),
-            ExchangeRateData("🇺🇸", "미국 달러", "1,340 USD = 1,000 KRW", "15.20 (+1.15%)", true),
-            ExchangeRateData("🇪🇺", "유럽 유로", "1,450 EUR = 1,000 KRW", "8.30 (-0.58%)", false),
-            ExchangeRateData("🇨🇳", "중국 위안", "185 CNY = 1,000 KRW", "2.10 (+0.23%)", true),
-            ExchangeRateData("🇬🇧", "영국 파운드", "1,650 GBP = 1,000 KRW", "12.80 (-0.78%)", false)
-        ))
+    // 에러 메시지 표시
+    uiState.errorMessage?.let { message ->
+        LaunchedEffect(message) {
+            Toast.makeText(context, "API 연결 실패: $message", Toast.LENGTH_LONG).show()
+            viewModel.clearError()
+        }
     }
 
     Column(
@@ -116,45 +115,81 @@ fun ExchangeScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(Spacing.Medium))
 
-        // 환율 리스트 (편집 모드에 따라 다르게 표시)
+        // 환율 리스트 영역
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f) // 남은 공간을 모두 차지하도록
+                .weight(1f)
                 .background(
-                    color = if (isEditMode) Color.Gray.copy(alpha = 0.5f) else Color.Gray.copy(alpha = 0.3f),
+                    color = if (uiState.isEditMode) Color.Gray.copy(alpha = 0.5f) else Color.Gray.copy(alpha = 0.3f),
                     shape = RoundedCornerShape(8.dp)
                 )
                 .padding(horizontal = Spacing.Small, vertical = Spacing.SmallMedium)
         ) {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
-            ) {
-                itemsIndexed(ratesList) { index, rate ->
-                    if (isEditMode) {
-                        EditModeRateItem(
-                            rate = rate,
-                            onDelete = {
-                                ratesList = ratesList.filterIndexed { i, _ -> i != index }
-                            },
-                            // 드래그로 움직이는 동작
-                            onDragStart = { draggedItem = index },
-                            onDragEnd = { targetIndex ->
-                                if (draggedItem != null && draggedItem != targetIndex) {
-                                    val newList = ratesList.toMutableList()
-                                    val item = newList.removeAt(draggedItem!!)
-                                    newList.add(targetIndex, item)
-                                    ratesList = newList
-                                }
-                                draggedItem = null
-                            },
-                            isDragging = draggedItem == index
-                        )
-                    } else {
-                        NormalRateItem(
-                            rate = rate,
-                            onClick = { showModal = true }
-                        )
+            when {
+                uiState.isLoading -> {
+                    // 로딩 상태
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CircularProgressIndicator()
+                            Spacer(modifier = Modifier.height(Spacing.Medium))
+                            Text(
+                                text = "환율 정보를 불러오는 중...",
+                                style = Typography.bodyMedium,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+                uiState.ratesList.isEmpty() && !uiState.isLoading -> {
+                    // 빈 상태
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "환율 정보가 없습니다",
+                                style = Typography.bodyMedium,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(Spacing.Small))
+                            TextButton(
+                                onClick = { viewModel.refreshExchangeRates() }
+                            ) {
+                                Text("다시 시도")
+                            }
+                        }
+                    }
+                }
+                else -> {
+                    // 환율 리스트 표시
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
+                    ) {
+                        itemsIndexed(uiState.ratesList) { index, rate ->
+                            if (uiState.isEditMode) {
+                                EditModeRateItem(
+                                    rate = rate,
+                                    onDelete = { viewModel.deleteRate(index) },
+                                    onDragStart = { viewModel.startDrag(index) },
+                                    onDragEnd = { targetIndex -> viewModel.endDrag(targetIndex) },
+                                    isDragging = uiState.draggedItem == index
+                                )
+                            } else {
+                                NormalRateItem(
+                                    rate = rate,
+                                    onClick = { viewModel.showModal() }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -190,7 +225,7 @@ fun ExchangeScreen(navController: NavController) {
             // 수정 버튼
             TextButton(
                 onClick = {
-                    isEditMode = !isEditMode
+                    viewModel.toggleEditMode()
                 },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.textButtonColors(
@@ -204,23 +239,21 @@ fun ExchangeScreen(navController: NavController) {
                     tint = Color.Gray
                 )
                 Spacer(modifier = Modifier.width(Spacing.ExtraSmall))
-                Text(if (isEditMode) "완료" else "수정")
+                Text(if (uiState.isEditMode) "완료" else "수정")
             }
         }
     }
 
     // 모달 표시
-    if (showModal) {
+    if (uiState.showModal) {
         ExchangeTypeModal(
-            onDismiss = {
-                showModal = false
-            },
+            onDismiss = { viewModel.hideModal() },
             onChargeSelected = {
-                showModal = false
+                viewModel.hideModal()
                 navController.navigate("exchange_keypad/charge")
             },
             onRefundSelected = {
-                showModal = false
+                viewModel.hideModal()
                 navController.navigate("exchange_keypad/refund")
             }
         )
@@ -270,7 +303,7 @@ private fun NormalRateItem(
 
         // 변동률
         Column(horizontalAlignment = Alignment.End) {
-            val isPositive = rate.change.contains("+")
+            val isPositive = rate.isIncreased
             val changeColor = if (isPositive) Color.Red else Color.Blue
             val changeSymbol = if (isPositive) "▲" else "▼"
             Text(
@@ -365,7 +398,7 @@ private fun EditModeRateItem(
 
         // 변동률 (상승/하락 따라 색상 변경)
         Column(horizontalAlignment = Alignment.End) {
-            val isPositive = rate.change.contains("+")
+            val isPositive = rate.isIncreased
             val changeColor = if (isPositive) Color.Red else Color.Blue
             val changeSymbol = if (isPositive) "▲" else "▼"
 
