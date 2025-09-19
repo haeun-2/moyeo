@@ -47,8 +47,8 @@ public class Transaction {
     public enum Type {
         EXCHANGE("환전"),
         PAYMENT("결제"),
-        DEPOSIT("입금"),
-        WITHDRAW("출금"),
+        DEPOSIT("충전"),
+        WITHDRAW("반환"),
         TRANSFER("이체"),
         EXCHANGE_RESERVATION("환전 예약");
 

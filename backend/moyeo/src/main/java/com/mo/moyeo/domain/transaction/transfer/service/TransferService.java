@@ -21,6 +21,7 @@ import com.mo.moyeo.domain.transaction.transfer.dto.TransferRequest;
 import com.mo.moyeo.domain.transaction.transfer.entity.TransferTransaction;
 import com.mo.moyeo.domain.transaction.transfer.repository.TransferRepository;
 import com.mo.moyeo.domain.user.entity.User;
+import com.mo.moyeo.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,7 @@ public class TransferService {
     private final BoxBalanceService boxBalanceService;
     private final BoxHistoryService boxHistoryService;
     private final CategoryCacheService categoryCacheService;
+    private final UserService userService;
 
     @BoxDistributedLock({
             @BoxLockParam(boxId = "#request.fromBoxId", currencyCode = "#request.currency"),
@@ -74,6 +76,9 @@ public class TransferService {
                 .build();
         transferRepository.save(transferTransaction);
 
+        String toBoxName = toBox.isPersonal() ? userService.getById(toBox.getOwnerId()).getName() : toBox.getBoxName();
+        String fromBoxName = fromBox.isPersonal() ? userService.getById(fromBox.getOwnerId()).getName() : fromBox.getBoxName();
+
         // 입출금 히스토리 저장
         BoxHistory fromHistory = BoxHistory.builder()
                 .box(fromBox)
@@ -81,7 +86,7 @@ public class TransferService {
                 .amount(amount.negate())
                 .currencyCode(currency)
                 .totalAmount(fromBoxBalance.getBalance())
-                .title(toBox.getBoxName())
+                .title(toBoxName)
                 .type(Transaction.Type.TRANSFER)
                 .category(categoryCacheService.getByName(CategoryType.WITHDRAW))
                 .createdAt(transaction.getCreatedAt())
@@ -93,13 +98,13 @@ public class TransferService {
                 .amount(amount)
                 .currencyCode(currency)
                 .totalAmount(toBoxBalance.getBalance())
-                .title(fromBox.getBoxName())
+                .title(fromBoxName)
                 .type(Transaction.Type.TRANSFER)
                 .category(categoryCacheService.getByName(CategoryType.DEPOSIT))
                 .createdAt(transaction.getCreatedAt())
                 .build();
 
-        boxHistoryService.saveHistory(fromHistory);
+        boxHistoryService.saveHistoryWithoutNotification(fromHistory);
         boxHistoryService.saveHistory(toHistory);
     }
 

@@ -22,6 +22,7 @@ import com.mo.moyeo.domain.transaction.exchange.dto.ExchangeRequestDto;
 import com.mo.moyeo.domain.transaction.exchange.entity.ExchangeTransaction;
 import com.mo.moyeo.domain.transaction.exchange.repository.ExchangeRepository;
 import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
+import com.mo.moyeo.domain.transaction.history.service.BoxHistoryService;
 import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import com.mo.moyeo.domain.transaction.transaction.service.TransactionService;
 import com.mo.moyeo.domain.user.entity.User;
@@ -49,6 +50,7 @@ public class ExchangeService {
     private final BoxBalanceService boxBalanceService;
     private final BatchInsert batchInsert;
     private final CategoryCacheService categoryCacheService;
+    private final BoxHistoryService boxHistoryService;
     private final BankApiService bankApiService;
 
     @BoxDistributedLock({
@@ -128,7 +130,7 @@ public class ExchangeService {
                 .createdAt(transaction.getCreatedAt())
                 .build();
 
-        batchInsert.saveBatch(List.of(boxHistory1, boxHistory2));
+        boxHistoryService.saveExchangeHistory(boxHistory1, boxHistory2);
     }
 
     private List<ExchangeTransaction> exchangeThroughKRW(Transaction transaction, Map<String, CurrentExchangeRateDto> currentExchangeRate, ExchangeRequestDto exchangeRequestDto) {

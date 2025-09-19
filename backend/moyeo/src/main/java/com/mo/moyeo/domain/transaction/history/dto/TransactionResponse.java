@@ -44,7 +44,7 @@ public class TransactionResponse {
                                 .map(CategoryType::getLabel)
                                 .orElse("")
                 )
-                .transactionType(boxHistory.getType().name())
+                .transactionType(boxHistory.getType().getLabel())
                 .build();
     }
 

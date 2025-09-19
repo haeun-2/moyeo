@@ -22,14 +22,23 @@ public class FcmAsyncService {
      * 일반 멀티캐스트 메시지 비동기 전송
      */
     @Async("fcmAsyncExecutor")
-    public void sendMulticastMessageAsync(List<String> tokens, FcmMessageDTO message) {
+    public void sendMulticastMessageAsync(List<String> tokens, FcmMessageDTO message, Runnable onSuccess) {
         try {
             multicastSendStrategy.send(tokens, message);
             log.info("멀티캐스트 메시지 전송 완료: 토큰 수={}", tokens.size());
 
+            if (onSuccess != null) {
+                onSuccess.run();
+            }
         } catch (Exception e) {
             log.error("멀티캐스트 메시지 전송 실패: 토큰 수={}, error={}", tokens.size(), e.getMessage());
         }
+    }
+
+    // 알림 저장하지 않는 경우
+    @Async("fcmAsyncExecutor")
+    public void sendMulticastMessageAsync(List<String> tokens, FcmMessageDTO message) {
+        sendMulticastMessageAsync(tokens, message, null);
     }
 
     /**

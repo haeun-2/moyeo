@@ -101,6 +101,7 @@ public class BankTransactionService {
                 boxBalance.increaseBalance(amount);
             } else {
                 boxBalance.decreaseBalance(amount);
+                amount = amount.negate();
             }
 
             // 히스토리 기록
