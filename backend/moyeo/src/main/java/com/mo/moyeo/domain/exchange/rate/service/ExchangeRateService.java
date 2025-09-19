@@ -15,6 +15,9 @@ import com.mo.moyeo.domain.exchange.rate.dto.ExchangeRateResponse;
 import com.mo.moyeo.domain.exchange.rate.entity.ExchangeRate;
 import com.mo.moyeo.domain.exchange.reservation.service.ReservedExchangeService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -31,9 +34,11 @@ import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ExchangeRateService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final CurrencyRepository currencyRepository;
@@ -44,6 +49,7 @@ public class ExchangeRateService {
     private final ExchangeRateRepository exchangeRateRepository;
     private final ExchangeRateCacheService exchangeRateCacheService;
     private final ReservedExchangeService reservedExchangeService;
+    private final RedissonClient redissonClient;
 
     // 매일 0시 5분에 실행
     @Scheduled(cron = "0 5 0 * * *")
@@ -58,7 +64,25 @@ public class ExchangeRateService {
 
     @Scheduled(fixedDelay = 1000 * 60 * 10)
     @Transactional
-    public void getExchangeRate() {
+    public void getScheduledLock() {
+        RLock lock = redissonClient.getLock("myScheduledJobLock");
+        boolean available = false;
+        try{
+            available = lock.tryLock(0, 10, TimeUnit.SECONDS);
+            if (available) {
+                doScheduledTask();
+            } else {
+                log.info("다른 서버에서 실행 중, skip");
+            }
+        }catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            if (available) lock.unlock();
+        }
+
+    }
+
+    private void doScheduledTask() {
         ExchangeRateResponse exchangeRateResponse = apiCall();
         // recordedAt 설정 (첫 번째 REC 기준)
         LocalDateTime recordedAt = LocalDateTime.parse(
