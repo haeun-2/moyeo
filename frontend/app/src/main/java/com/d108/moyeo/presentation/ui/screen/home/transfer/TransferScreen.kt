@@ -137,7 +137,7 @@ fun TransferScreen(
         }
 
         val isButtonEnabled = when(uiState.currentStep) {
-            TransferStep.TARGET_BOX -> uiState.targetBox.isNotBlank()
+            TransferStep.TARGET_BOX -> uiState.targetBox != -1L
             TransferStep.CHOOSE_CURRENCY -> uiState.currency.isNotBlank()
             TransferStep.HOW_MUCH -> uiState.howMuch.isNotBlank()
             TransferStep.BIOMETRIC -> true // 이 단계는 자동 진행되므로 버튼 비활성화도 가능

@@ -31,7 +31,7 @@ class BoxStore @Inject constructor() {
     // groupBox 의 정보가 바뀌었을 때(이름, 색상) BoxStore 에 반영
     // 통화량 등의 민감 정보는 배제
     fun patchBox(
-        id: String,
+        id: Long,
         newName: String? = null,
         newBg: Color? = null
     ) {

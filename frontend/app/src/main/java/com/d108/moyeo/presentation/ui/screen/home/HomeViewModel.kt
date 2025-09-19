@@ -191,7 +191,7 @@ class HomeViewModel @Inject constructor(
         val amountText = if (repr == null) "잔액 없음" else formatAmount(repr.currency, repr.balance)
 
         return GroupBox(
-            id = box.id.toString(),
+            id = box.id,
             title = box.name,
             amount = amountText,
             bg = colorFromId(box.id)
@@ -270,7 +270,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun onGroupBoxClick(boxId: String) {
+    fun onGroupBoxClick(boxId: Long) {
         viewModelScope.launch {
             val clicked = _uiState.value.groups.find { it.id == boxId }
             if (clicked != null) {
@@ -297,7 +297,7 @@ class HomeViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 groups = state.groups.map { group ->
-                    if (group.id == id.toString()) group.copy(
+                    if (group.id == id) group.copy(
                         title = newName,
                         bg = newColor
                     ) else group
@@ -311,13 +311,13 @@ class HomeViewModel @Inject constructor(
             userDataManager.saveGroupColor(id, newColor.toArgb())
         }
         boxStore.patchBox(
-            id = id.toString(),
+            id = id,
             newName = newName,
             newBg = newColor
         )
     }
 
-    fun onDepositClick(boxId: String) {
+    fun onDepositClick(boxId: Long) {
         viewModelScope.launch { _navigationEvent.emit(HomeNavigationEvent.NavigateToCollecting(boxId)) }
     }
 

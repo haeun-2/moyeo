@@ -11,7 +11,7 @@ package com.d108.moyeo.presentation.ui.screen.home.transfer
 data class TransferUiState(
     val currentStep: TransferStep = TransferStep.TARGET_BOX,
     val currency: String = "",
-    val targetBox: String = "",
+    val targetBox: Long = -1,
     val howMuch: String = "",
     val pin: String = "",
 

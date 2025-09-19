@@ -18,7 +18,7 @@ data class CurrencyBalance(
 
 /** 홈의 그룹(모임) 박스 카드 */
 data class GroupBox(
-    val id: String,
+    val id: Long,
     val title: String,
     val amount: String, // 대표 금액 문자열
     val bg: Color       // 카드 배경색

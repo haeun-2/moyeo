@@ -69,7 +69,7 @@ fun HomeScreen(
 
                 is HomeNavigationEvent.NavigateToMyBox -> {  // route에 {boxid}라 된 부분을 파라미터로 교체한 후 라우트
                     navController.navigate(AppScreen.MyBox.route
-                        .replace("{boxId}", event.boxId)
+                        .replace("{boxId}", event.boxId.toString())
                         .replace("{bgColor}", event.bgColor.toString())
                     )
                 }
@@ -79,7 +79,7 @@ fun HomeScreen(
                 }
 
                 is HomeNavigationEvent.NavigateToCollecting -> {
-                    navController.navigate(AppScreen.Collecting.createRoute(event.BoxId, event.currencyId))
+                    navController.navigate(AppScreen.Collecting.createRoute(event.boxId.toString(), event.currencyId))
                 }
             }
         }
@@ -166,7 +166,7 @@ fun HomeScreen(
         }
 
         if (uiState.showGroupEditSheet) {
-            val target = uiState.groups.firstOrNull { it.id == uiState.editingGroupId?.toString() }
+            val target = uiState.groups.firstOrNull { it.id == uiState.editingGroupId }
             if (target != null) {
                 BoxEditBottomSheet(
                     initialName = target.title,

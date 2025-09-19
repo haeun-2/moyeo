@@ -28,10 +28,12 @@ import com.d108.moyeo.presentation.ui.component.common.GridMoyeoBoxesItem
 @Composable
 fun QRBoxesScreen(
     navController: NavController,
-    viewModel: QRBoxesViewModel = hiltViewModel()
+    viewModel: QRBoxesViewModel = hiltViewModel(),
 ) {
 
     val uiState by viewModel.uiState.collectAsState()
+    val boxes = viewModel.groupBoxesUi.collectAsState().value
+
 
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->
@@ -84,7 +86,7 @@ fun QRBoxesScreen(
                     verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
                 ) {
                     items(
-                        items = uiState.allBoxes,
+                        items = boxes,
                         key = { it.id }
                     ) { box ->
                         GridMoyeoBoxesItem(
