@@ -74,8 +74,8 @@ fun HomeScreen(
                     )
                 }
 
-                is HomeNavigationEvent.NavigateToSending -> {
-                    navController.navigate(AppScreen.Sending.createRoute(event.currencyId))
+                is HomeNavigationEvent.NavigateToTransfer -> {
+                    navController.navigate(AppScreen.Transfer.createRoute(event.currencyId))
                 }
 
                 is HomeNavigationEvent.NavigateToCollecting -> {

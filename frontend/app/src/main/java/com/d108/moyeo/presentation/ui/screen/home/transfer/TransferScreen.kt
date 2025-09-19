@@ -31,9 +31,9 @@ import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.util.BiometricAuthManager
 
 @Composable
-fun SendingScreen(
+fun TransferScreen(
     navController: NavController,
-    viewModel: SendingViewModel = hiltViewModel()
+    viewModel: TransferViewModel = hiltViewModel()
 ) {
 
     // 생체 인증에 필요
@@ -49,12 +49,12 @@ fun SendingScreen(
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->
             when (event) {
-                is SendingNavEvent.NavigateBack -> {
+                is TransferNavEvent.NavigateBack -> {
                     // NavigateBack 이벤트를 받으면 실제 뒤로가기 동작 수행
                     navController.popBackStack()
                 }
 
-                is SendingNavEvent.ShowBiometricPrompt -> {
+                is TransferNavEvent.ShowBiometricPrompt -> {
                     // 생체 인증을 사용할 수 있는지 먼저 확인
                     if (biometricManager.canAuthenticate()) {
                         // ViewModel로부터 생체 인증 창을 띄우라는 이벤트를 받으면 인증 절차 시작
@@ -152,7 +152,7 @@ fun SendingScreen(
                 .padding(bottom = 8.dp),
             enabled = isButtonEnabled
         ) {
-            // 2. 버튼 텍스트 로직 수정 (SendingStep에 맞게 수정)
+            // 2. 버튼 텍스트 로직 수정 (TransferStep에 맞게 수정)
             val buttonText = when(uiState.currentStep) {
                 TransferStep.FINISH -> "확인"
                 TransferStep.HOW_MUCH -> "보내기"

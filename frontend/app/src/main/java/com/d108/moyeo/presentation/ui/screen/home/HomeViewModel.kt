@@ -322,6 +322,6 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onTransferClicked(currencyId: String) {
-        viewModelScope.launch { _navigationEvent.emit(HomeNavigationEvent.NavigateToSending(currencyId)) }
+        viewModelScope.launch { _navigationEvent.emit(HomeNavigationEvent.NavigateToTransfer(currencyId)) }
     }
 }

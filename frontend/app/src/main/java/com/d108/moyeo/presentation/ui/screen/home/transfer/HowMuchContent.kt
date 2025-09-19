@@ -19,7 +19,7 @@ import com.d108.moyeo.presentation.ui.component.KeypadKey
 import java.text.DecimalFormat
 
 @Composable
-fun HowMuchContent(viewModel: SendingViewModel) {
+fun HowMuchContent(viewModel: TransferViewModel) {
 
     val uiState by viewModel.uiState.collectAsState()
 

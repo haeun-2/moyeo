@@ -8,7 +8,7 @@ package com.d108.moyeo.presentation.ui.screen.home.transfer
  * @property targetBox 사용자가 선택한 보낼 박스 ID
  * @property howMuch 사용자가 입력한 보낼 금액
  */
-data class SendingUiState(
+data class TransferUiState(
     val currentStep: TransferStep = TransferStep.TARGET_BOX,
     val currency: String = "",
     val targetBox: String = "",

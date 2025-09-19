@@ -4,7 +4,7 @@ package com.d108.moyeo.presentation.ui.screen.home
 sealed class HomeNavigationEvent {
     object NavigateToMyWallet : HomeNavigationEvent()
     data class NavigateToMyBox(val boxId: String, val bgColor: Int) : HomeNavigationEvent()
-    data class NavigateToSending(val currencyId: String) : HomeNavigationEvent()
+    data class NavigateToTransfer(val currencyId: String) : HomeNavigationEvent()
     // 기본 통화는 KRW
     data class NavigateToCollecting(val BoxId: String, val currencyId: String = "KRW"): HomeNavigationEvent()
 }

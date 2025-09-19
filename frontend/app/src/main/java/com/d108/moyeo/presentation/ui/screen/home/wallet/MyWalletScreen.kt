@@ -46,10 +46,10 @@ fun MyWalletScreen(
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->
             when (event) {
-                is WalletNavigationEvent.NavigateToSending -> {
-                    // "보내기" 이벤트가 오면, currencyCode를 가지고 SendingScreen으로 이동합니다.
+                is WalletNavigationEvent.NavigateToTransfer -> {
+                    // "보내기" 이벤트가 오면, currencyCode를 가지고 TransferScreen으로 이동합니다.
                     navController.navigate(
-                        AppScreen.Sending.route.replace("{currencyId}", event.currencyCode)  // 라우트 확인
+                        AppScreen.Transfer.route.replace("{currencyId}", event.currencyCode)  // 라우트 확인
                     )
                 }
                 is WalletNavigationEvent.NavigateToCharging -> {
@@ -108,7 +108,7 @@ fun MyWalletScreen(
                 totalBalance = uiState.totalBalance,
                 onBalanceClick = viewModel::onBalanceClick,
                 onBackClick = { /* TODO: 뒤로가기 로직 추가 */ },
-                onSendingClick = viewModel::onSendingClick
+                onTransferClick = viewModel::onTransferClick
             )
 
             Column(modifier = Modifier.padding(horizontal = Spacing.Medium)) {
@@ -149,7 +149,7 @@ private fun TopWalletInfoSurface(
     totalBalance: String,
     onBalanceClick: () -> Unit,
     onBackClick: () -> Unit,
-    onSendingClick:() -> Unit
+    onTransferClick:() -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -219,7 +219,7 @@ private fun TopWalletInfoSurface(
                 // !!그리고 이 버튼들이 너무 크다. 좀 작아진 다음에 좌우와 간격이 있으면 좋겠는데. !!
             ) {
                 Button(
-                        onClick = onSendingClick, // !! 이 버튼이랑 연결되어야 함
+                        onClick = onTransferClick, // !! 이 버튼이랑 연결되어야 함
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
                         contentColor = onPrimaryLight
