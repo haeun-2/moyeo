@@ -23,6 +23,7 @@ import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import com.mo.moyeo.domain.transaction.transaction.service.TransactionService;
 import com.mo.moyeo.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class ExchangeService {
     private final ExchangeRepository exchangeRepository;
     private final BoxService boxService;
@@ -72,6 +74,7 @@ public class ExchangeService {
             toAmount = exchangeTransactions.get(1).getToAmount();
         }
 
+        log.debug("환전 {} -> {}", fromAmount, toAmount);
         updateBoxBalanceAndSaveHistory(exchangeRequestDto, box, toAmount, fromAmount, transaction);
 
 
@@ -168,7 +171,7 @@ public class ExchangeService {
         if (toCurrency == CurrencyType.JPY) {
             // JPY는 100엔 기준
             fromAmount = buyRate
-                    .multiply(BigDecimal.valueOf(100)) // × 100
+                    .divide(BigDecimal.valueOf(100)) // div 100
                     .multiply(toAmount);
         } else {
             // USD, EUR 같은 경우는 1 단위 기준
