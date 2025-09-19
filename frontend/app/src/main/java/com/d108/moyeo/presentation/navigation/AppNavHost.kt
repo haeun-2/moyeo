@@ -29,7 +29,7 @@ import com.d108.moyeo.presentation.ui.screen.home.box.calculating.CalculatingScr
 import com.d108.moyeo.presentation.ui.screen.home.box.collecting.CollectingScreen
 import com.d108.moyeo.presentation.ui.screen.home.charge.ChargingScreen
 import com.d108.moyeo.presentation.ui.screen.home.create.CreateBoxScreen
-import com.d108.moyeo.presentation.ui.screen.home.transfer.SendingScreen
+import com.d108.moyeo.presentation.ui.screen.home.transfer.TransferScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChatConsultationScreen
@@ -137,16 +137,16 @@ fun AppNavHost(
 
         // 모여박스로 돈 보내는 화면
         composable(
-            route = AppScreen.Sending.route,
+            route = AppScreen.Transfer.route,
             // 1단계에서 정의한 {currencyId}가 어떤 타입인지 알려줍니다.
             arguments = listOf(navArgument("currencyId") {
                 type = NavType.StringType
             })
         ) {
-            // SendingScreen을 호출
-            // SendingViewModel은 hiltViewModel() 또는 viewModel()을 통해
+            // TransferScreen을 호출
+            // TransferViewModel은 hiltViewModel() 또는 viewModel()을 통해
             // 자동으로 SavedStateHandle을 주입받아 currencyId를 꺼내 사용
-            SendingScreen(navController = navController)
+            TransferScreen(navController = navController)
         }
 
         // 페이머니 충전 화면

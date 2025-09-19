@@ -17,13 +17,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed class SendingNavEvent {
-    data object NavigateBack : SendingNavEvent()
-    data object ShowBiometricPrompt : SendingNavEvent() // 생체 인증 창을 띄우라는 이벤트 추가
+sealed class TransferNavEvent {
+    data object NavigateBack : TransferNavEvent()
+    data object ShowBiometricPrompt : TransferNavEvent() // 생체 인증 창을 띄우라는 이벤트 추가
 }
 
 @HiltViewModel
-class SendingViewModel @Inject constructor(
+class TransferViewModel @Inject constructor(
     // NavHost에서 전달해준 파라미터('currencyId')를 받기 위해 SavedStateHandle를 사용
     private val savedStateHandle: SavedStateHandle,
     private val getPersonalBox: GetPersonalBoxUseCase,
@@ -39,7 +39,7 @@ class SendingViewModel @Inject constructor(
     // 임시 정답 PIN 추가
     private val correctPin = "111111"
 
-    private val _uiState = MutableStateFlow(SendingUiState())
+    private val _uiState = MutableStateFlow(TransferUiState())
     val uiState = _uiState.asStateFlow()
 
     // 사용자가 생체 인식을 활성화했는지 여부.
@@ -50,7 +50,7 @@ class SendingViewModel @Inject constructor(
      * 내비게이션 이벤트를 UI에 전달하기 위한 SharedFlow입니다.
      * Channel의 일종으로, 한 번 발생한 이벤트를 놓치지 않고 UI에 전달할 때 유용합니다.
      */
-    private val _navigationEvent = MutableSharedFlow<SendingNavEvent>()
+    private val _navigationEvent = MutableSharedFlow<TransferNavEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
     // TODO: (1/2) ViewModel이 생성될 때, DataStore를 확인하여
@@ -67,7 +67,7 @@ class SendingViewModel @Inject constructor(
     // ViewModel이 처음 생성될 때 실행되는 초기화 블록
     init {
         // NavHost로부터 전달받은 'currencyId' 파라미터를 꺼냄
-        // navigate("sending/{currencyId}") 에서의 "currencyId"와 이름이 같아야 함.
+        // navigate("transfer/{currencyId}") 에서의 "currencyId"와 이름이 같아야 함.
         val initialCurrency = savedStateHandle.get<String>("currencyId") ?: ""  // 할당함
 
         // 파라미터로 받은 값이 있다면, 초기 상태의 currency 값으로 설정
@@ -85,7 +85,7 @@ class SendingViewModel @Inject constructor(
         }
     }
 
-    // 2. 각 단계에서 사용자가 입력한 값을 SendingUiState에 반영하는 함수
+    // 2. 각 단계에서 사용자가 입력한 값을 TransferUiState에 반영하는 함수
     /**
      * 사용자가 보낼 화폐를 선택했을 때 호출됩니다.
      */
@@ -203,7 +203,7 @@ class SendingViewModel @Inject constructor(
         val amount = state.howMuch.toLongOrNull()
         val currency = state.currency
 
-        Log.d("SendingViewModel", "fromBoxId=$from, toBoxId=$to, amount=$amount, currency=$currency")
+        Log.d("TransferViewModel", "fromBoxId=$from, toBoxId=$to, amount=$amount, currency=$currency")
 
         // 입력 검증
         if (from == null || to == null || amount == null || currency.isBlank()) {
@@ -245,7 +245,7 @@ class SendingViewModel @Inject constructor(
                     _uiState.update { it.copy(currentStep = TransferStep.BIOMETRIC) }
                     // 화면에 생체 인증 창을 띄우라는 이벤트를 보냅니다.
                     viewModelScope.launch {
-                        _navigationEvent.emit(SendingNavEvent.ShowBiometricPrompt)
+                        _navigationEvent.emit(TransferNavEvent.ShowBiometricPrompt)
                     }
                 } else {
                     // 설정하지 않았다면, 바로 PIN 입력 단계로 넘어갑니다.
@@ -263,7 +263,7 @@ class SendingViewModel @Inject constructor(
             TransferStep.FINISH -> {
                 // 완료 화면에서 버튼을 누르면 화면 닫기
                 viewModelScope.launch {
-                    _navigationEvent.emit(SendingNavEvent.NavigateBack)
+                    _navigationEvent.emit(TransferNavEvent.NavigateBack)
                 }
             }
         }
@@ -275,7 +275,7 @@ class SendingViewModel @Inject constructor(
 
         if (currentStep == TransferStep.TARGET_BOX || currentStep == TransferStep.FINISH) {
             viewModelScope.launch {
-                _navigationEvent.emit(SendingNavEvent.NavigateBack)
+                _navigationEvent.emit(TransferNavEvent.NavigateBack)
             }
         } else {
             val previousStep = when (currentStep) {

@@ -60,7 +60,7 @@ data class MyWalletUiState(
 )
 
 sealed class WalletNavigationEvent {
-    data class NavigateToSending(val currencyCode: String) : WalletNavigationEvent()
+    data class NavigateToTransfer(val currencyCode: String) : WalletNavigationEvent()
     data object NavigateToCharging : WalletNavigationEvent() // 충전 화면 이동 이벤트 추가
 }
 
@@ -164,11 +164,11 @@ class MyWalletViewModel : ViewModel() {
     }
 
     // 보내기 버튼 클릭시 호출
-    fun onSendingClick() {
+    fun onTransferClick() {
         val code = uiState.value.choosenCurrencyCode
-        // 이 코드를 가지고 SendingScreen으로 진입해야 함
+        // 이 코드를 가지고 TransferScreen으로 진입해야 함
         viewModelScope.launch {
-            _navigationEvent.emit(WalletNavigationEvent.NavigateToSending(code))
+            _navigationEvent.emit(WalletNavigationEvent.NavigateToTransfer(code))
         }
     }
 

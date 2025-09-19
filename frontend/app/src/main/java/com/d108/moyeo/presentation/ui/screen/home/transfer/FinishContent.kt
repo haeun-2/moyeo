@@ -21,7 +21,7 @@ import com.d108.moyeo.presentation.theme.primaryLight
 import java.text.DecimalFormat
 
 @Composable
-fun FinishContent(viewModel: SendingViewModel) {
+fun FinishContent(viewModel: TransferViewModel) {
     val uiState by viewModel.uiState.collectAsState()
     // 금액에 천 단위 쉼표를 추가하기 위한 포맷터
     val formattedAmount = try {
