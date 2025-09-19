@@ -26,7 +26,7 @@ public class CustomExceptionHandler {
         log.error("에러 코드: {}", e.getErrorCode());
         log.error("에러 메시지: {}", e.getMessage());
         log.error("요청 URL: {}", requestURI);
-
+        e.printStackTrace();
         ErrorCode errorCode = e.getErrorCode();
         String message = e.getCustomMessage() != null ? e.getCustomMessage() : errorCode.getMessage();
 
