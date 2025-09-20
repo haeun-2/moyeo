@@ -9,6 +9,7 @@ import com.d108.moyeo.data.remote.api.BoxHistoryService
 import com.d108.moyeo.data.remote.api.BoxService
 import com.d108.moyeo.data.remote.api.BoxStatisticsService
 import com.d108.moyeo.data.remote.api.ExchangeService // 새 import 추가
+import com.d108.moyeo.data.remote.api.NotificationService
 import com.d108.moyeo.data.remote.api.PaymentService
 import com.d108.moyeo.data.remote.api.SignUpService
 import com.d108.moyeo.data.remote.interceptor.AuthInterceptor
@@ -130,5 +131,14 @@ object NetworkModule {  // 여러 부품을 조립해서 새로운 것을 '만�
     @Singleton
     fun provideExchangeService(retrofit: Retrofit): ExchangeService { // 함수 이름 및 반환 타입 변경
         return retrofit.create(ExchangeService::class.java) // 생성시 ExchangeService 사용
+    }
+
+    /*
+    * 알림 서비스
+    */
+    @Provides
+    @Singleton
+    fun provideNotificationService(retrofit: Retrofit): NotificationService {
+        return retrofit.create(NotificationService::class.java)
     }
 }

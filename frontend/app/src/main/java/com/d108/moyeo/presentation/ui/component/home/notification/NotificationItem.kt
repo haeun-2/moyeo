@@ -1,40 +1,32 @@
 package com.d108.moyeo.presentation.ui.component.home.notification
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.onSurfaceVariantLight
-import com.d108.moyeo.presentation.theme.secondaryContainerLight
-import com.d108.moyeo.presentation.ui.screen.home.Notification
+import com.d108.moyeo.presentation.ui.screen.home.NotificationItemUi
 
 @Composable
 fun NotificationItem(
-    notification: Notification,
+    notification: NotificationItemUi,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showDivider: Boolean = false
 ) {
-    // 읽지 않은 알림은 다른 배경색으로 강조
-    val backgroundColor = if (!notification.isRead) {
-        secondaryContainerLight
-    } else {
-        Color.Transparent
-    }
-
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .background(backgroundColor)
             .padding(horizontal = Spacing.SmallMedium, vertical = Spacing.Small)
     ) {
+        // 상단: 제목 - 수신시각
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -46,16 +38,28 @@ fun NotificationItem(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = notification.timestamp,
+                text = notification.time ?: "",
                 style = Typography.bodySmall,
-                color = Color.Gray
             )
         }
+
         Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
-        Text(
-            text = notification.content,
-            style = Typography.bodyMedium,
-            color = onSurfaceVariantLight
-        )
+
+        // 본문: 보낸 사람 / 거래량 / 잔액 (존재하는 항목만)
+        notification.sender?.let {
+            Text(text = it, style = Typography.bodyMedium, color = onSurfaceVariantLight)
+        }
+        notification.amount?.let {
+            Text(text = it, style = Typography.bodyMedium, color = onSurfaceVariantLight)
+        }
+        notification.balance?.let {
+            Text(text = it, style = Typography.bodyMedium, color = onSurfaceVariantLight)
+        }
+
+        // 마지막 항목일 경우 HorizontalDivider 를 만들지 않음
+        if (showDivider) {
+            Spacer(modifier = Modifier.height(Spacing.Small))
+            HorizontalDivider()
+        }
     }
 }

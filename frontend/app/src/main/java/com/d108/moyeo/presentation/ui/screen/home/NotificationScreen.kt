@@ -9,8 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -20,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
@@ -28,9 +31,10 @@ import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.ui.component.home.notification.NotificationItem
 
 @Composable
-fun NotificationScreen(navController: NavController,
-                       viewModel: NotificationViewModel = viewModel()) {
-
+fun NotificationScreen(
+    navController: NavController,
+    viewModel: NotificationViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
@@ -46,6 +50,15 @@ fun NotificationScreen(navController: NavController,
             modifier = Modifier.fillMaxWidth(), // 가로 전체 차지
             contentAlignment = Alignment.Center // 중앙 정렬
         ) {
+            IconButton(
+                onClick = { navController.navigateUp() },
+                modifier = Modifier.align(Alignment.CenterStart)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    contentDescription = "뒤로가기"
+                )
+            }
             Text(
                 text = "알림",
                 style = Typography.titleLarge
@@ -77,13 +90,15 @@ fun NotificationScreen(navController: NavController,
                         items = uiState.notifications,
                         key = { it.id } // 각 아이템의 고유 키
                     ) { notification ->
+                        val isLast = notification == uiState.notifications.lastOrNull()
                         NotificationItem(
                             notification = notification,
                             onClick = {
+                                // TODO: boxId 통해 해당 박스로 이동
                                 Toast.makeText(context, "'${notification.title}' 클릭됨", Toast.LENGTH_SHORT).show()
-                            }
+                            },
+                            showDivider = !isLast
                         )
-                        HorizontalDivider()
                     }
                 }
             }
