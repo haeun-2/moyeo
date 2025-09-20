@@ -25,13 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.d108.moyeo.domain.model.box.Box
+import com.d108.moyeo.core.BoxStoreUiState
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 
 @Composable
 fun SquareMoyeoBoxItem(
-    box: Box,
+    box: BoxStoreUiState,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -43,7 +43,11 @@ fun SquareMoyeoBoxItem(
             .clickable(onClick = onClick), // 클릭 이벤트 연결
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         // 선택되었을 때 테두리 하이라이트 효과
-        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+        colors = CardDefaults.cardColors(
+            containerColor = box.bg
+        )
+
     ) {
         Column(
             modifier = Modifier.padding(Spacing.SmallMedium)
@@ -58,10 +62,11 @@ fun SquareMoyeoBoxItem(
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = box.name, // 파라미터로 받은 데이터 사용
+                    text = box.title, // 파라미터로 받은 데이터 사용
                     style = Typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = Spacing.Small)
+                    modifier = Modifier.padding(start = Spacing.Small),
+                    color = box.textColor
                 )
             }
 
@@ -74,7 +79,7 @@ fun SquareMoyeoBoxItem(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 items(box.balances) { balance ->
-                    CurrencyItem(balance = balance)
+                    CurrencyItem(balance = balance, textColor = box.textColor)
                 }
             }
         }

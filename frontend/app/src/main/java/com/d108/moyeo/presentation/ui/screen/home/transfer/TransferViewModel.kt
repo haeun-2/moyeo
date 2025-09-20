@@ -32,7 +32,7 @@ class TransferViewModel @Inject constructor(
 ) : ViewModel() {
 
     // BoxStore 에서 모임 박스 목록, 내 통화 목록을 불러옴
-    val groupBoxesUi = boxStore.groupBoxesUi
+    val groupBoxesUi = boxStore.boxUiStates
     val currencies = boxStore.personalCurrencies
 
     // TODO: 임시 정답 핀을 찐핀으로 바꾸기

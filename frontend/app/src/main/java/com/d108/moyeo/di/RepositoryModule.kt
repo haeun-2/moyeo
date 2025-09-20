@@ -2,6 +2,7 @@ package com.d108.moyeo.di
 
 import com.d108.moyeo.data.repository.AuthRepositoryImpl
 import com.d108.moyeo.data.repository.BankRepositoryImpl
+import com.d108.moyeo.data.repository.BoxHistoryRepositoryImpl
 import com.d108.moyeo.data.repository.FidRepositoryImpl
 import com.d108.moyeo.data.repository.BoxRepositoryImpl
 import com.d108.moyeo.data.repository.BoxStatisticsRepositoryImpl
@@ -11,6 +12,7 @@ import com.d108.moyeo.data.repository.SignUpRepositoryImpl
 import com.d108.moyeo.data.repository.TransferRepositoryImpl
 import com.d108.moyeo.domain.repository.AuthRepository
 import com.d108.moyeo.domain.repository.BankRepository
+import com.d108.moyeo.domain.repository.BoxHistoryRepository
 import com.d108.moyeo.domain.repository.BoxRepository
 import com.d108.moyeo.domain.repository.BoxStatisticsRepository
 import com.d108.moyeo.domain.repository.ExchangeRepository
@@ -95,4 +97,10 @@ abstract class RepositoryModule {  // @Binds 함수는 함수 본문이 없어�
     abstract fun bindBoxStatisticsRepository(
         boxStatisticsRepositoryImpl: BoxStatisticsRepositoryImpl
     ): BoxStatisticsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBoxHistoryRepository(
+        boxHistoryRepositoryImpl: BoxHistoryRepositoryImpl
+    ): BoxHistoryRepository
 }

@@ -3,9 +3,9 @@ package com.d108.moyeo.presentation.ui.screen.history
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.domain.model.stats.CategoryStat
 import com.d108.moyeo.domain.usecase.box.GetBoxDetailUseCase
+import com.d108.moyeo.domain.usecase.history.GetTransactionHistoryUseCase
 import com.d108.moyeo.domain.usecase.stats.GetCategoryStatsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -27,7 +27,8 @@ sealed class HistoryNavEvent {
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val getBoxDetailUseCase: GetBoxDetailUseCase,
-    private val getCategoryStatsUseCase: GetCategoryStatsUseCase
+    private val getCategoryStatsUseCase: GetCategoryStatsUseCase,
+    private val getTransactionHistoryUseCase: GetTransactionHistoryUseCase
 ): ViewModel() {
     private val _uiState = MutableStateFlow(HistoryUiState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
@@ -153,18 +154,39 @@ class HistoryViewModel @Inject constructor(
 
         val currentState = _uiState.value  // 모든 상태를 받음
 
-        if (index == 1) {  // 일자 모드
-            if (!currentState.hasSelectedDateRange) {  // 날짜를 선택하지 않았으면 데이터 숨김
-                _uiState.update { it.copy(currentStats = null) }
-            } else {  // 날짜가 선택되어 있으면
-                val selectedCurrency = currentState.selectedCurrency  // 이미 캐시된 날짜 범위 데이터 사용
+        if (index == 0) { // "전체" 탭을 선택한 경우
+            _uiState.update {
+                // 전체 기간 데이터 캐시에서 통화 목록과 현재 통계를 복원
+                val currencyOptions = it.allPeriodStatsMap.keys.toList()
+                val selectedCurrency = currencyOptions.firstOrNull() ?: "기록 없음"
+                it.copy(
+                    currencyOptions = currencyOptions,
+                    selectedCurrency = selectedCurrency,
+                    currentStats = it.allPeriodStatsMap[selectedCurrency]
+                )
+            }
+        } else { // "일자" 탭을 선택한 경우
+            if (currentState.hasSelectedDateRange) {
+                // 날짜를 선택한 이력이 있다면 기간별 데이터 캐시에서 복원
                 _uiState.update {
-                    it.copy(currentStats = it.dateRangeStatsMap[selectedCurrency])
+                    val currencyOptions = it.dateRangeStatsMap.keys.toList()
+                    val selectedCurrency = currencyOptions.firstOrNull() ?: "기록 없음"
+                    it.copy(
+                        currencyOptions = currencyOptions,
+                        selectedCurrency = selectedCurrency,
+                        currentStats = it.dateRangeStatsMap[selectedCurrency]
+                    )
+                }
+            } else {
+                // 날짜를 선택한 이력이 없다면, 표시할 데이터가 없으므로 비워줌
+                _uiState.update {
+                    it.copy(
+                        currentStats = null,
+                        currencyOptions = emptyList(),
+                        selectedCurrency = ""
+                    )
                 }
             }
-        } else { // 전체 모드
-            // 캐시된 전체 기간 데이터 사용
-            loadAllPeriodStats(_uiState.value.selectedBoxId!!)
         }
     }
 
@@ -214,6 +236,55 @@ class HistoryViewModel @Inject constructor(
         _uiState.value.selectedBoxId?.let { boxId ->
             loadDateRangeStats(boxId, startDate, endDate)
         }
+    }
+
+    // 바텀 시트 관련
+    fun onHistoryItemClick(stat: CategoryStat) {
+        _uiState.update { it.copy(
+            selectedCategoryForSheet = stat,
+            isSheetLoading = true,
+            groupedHistoryTransactions = emptyMap() // 이전 맵을 비워줌
+        ) }
+
+        val currentState = _uiState.value
+        val boxId = currentState.selectedBoxId ?: return
+        val startDate = if (currentState.selectedToggleIndex == 0) "" else currentState.startDateMillis.toApiDateString()
+        val endDate = if (currentState.selectedToggleIndex == 0) "" else currentState.endDateMillis.toApiDateString()
+        val currency = currentState.selectedCurrency
+
+        // UseCase를 호출하여 데이터 요청
+        viewModelScope.launch {
+            getTransactionHistoryUseCase(
+                boxId = boxId,
+                startDate = startDate,
+                endDate = endDate,
+                currency = currency,
+                categoryId = stat.categoryId, // stat 객체에서 카테고리 ID를 가져옴
+                type = "WITHDRAW",  // 지출 내역만
+                page = 0,
+                size = 100 // 일단 100개까지 불러오도록 설정
+            ).onSuccess { paginatedHistory ->
+
+                val groupedData = paginatedHistory.content.groupBy { transaction ->
+                    transaction.datetime.substring(0, 10) // "2025-09-20"
+                }
+                Log.d(TAG, "상세 거래내역 서버 응답: $paginatedHistory")
+                _uiState.update {
+                    it.copy(
+                        isSheetLoading = false,
+                        groupedHistoryTransactions = groupedData // 2. 그룹화된 Map을 UI 상태에 저장
+                    )
+                }
+            }.onFailure { error ->
+                // 4. 실패 시, 로딩을 멈추고 에러 처리
+                Log.d(TAG, "onHistoryItemClick: $error")
+                _uiState.update { it.copy(isSheetLoading = false, errorMessage = "상세 내역을 불러오지 못했습니다.") }
+            }
+        }
+    }
+
+    fun onBottomSheetDismiss() {
+        _uiState.update { it.copy(selectedCategoryForSheet = null) }
     }
 
     private fun Long?.toApiDateString(default: String = ""): String {  // 서버에서 전체 조회를 하기 위해서는 빈칸으로 달라고 했음.

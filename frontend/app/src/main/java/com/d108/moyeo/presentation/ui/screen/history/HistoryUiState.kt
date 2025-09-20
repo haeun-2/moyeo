@@ -1,6 +1,7 @@
 package com.d108.moyeo.presentation.ui.screen.history
 
 import com.d108.moyeo.domain.model.box.Box
+import com.d108.moyeo.domain.model.history.HistoryTransaction
 import com.d108.moyeo.domain.model.stats.CategoryStat
 import com.d108.moyeo.domain.model.stats.CategoryStats
 
@@ -26,6 +27,11 @@ data class HistoryUiState(
     val showDateRangePicker: Boolean = false,
     val startDateMillis: Long? = null,
     val endDateMillis: Long? = null,
+
+    // 바텀 시트 관련
+    val selectedCategoryForSheet: CategoryStat? = null, // 바텀시트에 보여줄 카테고리 정보
+    val groupedHistoryTransactions: Map<String, List<HistoryTransaction>> = emptyMap(), // 날짜별로 그룹화된 거래 내역
+    val isSheetLoading: Boolean = false, // 바텀시트 내부의 로딩 상태
 
     val isLoading: Boolean = false,
     val errorMessage: String? = null

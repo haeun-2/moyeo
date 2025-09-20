@@ -50,8 +50,10 @@ import com.d108.moyeo.presentation.ui.component.history.HistoryItem
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
+import com.d108.moyeo.domain.model.history.HistoryTransaction
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.ui.component.common.DateRangePickerModal
+import com.d108.moyeo.presentation.ui.component.history.CategoryHistoryBottomSheet
 import com.d108.moyeo.presentation.ui.component.history.MainPieChart
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -68,6 +70,12 @@ fun HistoryScreen(navController: NavController,
 
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    val dateText = if (uiState.selectedToggleIndex == 0) {
+        "전체 기간"
+    } else {
+        formatDateRange(uiState.startDateMillis, uiState.endDateMillis)
+    }
 
     // 사용내역 클릭해서 화면 이동
     LaunchedEffect(key1 = true) {
@@ -98,6 +106,17 @@ fun HistoryScreen(navController: NavController,
         DateRangePickerModal(
             onDismiss = viewModel::onDateRangePickerDismiss,
             onConfirm = viewModel::onDateRangeSelected
+        )
+    }
+
+    if (uiState.selectedCategoryForSheet != null) {
+        CategoryHistoryBottomSheet(
+            categoryName = uiState.selectedCategoryForSheet!!.category,
+            period = dateText, // 위에서 계산한 기간 텍스트
+            totalAmount = uiState.selectedCategoryForSheet!!.amount,
+            currency = uiState.selectedCurrency,
+            groupedHistoryTransactions = uiState.groupedHistoryTransactions,
+            onDismiss = viewModel::onBottomSheetDismiss
         )
     }
 
@@ -180,7 +199,9 @@ fun HistoryScreen(navController: NavController,
                                 onValueChange = {},
                                 readOnly = true,
                                 trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = "메뉴 열기") },
-                                modifier = Modifier.menuAnchor().width(100.dp),
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .width(100.dp),
                                 textStyle = Typography.bodySmall,
                                 colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color.Transparent)
                             )
@@ -231,11 +252,7 @@ fun HistoryScreen(navController: NavController,
             Spacer(modifier = Modifier.height(Spacing.Medium))
 
             // 3. 날짜 표시 영역
-            val dateText = if (uiState.selectedToggleIndex == 0) {
-                "전체 기간"
-            } else {
-                formatDateRange(uiState.startDateMillis, uiState.endDateMillis)
-            }
+
             Text(
                 text = dateText,
                 style = Typography.bodyLarge,
@@ -282,10 +299,13 @@ fun HistoryScreen(navController: NavController,
                     verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
                 ) {
                     items(items = uiState.currentStats?.content ?: emptyList()) { statItem ->
-                        HistoryItem(
-                            stat = statItem,
-                            allStats = uiState.currentStats?.content ?: emptyList(),
-                            currencyUnit = uiState.selectedCurrency)
+                        Box(modifier = Modifier.clickable { viewModel.onHistoryItemClick(statItem) }) {
+                            HistoryItem(
+                                stat = statItem,
+                                allStats = uiState.currentStats?.content ?: emptyList(),
+                                currencyUnit = uiState.selectedCurrency
+                            )
+                        }
                     }
                 }
             }

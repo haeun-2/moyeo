@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.d108.moyeo.core.BoxStoreUiState
 import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
@@ -33,13 +34,13 @@ import com.d108.moyeo.presentation.theme.surfaceVariantLight
 
 @Composable
 fun HistoryBoxesItem(  // 모여박스 선택 화면
-    box: Box,
+    box: BoxStoreUiState,
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
     val cardColors = CardDefaults.cardColors(
-        containerColor = surfaceVariantLight,
-        contentColor = onSurfaceVariantLight
+        containerColor = box.bg,
+        contentColor = box.textColor
     )
 
     Card(
@@ -74,7 +75,7 @@ fun HistoryBoxesItem(  // 모여박스 선택 화면
 
             // 오른쪽엔 이 모여 박스의 이름. 이 모여 박스의 이름이 남은 공간을 모두 차지함
             Text(
-                text = box.name,
+                text = box.title,
                 style = Typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 maxLines = 2,
