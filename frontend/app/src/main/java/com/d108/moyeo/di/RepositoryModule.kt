@@ -7,6 +7,7 @@ import com.d108.moyeo.data.repository.FidRepositoryImpl
 import com.d108.moyeo.data.repository.BoxRepositoryImpl
 import com.d108.moyeo.data.repository.BoxStatisticsRepositoryImpl
 import com.d108.moyeo.data.repository.ExchangeRepositoryImpl
+import com.d108.moyeo.data.repository.NotificationRepositoryImpl
 import com.d108.moyeo.data.repository.PaymentRepositoryImpl
 import com.d108.moyeo.data.repository.SignUpRepositoryImpl
 import com.d108.moyeo.data.repository.TransferRepositoryImpl
@@ -17,6 +18,7 @@ import com.d108.moyeo.domain.repository.BoxRepository
 import com.d108.moyeo.domain.repository.BoxStatisticsRepository
 import com.d108.moyeo.domain.repository.ExchangeRepository
 import com.d108.moyeo.domain.repository.FidRepository
+import com.d108.moyeo.domain.repository.NotificationRepository
 import com.d108.moyeo.domain.repository.PaymentRepository
 import com.d108.moyeo.domain.repository.SignUpRepository
 import com.d108.moyeo.domain.repository.TransferRepository
@@ -103,4 +105,11 @@ abstract class RepositoryModule {  // @Binds 함수는 함수 본문이 없어�
     abstract fun bindBoxHistoryRepository(
         boxHistoryRepositoryImpl: BoxHistoryRepositoryImpl
     ): BoxHistoryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindNotificationRepository(
+        notificationRepositoryImpl: NotificationRepositoryImpl
+    ): NotificationRepository
+
 }
