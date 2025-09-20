@@ -30,7 +30,7 @@ import com.d108.moyeo.presentation.ui.component.KeyMode
 import com.d108.moyeo.presentation.ui.component.KeypadKey
 
 @Composable
-fun PinContent(viewModel: ChargingViewModel) {
+fun PinContent(viewModel: ChargeViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
     Column (

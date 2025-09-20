@@ -20,7 +20,10 @@ data class TransferUiState(
     // PIN 검증을 위한 상태
     val pinFailureCount: Int = 0,
     val isPinLocked: Boolean = false,
-    val pinError: String? = null
+    val pinError: String? = null,
+
+    // 생체 인증 활성화 여부 확인
+    val biometricsEnabled: Boolean = false
 )
 
 // 화면에 표시할 통화 데이터 클래스 (ViewModel에서 전달받을 데이터 모델)

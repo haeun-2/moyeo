@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
+import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.domain.usecase.banking.TransferUseCase
 import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,7 +29,8 @@ class TransferViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getPersonalBox: GetPersonalBoxUseCase,
     private val sendTransfer: TransferUseCase,
-    private val boxStore: BoxStore
+    private val boxStore: BoxStore,
+    private val userDataManager: UserDataManager
 ) : ViewModel() {
 
     // BoxStore 에서 모임 박스 목록, 내 통화 목록을 불러옴
@@ -41,10 +43,6 @@ class TransferViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(TransferUiState(mode = TransferMode.TRANSFER))
     val uiState = _uiState.asStateFlow()
-
-    // 사용자가 생체 인식을 활성화했는지 여부.
-    // TODO: 실제로는 DataStore나 SharedPreferences 등에서 이 값을 가져와야 합니다.
-    private val isBiometricsEnabledByUser = true
 
     /**
      * 내비게이션 이벤트를 UI에 전달하기 위한 SharedFlow입니다.
@@ -90,11 +88,14 @@ class TransferViewModel @Inject constructor(
             )
         }
 
-        //
         viewModelScope.launch {
             getPersonalBox()
                 .onSuccess { box -> myPersonalBoxId = box.id }
                 .onFailure { /* TODO: 에러 처리 */}
+            // 생체인증 여부 반영
+            userDataManager.biometricsPreferenceFlow.collect { enabled ->
+                _uiState.update { it.copy(biometricsEnabled = enabled) }
+            }
         }
     }
 
@@ -256,7 +257,7 @@ class TransferViewModel @Inject constructor(
             TransferStep.HOW_MUCH -> {
                 // 금액 입력 후 다음 버튼을 누르면 인증을 시작합니다.
                 // 사용자가 생체 인식을 설정했는지 확인합니다.
-                if (isBiometricsEnabledByUser) {
+                if (_uiState.value.biometricsEnabled) {
                     // 설정했다면, BIOMETRIC 단계로 상태를 바꾸고
                     _uiState.update { it.copy(currentStep = TransferStep.BIOMETRIC) }
                     // 화면에 생체 인증 창을 띄우라는 이벤트를 보냅니다.

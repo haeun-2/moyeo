@@ -67,7 +67,7 @@ sealed class AppScreen(
     }
 
     // 충전화 관련된 화면
-    object Charging: AppScreen(route = "charging", title = "충전")
+    object Charge: AppScreen(route = "charge", title = "충전")
 
     // 모으기와 관련된 화면
     object Collecting : AppScreen(route = "collecting/{boxId}?currencyCode={currencyCode}", title = "모으기") {

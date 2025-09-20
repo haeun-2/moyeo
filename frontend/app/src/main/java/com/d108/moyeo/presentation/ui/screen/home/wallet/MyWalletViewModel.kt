@@ -1,6 +1,5 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
-import android.icu.number.Precision.currency
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.presentation.ui.component.home.FilterOptions
@@ -61,7 +60,7 @@ data class MyWalletUiState(
 
 sealed class WalletNavigationEvent {
     data class NavigateToTransfer(val currencyCode: String) : WalletNavigationEvent()
-    data object NavigateToCharging : WalletNavigationEvent() // 충전 화면 이동 이벤트 추가
+    data object NavigateToCharge : WalletNavigationEvent() // 충전 화면 이동 이벤트 추가
 }
 
 class MyWalletViewModel : ViewModel() {
@@ -174,9 +173,9 @@ class MyWalletViewModel : ViewModel() {
 
 
     // 충전 플로팅 버튼 클릭 시 호출
-    fun onChargingClick() {
+    fun onChargeClick() {
         viewModelScope.launch {
-            _navigationEvent.emit(WalletNavigationEvent.NavigateToCharging)
+            _navigationEvent.emit(WalletNavigationEvent.NavigateToCharge)
         }
     }
 

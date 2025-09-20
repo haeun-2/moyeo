@@ -19,7 +19,7 @@ import com.d108.moyeo.presentation.ui.component.KeypadKey
 import java.text.DecimalFormat
 
 @Composable
-fun HowMuchContent(viewModel: ChargingViewModel) {
+fun HowMuchContent(viewModel: ChargeViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
     // 입력된 숫자 문자열을 천 단위 쉼표가 있는 형식으로 변환합니다.

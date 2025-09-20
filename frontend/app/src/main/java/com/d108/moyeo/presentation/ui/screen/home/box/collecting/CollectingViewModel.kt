@@ -3,7 +3,8 @@ package com.d108.moyeo.presentation.ui.screen.home.box.collecting
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.d108.moyeo.presentation.ui.component.home.Currency
+import com.d108.moyeo.data.local.UserDataManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,35 +12,24 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-
-data class CollectingUiState(
-    val currentStep: CollectingStep = CollectingStep.CHOOSE_CURRENCY,
-    val boxId: String = "", // 어떤 박스에 모을지
-    val currency: String = "", // 어떤 화폐를 모을지
-    val howMuch: String = "",
-    val pin: String = "",
-    // PIN 검증을 위한 상태
-    val pinFailureCount: Int = 0,
-    val isPinLocked: Boolean = false,
-    val pinError: String? = null
-)
+import javax.inject.Inject
 
 sealed class CollectingNavEvent {
     data object NavigateBack : CollectingNavEvent()
     data object ShowBiometricPrompt : CollectingNavEvent()
 }
 
-class CollectingViewModel(private val savedStateHandle: SavedStateHandle): ViewModel() {
+@HiltViewModel
+class CollectingViewModel @Inject constructor (
+    private val savedStateHandle: SavedStateHandle,
+    private val userDataManager: UserDataManager
+): ViewModel() {
 
     private val _uiState = MutableStateFlow(CollectingUiState())
     val uiState = _uiState.asStateFlow()
 
     // TODO: 임시 정답 핀을 실제 PIN으로 바꾸기
     private val correctPin = "111111"
-
-    // TODO: 실제로는 DataStore나 SharedPreferences 등에서 이 값을 가져와야 합니다.
-    private val isBiometricsEnabledByUser = true
 
     private val _navigationEvent = MutableSharedFlow<CollectingNavEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
@@ -54,6 +44,13 @@ class CollectingViewModel(private val savedStateHandle: SavedStateHandle): ViewM
         if (initialCurrency.isNotBlank()) {
             _uiState.update { currentState ->
                 currentState.copy(currency = initialCurrency)
+            }
+        }
+
+        // 생체인증 여부 반영
+        viewModelScope.launch {
+            userDataManager.biometricsPreferenceFlow.collect { enabled ->
+                _uiState.update { it.copy(biometricsEnabled = enabled) }
             }
         }
     }
@@ -130,7 +127,7 @@ class CollectingViewModel(private val savedStateHandle: SavedStateHandle): ViewM
                 _uiState.update { it.copy(currentStep = CollectingStep.HOW_MUCH) }
             }
             CollectingStep.HOW_MUCH -> {
-                if (isBiometricsEnabledByUser) {
+                if (_uiState.value.biometricsEnabled) {
                     _uiState.update { it.copy(currentStep = CollectingStep.BIOMETRIC) }
                     viewModelScope.launch {
                         _navigationEvent.emit(CollectingNavEvent.ShowBiometricPrompt)

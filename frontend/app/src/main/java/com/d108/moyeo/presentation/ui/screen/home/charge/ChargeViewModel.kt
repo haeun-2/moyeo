@@ -2,6 +2,8 @@ package com.d108.moyeo.presentation.ui.screen.home.charge
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.data.local.UserDataManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,37 +11,35 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-
-data class ChargingUiState(
-    val currentStep: ChargeStep = ChargeStep.HOW_MUCH,
-    val howMuch: String = "",
-    val pin: String = "",
-    // PIN 검증을 위한 상태
-    val pinFailureCount: Int = 0,
-    val isPinLocked: Boolean = false,
-    val pinError: String? = null
-)
-
-sealed class ChargingNavEvent {  // 내비게이션
-    data object NavigateBack : ChargingNavEvent()
-    data object ShowBiometricPrompt : ChargingNavEvent()
+sealed class ChargeNavEvent {  // 내비게이션
+    data object NavigateBack : ChargeNavEvent()
+    data object ShowBiometricPrompt : ChargeNavEvent()
 }
 
-class ChargingViewModel: ViewModel() {
-    private val _uiState = MutableStateFlow(ChargingUiState())
+@HiltViewModel
+class ChargeViewModel @Inject constructor(
+    private val userDataManager: UserDataManager
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(ChargeUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _navigationEvent = MutableSharedFlow<ChargingNavEvent>()
+    private val _navigationEvent = MutableSharedFlow<ChargeNavEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
     // TODO: 임시 정답 핀을 실제 PIN으로 바꾸기
     private val correctPin = "111111"
 
-    // TODO: 실제로는 DataStore나 SharedPreferences 등에서 이 값을 가져와야
-    private val isBiometricsEnabledByUser = true
-
-
+    init {
+        // 생체인증 여부 반영
+        viewModelScope.launch {
+            userDataManager.biometricsPreferenceFlow.collect { enabled ->
+                _uiState.update { it.copy(biometricsEnabled = enabled) }
+            }
+        }
+    }
 
     // --- 금액 입력 관련 함수 ---
     fun onMoneyDigitInput(digit: String) {
@@ -107,10 +107,10 @@ class ChargingViewModel: ViewModel() {
     fun onNextClicked() {
         when (_uiState.value.currentStep) {
             ChargeStep.HOW_MUCH -> {
-                if (isBiometricsEnabledByUser) {
+                if (_uiState.value.biometricsEnabled) {
                     _uiState.update { it.copy(currentStep = ChargeStep.BIOMETRIC) }
                     viewModelScope.launch {
-                        _navigationEvent.emit(ChargingNavEvent.ShowBiometricPrompt)
+                        _navigationEvent.emit(ChargeNavEvent.ShowBiometricPrompt)
                     }
                 } else {
                     _uiState.update { it.copy(currentStep = ChargeStep.PIN) }
@@ -126,7 +126,7 @@ class ChargingViewModel: ViewModel() {
             }
             ChargeStep.FINISH -> {
                 viewModelScope.launch {
-                    _navigationEvent.emit(ChargingNavEvent.NavigateBack)
+                    _navigationEvent.emit(ChargeNavEvent.NavigateBack)
                 }
             }
         }
@@ -136,7 +136,7 @@ class ChargingViewModel: ViewModel() {
         val currentStep = _uiState.value.currentStep
         if (currentStep == ChargeStep.HOW_MUCH || currentStep == ChargeStep.FINISH) {
             viewModelScope.launch {
-                _navigationEvent.emit(ChargingNavEvent.NavigateBack)
+                _navigationEvent.emit(ChargeNavEvent.NavigateBack)
             }
         } else {
             _uiState.update { it.copy(currentStep = ChargeStep.HOW_MUCH) }

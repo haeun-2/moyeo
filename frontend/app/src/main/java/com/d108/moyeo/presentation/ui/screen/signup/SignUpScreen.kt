@@ -37,8 +37,13 @@ fun SignUpScreen(
     }
 
     val context = LocalContext.current
+
+    // 생체 인증 관련
     val activity = context as FragmentActivity
     val biometricManager = remember { BiometricAuthManager(activity) }
+
+    // 생체인증이 불가능한 기기 판별
+    val canAuth = remember { biometricManager.canAuthenticate() }
 
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->
@@ -135,7 +140,8 @@ fun SignUpScreen(
             SignUpStep.TERMS -> uiState.termsOfServiceAccepted && uiState.privacyPolicyAccepted
             SignUpStep.PIN -> uiState.pin.length == 6
             SignUpStep.PIN_CONFIRM -> uiState.pinConfirm.length == 6 && uiState.pin == uiState.pinConfirm
-            SignUpStep.BIOMETRICS -> true
+            // TODO: 생체 인증이 불가능한 기기의 경우 BiometricsContent 접근 제한
+            SignUpStep.BIOMETRICS -> canAuth  // 생체 인증이 불가능한 기기의 경우 버튼 비활성화
             SignUpStep.COMPLETE -> true
 
         }

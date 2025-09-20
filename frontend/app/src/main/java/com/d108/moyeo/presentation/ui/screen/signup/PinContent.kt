@@ -5,10 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,8 +51,6 @@ private fun PinContentLayout(
     onBackspaceClick: () -> Unit,
     errorMessage: String? = null
 ) {
-    var keyMode by remember { mutableStateOf(KeyMode.Zeros) }
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
@@ -78,20 +72,18 @@ private fun PinContentLayout(
 
         Spacer(Modifier.weight(1f))
 
+        // 재사용 가능한 커스텀 키패드
         CustomKeypad(
+            keypadColortype = "normal",
+            keyMode = KeyMode.Reset, // 금액 입력이 아니므로 '초기화' 모드
             onKeyPress = { key ->
                 when (key) {
                     is KeypadKey.Digit -> onDigitClick(key.value.toString())
-                    KeypadKey.Clear -> when (keyMode) {
-                        KeyMode.Reset -> onClearClick()
-                        KeyMode.Zeros -> onDigitClick("00")
-                    }
+                    KeypadKey.Clear -> onClearClick()
                     KeypadKey.Backspace -> onBackspaceClick()
-                    is KeypadKey.Custom -> {}
+                    else -> {}
                 }
             },
-            keypadColortype = "normal",
-            keyMode = keyMode
         )
     }
 }

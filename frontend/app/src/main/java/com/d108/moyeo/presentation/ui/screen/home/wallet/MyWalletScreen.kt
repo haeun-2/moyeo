@@ -1,6 +1,5 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
-import android.R.attr.onClick
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -52,8 +51,8 @@ fun MyWalletScreen(
                         AppScreen.Transfer.route.replace("{currencyId}", event.currencyCode)  // 라우트 확인
                     )
                 }
-                is WalletNavigationEvent.NavigateToCharging -> {
-                    navController.navigate(AppScreen.Charging.route)
+                is WalletNavigationEvent.NavigateToCharge -> {
+                    navController.navigate(AppScreen.Charge.route)
                 }
             }
         }
@@ -83,7 +82,7 @@ fun MyWalletScreen(
     Scaffold(
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = viewModel::onChargingClick,  // 여기에서 충전하기 화면으로 이동
+                onClick = viewModel::onChargeClick,  // 여기에서 충전하기 화면으로 이동
                 icon = { Icon(Icons.Default.Add, "충전 아이콘") },
                 text = { Text(text = "충전") }
             )
