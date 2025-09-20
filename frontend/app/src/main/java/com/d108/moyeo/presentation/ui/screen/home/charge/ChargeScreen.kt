@@ -31,8 +31,10 @@ import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.util.BiometricAuthManager
 
 @Composable
-fun ChargingScreen(navController: NavController,
-                   viewModel: ChargingViewModel = viewModel()) {
+fun ChargeScreen(
+    navController: NavController,
+    viewModel: ChargeViewModel = viewModel()
+) {
 
     // 생체 인증에 필요
     val context = LocalContext.current
@@ -47,11 +49,11 @@ fun ChargingScreen(navController: NavController,
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->
             when (event) {
-                is ChargingNavEvent.NavigateBack -> {
+                is ChargeNavEvent.NavigateBack -> {
                     navController.popBackStack()
                 }
 
-                is ChargingNavEvent.ShowBiometricPrompt -> {
+                is ChargeNavEvent.ShowBiometricPrompt -> {
                     if (biometricManager.canAuthenticate()) {
                         biometricManager.authenticate(
                             title = "본인 인증",

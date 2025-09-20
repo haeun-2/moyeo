@@ -2,6 +2,8 @@ package com.d108.moyeo.presentation.ui.screen.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.data.local.UserDataManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,25 +11,18 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-enum class LoginMode {
-    BIOMETRIC,
-    PASSWORD
-}
-
-// PIN 화면의 UI 상태를 관리할 데이터 클래스
-data class LoginUiState(
-    val pin: String = "",
-    val errorMessage: String? = null
-)
+import javax.inject.Inject
 
 sealed class LoginNavigationEvent {
     object NavigateToHome : LoginNavigationEvent()
 }
 
-class LoginViewModel : ViewModel() {
+@HiltViewModel
+class LoginViewModel @Inject constructor (
+    private val userDataManager: UserDataManager
+) : ViewModel() {
 
-    private val _loginMode = MutableStateFlow(LoginMode.BIOMETRIC)
+    private val _loginMode = MutableStateFlow(LoginMode.PASSWORD)
     val loginMode = _loginMode.asStateFlow()
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -37,6 +32,15 @@ class LoginViewModel : ViewModel() {
     val navigationEvent = _navigationEvent.asSharedFlow()
 
     private val correctPin = "111111" // 사용자 현재 비밀번호 (임시)
+
+    init {
+        // 생체인증 여부 반영
+        viewModelScope.launch {
+            userDataManager.biometricsPreferenceFlow.collect { enabled ->
+                _loginMode.value = if (enabled) LoginMode.BIOMETRIC else LoginMode.PASSWORD
+            }
+        }
+    }
 
     fun switchToPasswordMode() {
         _loginMode.value = LoginMode.PASSWORD

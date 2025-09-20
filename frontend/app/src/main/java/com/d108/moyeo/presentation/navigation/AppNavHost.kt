@@ -27,7 +27,7 @@ import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxDetailScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.calculating.CalculatingScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.collecting.CollectingScreen
-import com.d108.moyeo.presentation.ui.screen.home.charge.ChargingScreen
+import com.d108.moyeo.presentation.ui.screen.home.charge.ChargeScreen
 import com.d108.moyeo.presentation.ui.screen.home.create.CreateBoxScreen
 import com.d108.moyeo.presentation.ui.screen.home.transfer.TransferScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
@@ -152,8 +152,8 @@ fun AppNavHost(
         }
 
         // 페이머니 충전 화면
-        composable(route = AppScreen.Charging.route) {
-            ChargingScreen(navController = navController)
+        composable(route = AppScreen.Charge.route) {
+            ChargeScreen(navController = navController)
         }
 
         // 모으기 화면
