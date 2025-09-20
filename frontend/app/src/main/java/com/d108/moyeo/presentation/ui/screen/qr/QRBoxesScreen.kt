@@ -23,7 +23,7 @@ import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.ui.component.common.GridMoyeoBoxesItem
+import com.d108.moyeo.presentation.ui.component.common.LazyColumnMoyeoBoxesItem
 
 @Composable
 fun QRBoxesScreen(
@@ -32,17 +32,16 @@ fun QRBoxesScreen(
 ) {
 
     val uiState by viewModel.uiState.collectAsState()
-    val boxes = viewModel.groupBoxesUi.collectAsState().value
+    val boxes by viewModel.groupBoxesUi.collectAsState()
 
 
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->
             when (event) {
                 is QRBoxesNavEvent.NavigateBackWithResult -> {
-                    navController.previousBackStackEntry  // 이전 화면의
-                        ?.savedStateHandle  // savedStateHandle에
-                        ?.set("newly_bookmarked_id", event.selectedBoxId)  // "newly_bookmarded_id"라는 키에 value를 답아서 보냄
-                    // 현재 화면을 닫습니다.
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("newly_bookmarked_id", event.selectedBoxId)
                     navController.popBackStack()
                 }
             }
@@ -89,7 +88,7 @@ fun QRBoxesScreen(
                         items = boxes,
                         key = { it.id }
                     ) { box ->
-                        GridMoyeoBoxesItem(
+                        LazyColumnMoyeoBoxesItem(
                             box = box,
                             isSelected = (uiState.newlySelectedBoxId == box.id),
                             onClick = { viewModel.onBoxClick(box) }

@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 /** 상단 지갑 요약 */
 data class WalletSummary(
+    val id: Long,
     val title: String,
     val bg: Color,
     val balances: List<CurrencyBalance>
@@ -21,7 +22,8 @@ data class GroupBox(
     val id: Long,
     val title: String,
     val amount: String, // 대표 금액 문자열
-    val bg: Color       // 카드 배경색
+    val bg: Color,       // 카드 배경색
+    val isBookmarked: Boolean
 )
 
 /** HomeScreen 전체 상태 */

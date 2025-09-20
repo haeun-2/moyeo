@@ -17,7 +17,6 @@ import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.ui.component.common.GridMoyeoBoxesItem
 import com.d108.moyeo.presentation.ui.component.history.HistoryBoxesItem
 
 @Composable
@@ -27,6 +26,7 @@ fun HistoryBoxesScreen(
 ) {
     // ViewModel의 상태를 구독
     val uiState by viewModel.uiState.collectAsState()
+    val allBoxes by viewModel.allBoxesUi.collectAsState()
 
 
     LaunchedEffect(key1 = true) {
@@ -66,25 +66,18 @@ fun HistoryBoxesScreen(
             modifier = Modifier.weight(1f), // Box가 남은 공간을 차지하도록
             contentAlignment = Alignment.Center
         ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator()
-            } else if (uiState.errorMessage != null) {
-                Text(text = uiState.errorMessage!!)
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
-                ) {
-                    items(
-                        items = uiState.allBoxes,
-                        key = { it.id }
-                    ) { box ->
-                        HistoryBoxesItem(
-                            box = box,
-                            // isSelected 상태를 ViewModel의 newlySelectedBoxId와 비교하여 결정
-                            isSelected = (uiState.newlySelectedBoxId == box.id),
-                            onClick = { viewModel.onBoxSelected(box.id) }
-                        )
-                    }
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
+            ) {
+                items(
+                    items = allBoxes,
+                    key = { it.id }
+                ) { box ->
+                    HistoryBoxesItem(
+                        box = box,
+                        isSelected = (uiState.newlySelectedBoxId == box.id),
+                        onClick = { viewModel.onBoxSelected(box.id) }
+                    )
                 }
             }
         }

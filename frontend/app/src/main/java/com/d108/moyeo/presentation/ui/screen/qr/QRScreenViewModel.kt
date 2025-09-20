@@ -3,6 +3,7 @@ package com.d108.moyeo.presentation.ui.screen.qr
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.domain.usecase.box.GetBookmarkedBoxesUseCase
 import com.d108.moyeo.domain.usecase.payment.GenerateQRTokenUseCase
 import com.d108.moyeo.util.generateQRCodeBitmap
@@ -10,7 +11,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -18,18 +22,23 @@ import javax.inject.Inject
 private val TAG = "QRScreenViewModel"
 @HiltViewModel
 class QRScreenViewModel @Inject constructor(
-    private val getBookmarkedBoxesUseCase: GetBookmarkedBoxesUseCase,
     private val generateQRTokenUseCase: GenerateQRTokenUseCase,
+    private val boxStore: BoxStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(QRScreenUiState())
     val uiState = _uiState.asStateFlow()
 
+    val bookmarkedBoxes = boxStore.boxUiStates.map { allBoxes ->
+        allBoxes.filter { it.isBookmarked }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
     private var timerJob: Job? = null  // 현재 실행 중인 타이머 작업
 
-    init {
-        loadBookmarkedBoxes()
-    }
 
     // 사용자가 모여박스를 클릭했을 때 호출될 함수
     fun selectBox(boxId: Long) {
@@ -48,50 +57,9 @@ class QRScreenViewModel @Inject constructor(
         }
     }
 
-    fun refreshAndSelect(boxIdToSelect: Long) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoadingBoxes = true, errorMessage = null) }
-            getBookmarkedBoxesUseCase()
-                .onSuccess { boxes ->
-                    // 성공 시, 목록과 선택된 ID를 '한 번에' 업데이트하여 충돌 방지
-                    _uiState.update {
-                        it.copy(
-                            isLoadingBoxes = false,
-                            bookmarkedBoxes = boxes,
-                            selectedBoxId = boxIdToSelect
-                        )
-                    }
-
-                    generateQRCode(boxIdToSelect)
-                }
-                .onFailure { error ->
-                    _uiState.update { it.copy(isLoadingBoxes = false, errorMessage = "즐겨찾기 목록을 불러오지 못했습니다.") }
-                }
-        }
+    fun selectBoxOnReturn(boxIdToSelect: Long) {
+        selectBox(boxIdToSelect)
     }
-
-    private fun loadBookmarkedBoxes() {
-        viewModelScope.launch {
-            // 1. 로딩 상태를 true로 변경하여 UI에 알려줍니다.
-            _uiState.update { it.copy(isLoadingBoxes = true, errorMessage = null) }
-
-            // 2. UseCase를 실행하여 서버로부터 데이터를 가져옵니다.
-            getBookmarkedBoxesUseCase()
-                .onSuccess { boxes ->
-                    // 3. 성공 시, 받아온 박스 목록으로 상태를 업데이트합니다.
-                    _uiState.update { it.copy(isLoadingBoxes = false, bookmarkedBoxes = boxes) }
-                }
-                .onFailure { error ->
-                    // 4. 실패 시, 에러 메시지를 상태에 저장합니다.
-                    _uiState.update { it.copy(isLoadingBoxes = false, errorMessage = "즐겨찾기 목록을 불러오지 못했습니다.") }
-                }
-        }
-    }
-
-    fun refreshBookmarkedBoxes() {
-        loadBookmarkedBoxes()
-    }
-
 
     /*
     QR 코드 관련

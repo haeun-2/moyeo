@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items // lazy.items를 import 합니다.
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -13,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,6 +32,8 @@ import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.onPrimaryLight
 import com.d108.moyeo.presentation.theme.primaryLight
 import com.d108.moyeo.presentation.ui.component.qr.SquareMoyeoBoxItem
+import kotlinx.coroutines.launch
+import kotlin.math.max
 
 @Composable
 fun QRScreen(
@@ -38,20 +42,31 @@ fun QRScreen(
 ) {
     // ViewModel의 상태를 구독합니다.
     val uiState by viewModel.uiState.collectAsState()
+    val bookmarkedBoxes by viewModel.bookmarkedBoxes.collectAsState()
+
+    // 선택한 걸 중앙에 두려고
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     LaunchedEffect(savedStateHandle) {
-        savedStateHandle?.getLiveData<Long>("newly_bookmarked_id")?.observeForever { newId ->
-            if (newId != null) {
-                viewModel.refreshAndSelect(newId)
-                savedStateHandle.remove<Long>("newly_bookmarked_id")
+        val newId = savedStateHandle?.get<Long>("newly_bookmarked_id")
+        if (newId != null) {
+            viewModel.selectBoxOnReturn(newId)
+            savedStateHandle.remove<Long>("newly_bookmarked_id")
+
+            val index = bookmarkedBoxes.indexOfFirst { it.id == newId }
+            if (index != -1) {
+                coroutineScope.launch {
+                    lazyListState.animateScrollToItem(index = max(0, index - 1))  // 가운데로 위치
+                }
             }
         }
     }
 
     // 선택된 박스의 이름을 찾습니다. (없으면 기본 텍스트)
-    val selectedBoxName = remember(uiState.selectedBoxId, uiState.bookmarkedBoxes) {
-        uiState.bookmarkedBoxes.find { it.id == uiState.selectedBoxId }?.name ?: "결제할 모여 박스를 선택해주세요"
+    val selectedBoxName = remember(uiState.selectedBoxId, bookmarkedBoxes) {
+        bookmarkedBoxes.find { it.id == uiState.selectedBoxId }?.title ?: "결제할 모여 박스를 선택해주세요"
     }
 
     Column(
@@ -125,11 +140,12 @@ fun QRScreen(
                 .fillMaxWidth()
                 .weight(1f), // 남은 모든 세로 공간 확보
             horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
-            verticalAlignment = Alignment.CenterVertically // 아이템들을 세로 중앙에 정렬
+            verticalAlignment = Alignment.CenterVertically, // 아이템들을 세로 중앙에 정렬,
+            state = lazyListState
         ) {
             // 레이지로우 아이템은 ViewModel의 리스트를 사용
             items(
-                items = uiState.bookmarkedBoxes,
+                items = bookmarkedBoxes,
                 key = { it.id } // 각 아이템의 고유 키를 지정
             ) { box ->
                 SquareMoyeoBoxItem(
