@@ -9,7 +9,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -135,7 +137,8 @@ fun HomeScreen(
                             data = item,
                             onDepositClick = { viewModel.onDepositClick(item.id) },
                             onMoreClick = { viewModel.onGroupMoreClick(item.id) },
-                            onColumnClick = { viewModel.onGroupBoxClick(item.id) }
+                            onColumnClick = { viewModel.onGroupBoxClick(item.id) },
+                            onBookmarkToggle = { viewModel.onToggleBookmark(item.id, item.isBookmarked) }
                         )
                         if (index < uiState.groups.lastIndex) {
                             Spacer(Modifier.height(Spacing.Large))
@@ -336,7 +339,8 @@ private fun GroupBoxCard(
     data: GroupBox,
     onDepositClick: () -> Unit, // 입금 클릭
     onMoreClick: () -> Unit,
-    onColumnClick: () -> Unit  // 클릭 시 상세 화면으로 이동
+    onColumnClick: () -> Unit,  // 클릭 시 상세 화면으로 이동
+    onBookmarkToggle: () -> Unit,
 ) {
     Card(
         shape = RoundedCornerShape(20.dp),
@@ -373,6 +377,14 @@ private fun GroupBoxCard(
                     .padding(Spacing.ExtraSmall),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(onClick = onBookmarkToggle) {
+                    Icon(
+                        imageVector = if (data.isBookmarked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = "즐겨찾기 토글",
+                        tint = if (data.isBookmarked) Color.Yellow else textColorUtil(data.bg)
+                    )
+                }
+
                 // TODO: 입금 색상 변경
                 AssistChip(
                     onClick = onDepositClick,

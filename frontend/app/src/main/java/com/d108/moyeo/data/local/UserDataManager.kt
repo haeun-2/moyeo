@@ -137,7 +137,7 @@ class UserDataManager @Inject constructor(
         }
     }
 
-    suspend fun removeBookmark(id: Long) {
+    suspend fun deleteBookmark(id: Long) {
         context.dataStore.edit { preferences ->
             val currentIds = preferences[BOOKMARKED_GROUP_IDS] ?: emptySet()
             preferences[BOOKMARKED_GROUP_IDS] = currentIds - id.toString()

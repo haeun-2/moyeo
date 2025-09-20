@@ -12,6 +12,8 @@ import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.domain.usecase.box.GetGroupBoxesUseCase
 import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import com.d108.moyeo.domain.repository.AuthRepository
+import com.d108.moyeo.domain.usecase.box.AddBookmarkUseCase
+import com.d108.moyeo.domain.usecase.box.DeleteBookmarkUseCase
 import com.d108.moyeo.presentation.theme.boxAvailableColors
 import com.d108.moyeo.presentation.ui.screen.home.transfer.CurrencyData
 import com.d108.moyeo.util.textColorUtil
@@ -49,7 +51,9 @@ class HomeViewModel @Inject constructor(
     private val getPersonalBox: GetPersonalBoxUseCase,
     private val getGroupBoxes: GetGroupBoxesUseCase,
     private val userDataManager: UserDataManager,
-    private val boxStore: BoxStore
+    private val boxStore: BoxStore,
+    private val addBookmarkUseCase: AddBookmarkUseCase,
+    private val deleteBookmarkUseCase: DeleteBookmarkUseCase
 ) : ViewModel() {
 
     private var didHandleFirstResume: Boolean = false
@@ -194,6 +198,33 @@ class HomeViewModel @Inject constructor(
                 _uiState.update { it.copy(groups = finalUiStateList.map { it.toGroupBox() }) }  // 홈 화면 UI를 위해서는 GroupBox 모델로 변환하여 저장
             }
             .onFailure { e -> Log.e("HomeViewModel", "loadGroups failed", e) }
+    }
+
+
+    fun onToggleBookmark(boxId: Long, currentIsBookmarked: Boolean) {
+        val newIsBookmarked = !currentIsBookmarked
+
+        viewModelScope.launch {
+            val result = if (newIsBookmarked) {
+                addBookmarkUseCase(boxId)
+            } else {
+                deleteBookmarkUseCase(boxId)
+            }
+
+            result
+                .onSuccess {
+                    // 3. 성공 시, 로컬 DB를 업데이트하고, 전체 목록을 새로고침합니다.
+                    if (newIsBookmarked) {
+                        userDataManager.addBookmark(boxId)
+                    } else {
+                        userDataManager.deleteBookmark(boxId)
+                    }
+                    refresh() // API 콜
+                }
+                .onFailure { error ->
+                    Log.e("HomeViewModel", "Bookmark update failed: $error")
+                }
+        }
     }
 
     // ---------- 매핑 ----------

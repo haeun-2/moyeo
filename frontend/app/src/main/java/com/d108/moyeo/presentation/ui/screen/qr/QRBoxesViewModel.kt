@@ -6,7 +6,6 @@ import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.core.BoxStoreUiState
 import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.domain.usecase.box.AddBookmarkUseCase
-import com.d108.moyeo.domain.usecase.box.GetGroupBoxesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,7 +67,7 @@ class QRBoxesViewModel @Inject constructor(
                 .onFailure { error ->
                     // 서버 통신 실패 시, 모든 변경사항을 롤백
                     boxStore.patchBox(id = selectedId, newIsBookmarked = false)
-                    userDataManager.removeBookmark(selectedId) // 로컬 저장도 취소
+                    userDataManager.deleteBookmark(selectedId) // 로컬 저장도 취소
                     _uiState.update {
                         it.copy(isLoading = false, errorMessage = "즐겨찾기 추가에 실패했습니다.")
                     }
