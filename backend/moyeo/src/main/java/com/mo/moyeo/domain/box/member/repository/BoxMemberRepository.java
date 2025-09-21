@@ -74,7 +74,21 @@ public interface BoxMemberRepository extends JpaRepository<BoxMember, Long> {
           AND b.type = 'GROUP'
         ORDER BY bm.isBookmarked DESC, b.createdAt DESC, b.id DESC
     """)
-    List<BoxMember> selectJoinedGroupBoxByUser(@Param("user") User user);
+    List<BoxMember> findJoinedGroupBoxByUser(@Param("user") User user);
+
+    @Query("""
+        SELECT DISTINCT bm
+        FROM BoxMember bm
+        JOIN FETCH bm.box b
+        LEFT JOIN FETCH b.balances bal
+        WHERE bm.user = :user
+          AND bm.status = 'JOINED'
+          AND bm.canPayment = true
+          AND b.type = 'GROUP'
+        ORDER BY bm.isBookmarked DESC, b.createdAt DESC, b.id DESC
+    """)
+    List<BoxMember> findJoinedPayableGroupBoxByUser(@Param("user") User user);
+
 
     @Query("""
         SELECT CASE WHEN COUNT(bm) > 0 THEN true ELSE false END

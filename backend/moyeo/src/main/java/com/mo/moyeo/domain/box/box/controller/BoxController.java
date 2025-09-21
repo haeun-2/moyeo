@@ -56,4 +56,11 @@ public class BoxController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "결제용 박스 목록 조회", description = "결제 권한이 있는 박스 목록을 조회합니다. 개인 박스와 북마크 박스가 우선 조회됩니다.")
+    @GetMapping("/payments")
+    public ResponseEntity<List<PayableBoxResponse>> getPayableBoxList(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<PayableBoxResponse> response = boxApplicationService.getPayableBoxList(userDetails.getUser());
+        return ResponseEntity.ok(response);
+    }
+
 }
