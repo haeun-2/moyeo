@@ -21,6 +21,7 @@ hiltNavigationCompose = "1.2.0"
 # OKhttp, retrofit
 okhttp = "4.12.0"
 retrofit = "2.12.0"
+gson = "2.10.1"
 
 # datastore
 datastoreCore = "1.1.7"
@@ -63,6 +64,7 @@ okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-i
 # Retrofit
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
 #datastore
 androidx-datastore-core = { group = "androidx.datastore", name = "datastore-core", version.ref = "datastoreCore" }

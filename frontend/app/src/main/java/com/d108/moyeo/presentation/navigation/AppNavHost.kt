@@ -100,16 +100,12 @@ fun AppNavHost(
         composable(
             route = AppScreen.MyWalletDetail.route,
             // 경로에서 "transactionId"를 어떤 타입으로 받을지 정의합니다.
-            arguments = listOf(navArgument("transactionId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("historyId") { type = NavType.LongType },
+                navArgument("transactionJson") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
-            // 뒤로가기 스택에서 "transactionId" 값을 꺼냅니다.
-            val transactionId = backStackEntry.arguments?.getString("transactionId")
-            if (transactionId != null) {
-                MyWalletDetailScreen(
-                    navController = navController,
-                    transactionId = transactionId // 상세 화면에 ID를 전달합니다.
-                )
-            }
+            MyWalletDetailScreen(navController = navController)
         }
 
         // 모여 박스에서 클릭

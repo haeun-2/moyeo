@@ -42,7 +42,12 @@ sealed class AppScreen(
     }
 
     // 월렛에서 상세로 들어가는 화면
-    object MyWalletDetail : AppScreen(route = "my_wallet_detail/{transactionId}", title = "월렛 상세")
+    object MyWalletDetail : AppScreen(route = "my_wallet_detail/{historyId}?transactionJson={transactionJson}", title = "월렛 상세") {
+        fun createRoute(historyId: Long, transactionJson: String): String {
+            val encodedJson = java.net.URLEncoder.encode(transactionJson, "UTF-8")
+            return "my_wallet_detail/$historyId?transactionJson=$encodedJson"
+        }
+    }
 
     // 홈에서 모여 박스를 클릭했을 때 넘어오는 화면
     object MyBox : AppScreen(route = "my_box/{boxId}/{bgColor}", title = "내 박스")

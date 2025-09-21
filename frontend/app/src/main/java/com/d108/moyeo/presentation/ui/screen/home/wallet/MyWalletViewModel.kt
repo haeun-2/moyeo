@@ -10,6 +10,7 @@ import com.d108.moyeo.domain.usecase.history.GetTransactionHistoryUseCase
 import com.d108.moyeo.presentation.ui.component.home.FilterOptions
 import com.d108.moyeo.presentation.ui.component.home.WalletFilterOptionsAdp
 import com.d108.moyeo.presentation.ui.component.home.Currency
+import com.d108.moyeo.presentation.ui.component.home.FilterOptionData.allScopeOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -48,15 +49,13 @@ class MyWalletViewModel @Inject constructor(
     val navigationEvent = _navigationEvent.asSharedFlow()
     val boxId = savedStateHandle.get<Long>("boxId") ?: -1L
 
-    private val allScopeOptions = listOf(
-        "전체", "입금", "출금", "환전", "식사", "교통", "숙박", "투어/액티비티", "쇼핑", "기타"
-    )
+
 
     private var searchJob: Job? = null
 
     init {
-        Log.d(TAG, "${savedStateHandle.keys()}")
-        Log.d(TAG, "boxId: $boxId ")
+//        Log.d(TAG, "${savedStateHandle.keys()}")
+//        Log.d(TAG, "boxId: $boxId ")
         val currencyCode = savedStateHandle.get<String>("currencyCode") ?: "KRW"
 
         viewModelScope.launch {

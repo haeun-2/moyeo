@@ -37,6 +37,7 @@ import com.d108.moyeo.presentation.ui.component.history.toDate
 import com.d108.moyeo.presentation.ui.component.home.CommonFilterBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.CurrencyBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.FilterOptions
+import com.google.gson.Gson
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -166,7 +167,13 @@ fun MyWalletScreen(
                             TransactionRowItem(
                                 transaction = transaction,
                                 onClick = {
-                                    navController.navigate("my_wallet_detail/${transaction.id}")
+                                    val transactionJson = Gson().toJson(transaction)
+                                    navController.navigate(
+                                        AppScreen.MyWalletDetail.createRoute(
+                                            historyId = transaction.id,
+                                            transactionJson = transactionJson
+                                        )
+                                    )
                                 }
                             )
                             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
