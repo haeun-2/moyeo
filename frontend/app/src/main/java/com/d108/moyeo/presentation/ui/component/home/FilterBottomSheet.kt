@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.component.home
 
+import android.R.attr.name
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +27,9 @@ import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.onPrimaryContainerLight
 import com.d108.moyeo.presentation.theme.onSurfaceLight
 import com.d108.moyeo.presentation.theme.primaryContainerLight
+import com.d108.moyeo.presentation.ui.screen.home.wallet.Period
+import com.d108.moyeo.presentation.ui.screen.home.wallet.SortType
+import com.d108.moyeo.presentation.ui.screen.home.wallet.WalletFilterOptions
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -34,6 +38,7 @@ fun CommonFilterBottomSheet(
     onConfirm: (FilterOptions) -> Unit,
     onDismiss: () -> Unit
 ) {
+    // String 값을 꺼내 임시 상태
     var tempPeriod by remember { mutableStateOf(initialFilters.period) }
     var tempScope  by remember { mutableStateOf(initialFilters.scope) }
     var tempSort   by remember { mutableStateOf(initialFilters.sort) }
@@ -49,7 +54,7 @@ fun CommonFilterBottomSheet(
             // 기간 설정
             SegmentedFilterSection(
                 title = "기간",
-                options = listOf("1개월", "3개월", "6개월", "직접 설정"),
+                options = Period.entries.map { it.displayName },
                 selectedOption = tempPeriod,
                 onOptionSelected = { tempPeriod = it }
             )
@@ -68,7 +73,7 @@ fun CommonFilterBottomSheet(
             // 정렬 순 설정
             SegmentedFilterSection(
                 title = "정렬",
-                options = listOf("최신", "과거"),
+                options = SortType.entries.map { it.displayName },
                 selectedOption = tempSort,
                 onOptionSelected = { tempSort = it }
             )
@@ -131,12 +136,12 @@ private fun CategorySegmentedPager(
     onSelected: (String) -> Unit
 ) {
     // 카테고리 구성
-    val all = listOf(
+    val all = listOf(  // 이게 0 1 2 3 4 5 6 7 8 9 순서
         "전체","입금","출금","환전","식사","교통","숙박","투어/액티비티","쇼핑","기타"
     )
 
     // 페이지 구성 (1칸 / 3칸 / 3칸 / 3칸)
-    val pages = remember {
+    val pages = remember {  // 여기에서
         listOf(
             listOf("전체"),
             listOf("입금", "출금", "환전"),

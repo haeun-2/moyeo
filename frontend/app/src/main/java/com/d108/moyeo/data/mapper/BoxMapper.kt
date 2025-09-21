@@ -18,7 +18,7 @@ fun PersonalBoxResponseDto.toDomain() = Box(
     name = name,
     balances = balances.map(BalanceDto::toDomain),
     type = BoxType.from(type),
-    isBookmarked = false  // 개인 박스는 언제나 false
+    isBookmarked = false  // 개인 박스는 언제나 false  // TODO: 트루로 변경
 )
 
 fun GroupBoxResponseDto.toDomain() = Box(

@@ -27,7 +27,7 @@ data class TransferUiState(
 )
 
 // 화면에 표시할 통화 데이터 클래스 (ViewModel에서 전달받을 데이터 모델)
-data class CurrencyData(
+data class CurrencyData(  // TODO: 사실상 data class Currency랑 같음. 통일 가능함.
     val name: String, // "대한민국 원"
     val code: String  // "KRW"
 )

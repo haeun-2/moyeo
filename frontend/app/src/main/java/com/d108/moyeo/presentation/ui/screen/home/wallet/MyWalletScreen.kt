@@ -1,9 +1,11 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -21,40 +23,63 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.d108.moyeo.domain.model.history.HistoryTransaction
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.button
+import com.d108.moyeo.presentation.theme.errorLight
 import com.d108.moyeo.presentation.theme.onPrimaryLight
+import com.d108.moyeo.presentation.ui.component.history.toDate
 import com.d108.moyeo.presentation.ui.component.home.CommonFilterBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.CurrencyBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.FilterOptions
+import java.text.DecimalFormat
+import java.text.SimpleDateFormat
+import java.util.Locale
 
+private val TAG = "MyWalletScreen"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyWalletScreen(
     navController: NavController,
-    viewModel: MyWalletViewModel = viewModel()
+    viewModel: MyWalletViewModel = hiltViewModel()
 ) {
-    // ViewModel의 상태를 구독합니다.
+    // ViewModel의 상태를 구독
     val uiState by viewModel.uiState.collectAsState()
+    val listState = rememberLazyListState()
 
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->
             when (event) {
                 is WalletNavigationEvent.NavigateToTransfer -> {
-                    // "보내기" 이벤트가 오면, currencyCode를 가지고 TransferScreen으로 이동합니다.
+                    // "보내기" 이벤트가 오면, currencyCode를 가지고 TransferScreen으로 이동
                     navController.navigate(
-                        AppScreen.Transfer.route.replace("{currencyId}", event.currencyCode)  // 라우트 확인
+                        AppScreen.Transfer.createRouteForTransfer(event.currencyCode)
                     )
                 }
                 is WalletNavigationEvent.NavigateToCharge -> {
                     navController.navigate(AppScreen.Charge.route)
                 }
             }
+        }
+    }
+
+    // 무한 스크롤 로직
+    val isScrolledToEnd by remember {
+        derivedStateOf {
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
+            lastVisibleItem != null && lastVisibleItem.index >= listState.layoutInfo.totalItemsCount - 5
+        }
+    }
+
+    LaunchedEffect(isScrolledToEnd) {
+        if (isScrolledToEnd) {
+            viewModel.loadNextPage()
         }
     }
 
@@ -71,9 +96,10 @@ fun MyWalletScreen(
     // 필터 클릭 시 열릴 바텀 시트
     if (uiState.showFilterSheet) {
         CommonFilterBottomSheet(
-            initialFilters = uiState.filters.toAdapter(),                 // Wallet -> Adapter
-            onConfirm = { updated: FilterOptions ->
-                viewModel.onFilterConfirm(updated.toWallet())            // Adapter -> Wallet
+            initialFilters = uiState.filters.toAdapter(),  // Wallet -> Adapter
+            onConfirm = { updatedFilters ->
+                // 바텀시트가 전달해준 '어댑터'를 '내부 모델'로 변환하여 ViewModel에 전달
+                viewModel.onFilterConfirm(updatedFilters.toWallet())
             },
             onDismiss = viewModel::onFilterSheetDismiss
         )
@@ -103,10 +129,13 @@ fun MyWalletScreen(
         ) {
             // 상단 정보 카드
             TopWalletInfoSurface(
-                walletName = uiState.walletName,
-                totalBalance = uiState.totalBalance,
+                walletName = uiState.walletInfo?.title ?: "내 지갑",
+                totalBalance = uiState.walletInfo?.balances
+                    ?.find { it.currency == uiState.selectedCurrencyCode }
+                    ?.let { "${DecimalFormat("#,###.##").format(it.balance)} ${it.currency}" }
+                    ?: "전체 보기",
                 onBalanceClick = viewModel::onBalanceClick,
-                onBackClick = { /* TODO: 뒤로가기 로직 추가 */ },
+                onBackClick = { navController.popBackStack() },
                 onTransferClick = viewModel::onTransferClick
             )
 
@@ -119,21 +148,42 @@ fun MyWalletScreen(
                 )
 
                 // 거래 내역 목록
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth()
-
-                ) {
-                    // items 함수가 리스트를 받아 각 아이템을 transaction으로 전달해 줌
-                    items(uiState.transactions) { transaction ->
-                        TransactionRowItem(
-                            transaction = transaction,
-                            onClick = {
-                                navController.navigate(
-                                    "my_wallet_detail/${transaction.id}"
-                                )
+                if (uiState.isLoading && uiState.transactions.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else if (uiState.errorMessage != null) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = uiState.errorMessage!!)
+                    }
+                } else {
+                    // 거래 내역 목록
+                    LazyColumn(
+                        state = listState, // 무한 스크롤
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(uiState.transactions) { transaction ->
+                            TransactionRowItem(
+                                transaction = transaction,
+                                onClick = {
+                                    navController.navigate("my_wallet_detail/${transaction.id}")
+                                }
+                            )
+                            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+                        }
+                        // 6. 다음 페이지 로딩 중일 때 하단에 인디케이터 표시
+                        if (uiState.isLoadingNextPage) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(Spacing.Medium),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                                }
                             }
-                        )
-                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+                        }
                     }
                 }
             }
@@ -282,11 +332,11 @@ private fun SearchAndFilterBar(
             modifier = Modifier.clickable { onFilterClick() },
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(filters.period, style = Typography.bodySmall)
+            Text(filters.period.displayName, style = Typography.bodySmall)
             Text(" | ", style = Typography.bodySmall, color = Color.Gray)
             Text(filters.scope, style = Typography.bodySmall)
             Text(" | ", style = Typography.bodySmall, color = Color.Gray)
-            Text(filters.sort, style = Typography.bodySmall)
+            Text(filters.sort.displayName, style = Typography.bodySmall)
         }
     }
 }
@@ -294,9 +344,14 @@ private fun SearchAndFilterBar(
 // 거래 내역 한 줄 UI
 @Composable
 private fun TransactionRowItem(
-    transaction: WalletTransaction,
+    transaction: HistoryTransaction,
     onClick: () -> Unit
 ) {
+
+//    Log.d(TAG, "TransactionRowItem: ${transaction.datetime}")
+    // TransactionRowItem: 2025-09-20 20:22:00
+    val formattedAmount = DecimalFormat("#,###.##").format(transaction.amount)
+    val date = transaction.datetime.substring(startIndex = 0, endIndex = 10)
     Surface(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
@@ -309,20 +364,25 @@ private fun TransactionRowItem(
                 .padding(vertical = Spacing.Large),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(transaction.date, style = Typography.bodyMedium, color = Color.Gray)
+            Text(date, style = Typography.bodyMedium, color = Color.Gray)
             Spacer(modifier = Modifier.width(Spacing.Medium))
             Text(
-                text = transaction.description,
+                text = transaction.title,
                 style = Typography.bodyLarge,
                 modifier = Modifier.weight(1f)
             )
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    transaction.amount,
+                    text = "$formattedAmount ${transaction.currency}",
                     style = Typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (transaction.amount < 0) errorLight else Color.Yellow
                 )
-                Text(transaction.balance, style = Typography.bodySmall, color = Color.Gray)
+                Text(
+                    text = "${DecimalFormat("#,###.##").format(transaction.balance)} ${transaction.currency}",
+                    style = Typography.bodySmall,
+                    color = Color.Gray
+                )
             }
         }
     }
