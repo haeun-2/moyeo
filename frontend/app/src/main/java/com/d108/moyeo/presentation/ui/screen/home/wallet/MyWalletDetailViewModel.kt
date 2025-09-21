@@ -1,9 +1,11 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.domain.model.history.HistoryTransaction
+import com.d108.moyeo.domain.usecase.history.GetExchangeHistoryDetailUseCase
 import com.d108.moyeo.domain.usecase.history.UpdateHistoryUseCase
 import com.d108.moyeo.presentation.ui.component.home.FilterOptionData
 import com.google.gson.Gson
@@ -26,7 +28,8 @@ sealed class MyWalletDetailNavEvent {
 @HiltViewModel
 class MyWalletDetailViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-     private val updateHistoryUseCase: UpdateHistoryUseCase
+    private val updateHistoryUseCase: UpdateHistoryUseCase,
+    private val getExchangeHistoryDetailUseCase: GetExchangeHistoryDetailUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MyWalletDetailUiState())
@@ -36,6 +39,7 @@ class MyWalletDetailViewModel @Inject constructor(
     val navigationEvent = _navigationEvent.asSharedFlow()
 
     private val boxId = savedStateHandle.get<Long>("boxId") ?: -1L
+
 
     init {
         // 1. SavedStateHandle에서 JSON 문자열을 꺼냄.
@@ -50,6 +54,11 @@ class MyWalletDetailViewModel @Inject constructor(
                     editedMemo = transaction.memo ?: "", // 초기 메모 설정
                     selectedCategory = transaction.category
                 )
+            }
+
+            // 환전 카테고리면 추가로 호출
+            if (transaction.category == "환전") {
+                fetchExchangeDetail(transaction.id)
             }
         }
     }
@@ -147,6 +156,25 @@ class MyWalletDetailViewModel @Inject constructor(
         val category = uiState.value.transaction?.category ?: return
         viewModelScope.launch {
             _navigationEvent.emit(MyWalletDetailNavEvent.NavigateBackWithSearchCategory(category))
+        }
+    }
+
+    private fun fetchExchangeDetail(historyId: Long) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            Log.d("MyWalletDetailViewModel", "fetchExchangeDetail: 박스 아이디: $boxId, 히스토리 아이디: $historyId")
+            getExchangeHistoryDetailUseCase(boxId = boxId, historyId = historyId)
+                .onSuccess { details ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            exchangeDetail = details
+                        )
+                    }
+                }
+                .onFailure {
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "환전 정보를 불러오지 못했습니다.") }
+                }
         }
     }
 

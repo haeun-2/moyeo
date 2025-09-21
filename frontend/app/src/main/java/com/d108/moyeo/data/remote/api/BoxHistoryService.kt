@@ -2,6 +2,7 @@ package com.d108.moyeo.data.remote.api
 
 import com.d108.moyeo.data.remote.dto.history.PaginatedHistoryResponseDto
 import com.d108.moyeo.data.remote.dto.history.UpdateHistoryRequestDto
+import com.d108.moyeo.domain.model.history.ExchangeHistoryDetail
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -32,4 +33,11 @@ interface BoxHistoryService {
         @Path("historyId") historyId: Long,
         @Body body: UpdateHistoryRequestDto
     ): Response<Unit> // 성공 시 별도 내용이 없으므로 Unit
+
+
+    @GET("api/boxes/{boxId}/transactions/histories/{historyId}")
+    suspend fun getExchangeHistoryDetail(
+        @Path("boxId") boxId: Long,
+        @Path("historyId") historyId: Long
+    ): Response<List<ExchangeHistoryDetail>>
 }

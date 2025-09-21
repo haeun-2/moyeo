@@ -1,5 +1,6 @@
 package com.d108.moyeo.domain.repository
 
+import com.d108.moyeo.domain.model.history.ExchangeHistoryDetail
 import com.d108.moyeo.domain.model.history.PaginatedHistory // <-- 반환 타입이 도메인 모델로 변경
 
 interface BoxHistoryRepository {
@@ -23,4 +24,6 @@ interface BoxHistoryRepository {
         memo: String?,
         categoryId: Long?
     ): Result<Unit>
+
+    suspend fun getExchangeHistoryDetail(boxId: Long, historyId: Long): Result<ExchangeHistoryDetail>
 }

@@ -3,6 +3,7 @@ package com.d108.moyeo.data.repository
 import com.d108.moyeo.data.mapper.toDomain
 import com.d108.moyeo.data.remote.api.BoxHistoryService
 import com.d108.moyeo.data.remote.dto.history.UpdateHistoryRequestDto
+import com.d108.moyeo.domain.model.history.ExchangeHistoryDetail
 import com.d108.moyeo.domain.model.history.PaginatedHistory
 import com.d108.moyeo.domain.repository.BoxHistoryRepository
 import javax.inject.Inject
@@ -53,6 +54,23 @@ class BoxHistoryRepositoryImpl @Inject constructor(
                 body = UpdateHistoryRequestDto(memo = memo, categoryId = categoryId)
             )
             if (!response.isSuccessful) {
+                throw Exception("Server responded with error: ${response.code()}")
+            }
+        }
+    }
+
+    override suspend fun getExchangeHistoryDetail(
+        boxId: Long,
+        historyId: Long
+    ): Result<ExchangeHistoryDetail> {  // 바로 도메인 값으로 리턴
+        return runCatching {
+            val response = api.getExchangeHistoryDetail(boxId, historyId)
+
+            if (response.isSuccessful) {
+                response.body()?.firstOrNull()
+                    ?: throw Exception("Response body is null or empty")
+            } else {
+                // 실패 시, 에러 코드와 함께 예외를 발생시킵니다.
                 throw Exception("Server responded with error: ${response.code()}")
             }
         }

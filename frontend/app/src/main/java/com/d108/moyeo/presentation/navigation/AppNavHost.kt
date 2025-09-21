@@ -101,6 +101,7 @@ fun AppNavHost(
             route = AppScreen.MyWalletDetail.route,
             // 경로에서 "transactionId"를 어떤 타입으로 받을지 정의합니다.
             arguments = listOf(
+                navArgument("boxId") { type = NavType.LongType },
                 navArgument("historyId") { type = NavType.LongType },
                 navArgument("transactionJson") { type = NavType.StringType }
             )

@@ -207,6 +207,7 @@ fun MyWalletScreen(
                                     val transactionJson = Gson().toJson(transaction)
                                     navController.navigate(
                                         AppScreen.MyWalletDetail.createRoute(
+                                            boxId = uiState.walletInfo!!.id,
                                             historyId = transaction.id,
                                             transactionJson = transactionJson
                                         )

@@ -14,10 +14,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.d108.moyeo.domain.model.history.HistoryTransaction
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.ui.component.home.CategorySelectionBottomSheet
@@ -32,6 +34,7 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
 ) {
     // ViewModel의 상태를 구독.
     val uiState by viewModel.uiState.collectAsState()
+    val transaction = uiState.transaction
 
     // --- 카테고리 선택 바텀시트 호출 로직 ---
     if (uiState.showCategorySheet) {
@@ -44,7 +47,6 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         )
     }
 
-    val transaction = uiState.transaction
 
     // 데이터가 아직 로드되지 않았으면 로딩 화면.
     if (transaction == null) {
@@ -73,62 +75,151 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         }
     }
 
+    if (transaction.category == "환전") {
+        ExchangeDetailContent(
+            transaction = transaction,
+            uiState = uiState,
+            viewModel = viewModel,
+            navController = navController
+        )
+    } else {
+        GeneralTransactionDetailContent(
+            transaction = transaction,
+            uiState = uiState,
+            viewModel = viewModel,
+            navController = navController
+        )
+    }
+}
+@Composable
+private fun GeneralTransactionDetailContent(
+    transaction: HistoryTransaction,
+    uiState: MyWalletDetailUiState,
+    viewModel: MyWalletDetailViewModel,
+    navController: NavController
+) {
     val isExpense = transaction.amount < 0
     val amountColor = if (isExpense) Color.Red else Color.Blue
     val formattedAmount = DecimalFormat("#,###.##").format(transaction.amount)
     val formattedBalance = DecimalFormat("#,###.##").format(transaction.balance)
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(Spacing.Large),
-        horizontalAlignment = Alignment.CenterHorizontally // 각 요소들은 가운데 정렬
+        modifier = Modifier.fillMaxSize().padding(Spacing.Large),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 클릭해서 들어온 거래 내역의 제목이 맨 위에 있음
-        Text(
-            text = transaction.title, // 이전 화면에서 전달받을 데이터
-            style = Typography.titleLarge,
-        )
-
+        Text(text = transaction.title, style = Typography.titleLarge)
         Spacer(modifier = Modifier.height(Spacing.Medium))
-
-        // 호리젠탈 디바이더
         HorizontalDivider()
-
         Spacer(modifier = Modifier.height(Spacing.Large))
 
-        // 네 가지 요소가 있음.
-        // 각 요소들은 가운데를 텅 비워두고 왼쪽 끝에 글자, 오른쪽 끝에 또다른 글자가 있음
-
-        // 먼저 카테고리가 있음. Row겠지 그러면? 이 Row 끝엔 카테고리가 있고 제일 오른쪽 끝엔 에딧 버튼이 있음
         DetailInfoRow(
             label = "카테고리",
             content = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(text = transaction.category, style = Typography.bodyLarge)
                     Spacer(modifier = Modifier.width(Spacing.Medium))
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = "카테고리 수정",
-                        modifier = Modifier.size(20.dp)
-                            .clickable {
-                                viewModel.onCategoryEditClick()
-                            }
+                        modifier = Modifier.size(20.dp).clickable { viewModel.onCategoryEditClick() }
                     )
                 }
             }
         )
-
-
         DetailInfoRow(label = "거래시각", content = { Text(transaction.datetime, style = Typography.bodyLarge) })
-
         DetailInfoRow(label = "거래 금액", content = { Text("$formattedAmount ${transaction.currency}", style = Typography.bodyLarge, color = amountColor) })
-
         DetailInfoRow(label = "거래 후 잔액", content = { Text("$formattedBalance ${transaction.currency}", style = Typography.bodyLarge) })
 
-        // 메모
+        InlineEditMemoRow(
+            memo = uiState.editedMemo,
+            isEditing = uiState.isMemoEditing,
+            onMemoChanged = viewModel::onMemoChanged,
+            onEditClick = viewModel::startEditingMemo,
+            onSaveClick = viewModel::saveMemoEdit,
+            onCancelClick = viewModel::cancelMemoEdit
+        )
+        Spacer(modifier = Modifier.height(Spacing.Large))
+        HorizontalDivider()
+        SearchActionRow(text = "\"${transaction.title}\" 검색하기", onClick = viewModel::onSearchTitleClick)
+        HorizontalDivider()
+        SearchActionRow(text = "\"${transaction.category}\" 카테고리 검색하기", onClick = viewModel::onSearchCategoryClick)
+
+        Spacer(modifier = Modifier.weight(1f))
+        Button(
+            onClick = { navController.popBackStack() },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("확인")
+        }
+    }
+}
+
+/**
+ * '환전' 거래 내역을 위한 UI
+ */
+@Composable
+private fun ExchangeDetailContent(
+    transaction: HistoryTransaction,
+    uiState: MyWalletDetailUiState,
+    viewModel: MyWalletDetailViewModel,
+    navController: NavController
+) {
+    val exchangeDetail = uiState.exchangeDetail
+
+    Column(
+        modifier = Modifier.fillMaxSize().padding(Spacing.Large),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = transaction.title, style = Typography.titleLarge)
+        Spacer(modifier = Modifier.height(Spacing.Medium))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(Spacing.Large))
+
+        // 기본 정보 (API 호출과 무관하게 즉시 표시)
+        DetailInfoRow(label = "거래 시각", content = { Text(transaction.datetime, style = Typography.bodyLarge) })
+
+        // 추가 정보 (API 호출 상태에 따라 표시)
+        Box(
+            modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.Medium),
+            contentAlignment = Alignment.Center
+        ) {
+            when {
+                // 1. API 호출 중 (로딩)
+                uiState.isLoading -> CircularProgressIndicator()
+                // 2. API 호출 성공
+                exchangeDetail != null -> Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CurrencyAmount(
+                            label = "From",
+                            amount = "- ${DecimalFormat("#,###.##").format(exchangeDetail.fromAmount)}",
+                            currency = exchangeDetail.fromCurrency,
+                            color = Color.Red
+                        )
+                        Text(text = "→", style = Typography.headlineMedium)
+                        CurrencyAmount(
+                            label = "To",
+                            amount = "+ ${DecimalFormat("#,###.##").format(exchangeDetail.toAmount)}",
+                            currency = exchangeDetail.toCurrency,
+                            color = Color.Blue
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(Spacing.Large))
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(Spacing.Large))
+                    DetailInfoRow(label = "적용 환율", content = {
+                        Text("1 ${exchangeDetail.toCurrency} = ${exchangeDetail.exchangeRate} ${exchangeDetail.fromCurrency}", style = Typography.bodyLarge)
+                    })
+                }
+                // 3. API 호출 실패
+                uiState.errorMessage != null -> Text(uiState.errorMessage, color = Color.Red)
+            }
+        }
+
+        // 메모 편집 기능
         InlineEditMemoRow(
             memo = uiState.editedMemo,
             isEditing = uiState.isMemoEditing,
@@ -138,32 +229,31 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
             onCancelClick = viewModel::cancelMemoEdit
         )
 
-        Spacer(modifier = Modifier.height(Spacing.Large))
-
-        // 호리젠탈 디바이더
-        HorizontalDivider()
-
-        // 제목 검색
-        SearchActionRow(text = "\"${transaction.title}\" 검색하기", onClick = { viewModel.onSearchTitleClick() })
-        // 호리젠탈 디바이더
-        HorizontalDivider()
-        // "{저장된 카테고리}" 검색하기 가장 오른쪽엔 > 아이콘
-        SearchActionRow(text = "\"${transaction.category}\" 카테고리 검색하기", onClick = { viewModel.onSearchCategoryClick() })
-
-
-
-        // 그냥 여백
         Spacer(modifier = Modifier.weight(1f))
-
-        // 제일 아래쪽엔 확인 버튼이 있어서 누르면 카테고리 변경 사항을 저장함.
         Button(
-            onClick = {
-                navController.popBackStack()
-            },
+            onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("확인")
         }
+    }
+}
+
+/**
+ * 환전 UI에서 From/To를 표시하기 위한 헬퍼 Composable
+ */
+@Composable
+private fun CurrencyAmount(label: String, amount: String, currency: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = label, style = Typography.labelMedium, color = Color.Gray)
+        Spacer(modifier = Modifier.height(Spacing.Small))
+        Text(
+            text = amount,
+            style = Typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+        Text(text = currency, style = Typography.bodyMedium)
     }
 }
 
