@@ -233,13 +233,13 @@ fun InlineEditMemoRow(
             }
         } else {
             // 표시 모드
+            Text("메모")
+            Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = if (memo.isNotEmpty()) memo else "메모 없음",
                 style = Typography.bodyLarge,
                 color = if (memo.isNotEmpty()) Color.Black else Color.Gray,
-                modifier = Modifier.weight(1f)
             )
-
             IconButton(onClick = onEditClick) {
                 Icon(
                     imageVector = Icons.Default.Edit,

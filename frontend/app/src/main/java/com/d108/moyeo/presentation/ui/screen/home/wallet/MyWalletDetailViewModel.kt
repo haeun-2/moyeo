@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.net.URLDecoder
 import javax.inject.Inject
 
 
@@ -27,7 +28,8 @@ class MyWalletDetailViewModel @Inject constructor(
         val transactionJson = savedStateHandle.get<String>("transactionJson")
         if (transactionJson != null) {
             // 2. JSON 문자열을 HistoryTransaction 객체로 변환
-            val transaction = Gson().fromJson(transactionJson, HistoryTransaction::class.java)
+            val decodedJson = URLDecoder.decode(transactionJson, "UTF-8")
+            val transaction = Gson().fromJson(decodedJson, HistoryTransaction::class.java)
             _uiState.update {
                 it.copy(
                     transaction = transaction,
