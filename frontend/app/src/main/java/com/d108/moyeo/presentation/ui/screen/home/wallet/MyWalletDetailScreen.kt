@@ -164,7 +164,11 @@ private fun ExchangeDetailContent(
     viewModel: MyWalletDetailViewModel,
     navController: NavController
 ) {
+    val isExpense = transaction.amount < 0
     val exchangeDetail = uiState.exchangeDetail
+    val formattedAmount = DecimalFormat("#,###.##").format(transaction.amount)
+    val formattedBalance = DecimalFormat("#,###.##").format(transaction.balance)
+    val amountColor = if (isExpense) Color.Red else Color.Blue
 
     Column(
         modifier = Modifier.fillMaxSize().padding(Spacing.Large),
@@ -177,6 +181,9 @@ private fun ExchangeDetailContent(
 
         // 기본 정보 (API 호출과 무관하게 즉시 표시)
         DetailInfoRow(label = "거래 시각", content = { Text(transaction.datetime, style = Typography.bodyLarge) })
+        DetailInfoRow(label = "거래 금액", content = { Text("$formattedAmount ${transaction.currency}", style = Typography.bodyLarge, color = amountColor) })
+        DetailInfoRow(label = "거래 후 잔액", content = { Text("$formattedBalance ${transaction.currency}", style = Typography.bodyLarge) })
+
 
         // 추가 정보 (API 호출 상태에 따라 표시)
         Box(
