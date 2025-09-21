@@ -134,10 +134,4 @@ class MyWalletDetailViewModel @Inject constructor(
         }
     }
 
-    // 확인 버튼을 눌렀을 때 호출될 함수
-    fun onConfirmAndExit() {
-        viewModelScope.launch {
-            _navigationEvent.emit(MyWalletDetailNavEvent.NavigateBackWithRefresh)
-        }
-    }
 }

@@ -1,6 +1,7 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
 import android.util.Log
+import androidx.lifecycle.Observer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -76,11 +77,6 @@ class MyWalletViewModel @Inject constructor(
             if (boxId != -1L) {
                 loadHistories(boxId = boxId, isInitialLoad = true)
             }
-        }
-
-        val shouldRefresh = savedStateHandle.get<Boolean>("transaction_updated")
-        if (shouldRefresh == true) {
-            loadHistories(boxId = boxId, isInitialLoad = true)
         }
     }
 
@@ -240,6 +236,11 @@ class MyWalletViewModel @Inject constructor(
         viewModelScope.launch {
             _navigationEvent.emit(WalletNavigationEvent.NavigateToCharge)
         }
+    }
+
+    fun forceRefresh() {
+        Log.d(TAG, "Lifecycle Event: ON_RESUME. 강제 새로고침을 시작합니다.")
+        loadHistories(boxId = boxId, isInitialLoad = true)
     }
 
     private fun Date.toApiDateString(): String {

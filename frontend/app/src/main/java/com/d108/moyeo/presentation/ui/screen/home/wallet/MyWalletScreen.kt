@@ -24,6 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.domain.model.history.HistoryTransaction
@@ -53,6 +56,24 @@ fun MyWalletScreen(
     // ViewModel의 상태를 구독
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            // 화면이 다시 보이고 활성화될 때 (onResume)
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.forceRefresh()
+            }
+        }
+
+        // 라이프사이클 관찰자 추가
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        // 화면에서 나갈 때 관찰자 제거 (메모리 누수 방지)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->

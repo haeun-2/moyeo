@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
@@ -23,6 +24,7 @@ import com.d108.moyeo.presentation.ui.component.home.CategorySelectionBottomShee
 import com.d108.moyeo.presentation.ui.component.home.FilterOptionData
 import java.text.DecimalFormat
 
+private val TAG = "MyWalletDetailScreen"
 @Composable
 fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화면
     navController: NavController,
@@ -138,7 +140,7 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         // 제일 아래쪽엔 확인 버튼이 있어서 누르면 카테고리 변경 사항을 저장함.
         Button(
             onClick = {
-                navController.popBackStack() // 이전 화면으로 돌아가기
+                navController.popBackStack()
             },
             modifier = Modifier.fillMaxWidth()
         ) {
