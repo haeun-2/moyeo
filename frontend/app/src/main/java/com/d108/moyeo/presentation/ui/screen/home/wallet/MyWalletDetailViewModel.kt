@@ -33,28 +33,29 @@ class MyWalletDetailViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     transaction = transaction,
-                    editedMemo = transaction.memo ?: "" // 초기 메모 설정
+                    editedMemo = transaction.memo ?: "", // 초기 메모 설정
+                    selectedCategory = transaction.category
                 )
             }
         }
     }
 
+    // --- 카테고리 관련 이벤트 핸들러 ---
+    fun onCategoryEditClick() {
+        _uiState.update { it.copy(showCategorySheet = true) }
+    }
+
+    fun onCategorySheetDismiss() {
+        _uiState.update { it.copy(showCategorySheet = false) }
+    }
+
+    fun onCategorySelected(newCategory: String) {
+        _uiState.update { it.copy(selectedCategory = newCategory, showCategorySheet = false) }
+    }
+
     // 사용자가 메모를 수정할 때마다 호출될 함수
     fun onMemoChanged(newMemo: String) {
         _uiState.update { it.copy(editedMemo = newMemo) }
-    }
-
-    // 확인 버튼을 눌렀을 때 호출될 함수
-    fun saveChanges() {
-        val transaction = _uiState.value.transaction ?: return
-        val newMemo = _uiState.value.editedMemo
-
-        viewModelScope.launch {
-            // TODO: 실제 메모 수정 API를 호출하는 UseCase 실행
-            // updateMemoUseCase(transaction.id, newMemo)
-            //     .onSuccess { /* 성공 처리 */ }
-            //     .onFailure { /* 실패 처리 */ }
-        }
     }
 
     fun startEditingMemo() {
@@ -79,6 +80,19 @@ class MyWalletDetailViewModel @Inject constructor(
                 isMemoEditing = false,
                 editedMemo = it.transaction?.memo ?: "" // 원본으로 되돌리기
             )
+        }
+    }
+
+    // 확인 버튼을 눌렀을 때 호출될 함수
+    fun saveChanges() {
+        val transaction = _uiState.value.transaction ?: return
+        val newMemo = _uiState.value.editedMemo
+
+        viewModelScope.launch {
+            // TODO: 실제 메모 수정 API를 호출하는 UseCase 실행
+            // updateMemoUseCase(transaction.id, newMemo)
+            //     .onSuccess { /* 성공 처리 */ }
+            //     .onFailure { /* 실패 처리 */ }
         }
     }
 }

@@ -19,6 +19,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.ui.component.home.CategorySelectionBottomSheet
+import com.d108.moyeo.presentation.ui.component.home.FilterOptionData
 import java.text.DecimalFormat
 
 @Composable
@@ -28,6 +30,19 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
 ) {
     // ViewModel의 상태를 구독.
     val uiState by viewModel.uiState.collectAsState()
+
+    // --- 카테고리 선택 바텀시트 호출 로직 ---
+    if (uiState.showCategorySheet) {
+        val spendingCategories = FilterOptionData.allScopeOptions.drop(1)  // 전체 드랍
+
+        CategorySelectionBottomSheet(
+            categories = spendingCategories,
+            onCategorySelected = viewModel::onCategorySelected,
+            onDismiss = viewModel::onCategorySheetDismiss
+        )
+    }
+
+
     val transaction = uiState.transaction
 
     // 데이터가 아직 로드되지 않았으면 로딩 화면.
@@ -70,16 +85,17 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
             label = "카테고리",
             content = {
                 Row(
-                    modifier = Modifier.clickable {
-                    /* TODO: 카테고리 편집 바텀시트 열기 */
-                    },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = transaction.category, style = Typography.bodyLarge)
+                    Spacer(modifier = Modifier.width(Spacing.Medium))
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = "카테고리 수정",
                         modifier = Modifier.size(20.dp)
+                            .clickable {
+                                viewModel.onCategoryEditClick()
+                            }
                     )
                 }
             }

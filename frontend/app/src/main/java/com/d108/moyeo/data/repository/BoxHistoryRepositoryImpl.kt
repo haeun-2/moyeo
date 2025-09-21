@@ -2,6 +2,7 @@ package com.d108.moyeo.data.repository
 
 import com.d108.moyeo.data.mapper.toDomain
 import com.d108.moyeo.data.remote.api.BoxHistoryService
+import com.d108.moyeo.data.remote.dto.history.UpdateHistoryRequestDto
 import com.d108.moyeo.domain.model.history.PaginatedHistory
 import com.d108.moyeo.domain.repository.BoxHistoryRepository
 import javax.inject.Inject
@@ -34,6 +35,24 @@ class BoxHistoryRepositoryImpl @Inject constructor(
                     ?: throw Exception("Response body is null")
             } else {
                 // 실패 시, 에러 코드와 함께 예외 발생
+                throw Exception("Server responded with error: ${response.code()}")
+            }
+        }
+    }
+
+    override suspend fun updateHistory(
+        boxId: Long,
+        historyId: Long,
+        memo: String?,
+        categoryId: Long?
+    ): Result<Unit> {
+        return runCatching {
+            val response = api.updateHistory(
+                boxId = boxId,
+                historyId = historyId,
+                body = UpdateHistoryRequestDto(memo = memo, categoryId = categoryId)
+            )
+            if (!response.isSuccessful) {
                 throw Exception("Server responded with error: ${response.code()}")
             }
         }

@@ -15,4 +15,12 @@ interface BoxHistoryRepository {
         size: Int,
         sortDir: String
     ): Result<PaginatedHistory>
+
+
+    suspend fun updateHistory(
+        boxId: Long,
+        historyId: Long,
+        memo: String?,
+        categoryId: Long?
+    ): Result<Unit>
 }
