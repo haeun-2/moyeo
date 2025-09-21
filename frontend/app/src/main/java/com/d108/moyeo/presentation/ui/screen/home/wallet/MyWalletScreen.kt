@@ -41,6 +41,7 @@ import com.d108.moyeo.presentation.ui.component.home.CommonFilterBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.CurrencyBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.FilterOptions
 import com.google.gson.Gson
+import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -57,19 +58,34 @@ fun MyWalletScreen(
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
 
+    val scope = rememberCoroutineScope()
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            // 화면이 다시 보이고 활성화될 때 (onResume)
             if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.forceRefresh()
+                // [수정] scope.launch로 코루틴을 시작합니다.
+                scope.launch {
+                    // 1. ViewModel의 forceRefresh가 끝날 때까지 '반드시' 기다립니다.
+                    viewModel.forceRefresh()
+
+                    // 2. forceRefresh가 완전히 끝난 후에, 검색어/카테고리 확인 로직을 실행합니다.
+                    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+                    val searchQuery = savedStateHandle?.get<String>("search_query")
+                    if (searchQuery != null) {
+                        viewModel.searchWithQuery(searchQuery)
+                        savedStateHandle.remove<String>("search_query")
+                    } else {
+                        val searchCategory = savedStateHandle?.get<String>("search_category")
+                        if (searchCategory != null) {
+                            viewModel.searchWithCategory(searchCategory)
+                            savedStateHandle.remove<String>("search_category")
+                        }
+                    }
+                }
             }
         }
-
-        // 라이프사이클 관찰자 추가
         lifecycleOwner.lifecycle.addObserver(observer)
-
-        // 화면에서 나갈 때 관찰자 제거 (메모리 누수 방지)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }

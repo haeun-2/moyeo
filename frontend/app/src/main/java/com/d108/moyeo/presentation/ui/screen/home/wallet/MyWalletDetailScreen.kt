@@ -44,7 +44,6 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         )
     }
 
-
     val transaction = uiState.transaction
 
     // 데이터가 아직 로드되지 않았으면 로딩 화면.
@@ -53,6 +52,25 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
             CircularProgressIndicator()
         }
         return
+    }
+
+    LaunchedEffect(key1 = Unit) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is MyWalletDetailNavEvent.NavigateBackWithSearchQuery -> {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("search_query", event.query)
+                    navController.popBackStack()
+                }
+                is MyWalletDetailNavEvent.NavigateBackWithSearchCategory -> {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("search_category", event.category)
+                    navController.popBackStack()
+                }
+            }
+        }
     }
 
     val isExpense = transaction.amount < 0
@@ -126,11 +144,11 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         HorizontalDivider()
 
         // 제목 검색
-        SearchActionRow(text = "\"${transaction.title}\" 검색하기", onClick = { /* TODO */ })
+        SearchActionRow(text = "\"${transaction.title}\" 검색하기", onClick = { viewModel.onSearchTitleClick() })
         // 호리젠탈 디바이더
         HorizontalDivider()
         // "{저장된 카테고리}" 검색하기 가장 오른쪽엔 > 아이콘
-        SearchActionRow(text = "\"${transaction.category}\" 카테고리 검색하기", onClick = { /* TODO */ })
+        SearchActionRow(text = "\"${transaction.category}\" 카테고리 검색하기", onClick = { viewModel.onSearchCategoryClick() })
 
 
 

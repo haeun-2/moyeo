@@ -84,12 +84,14 @@ class MyWalletViewModel @Inject constructor(
      * 거래 내역을 불러오는 핵심 함수. 첫 페이지 로드, 다음 페이지 로드, 필터 변경 시 모두 사용
      * @param isInitialLoad true이면 기존 목록을 지우고 0페이지부터, false이면 다음 페이지를 불러와 추가.
      */
-    fun loadHistories(boxId: Long, isInitialLoad: Boolean) {
+    fun loadHistories(boxId: Long, isInitialLoad: Boolean): Job {
         val currentState = _uiState.value
         val pageToLoad = if (isInitialLoad) 0 else currentState.page
 
         // 이미 로딩 중이거나, 다음 페이지가 없으면(마지막 페이지) 함수를 종료하여 중복 호출을 방지
-        if (currentState.isLoading || (!currentState.hasNext && !isInitialLoad)) return
+        if (currentState.isLoading || (!currentState.hasNext && !isInitialLoad)) {
+            return viewModelScope.launch {}
+        }
 
         _uiState.update { it.copy(isLoading = true) }
 
@@ -105,7 +107,7 @@ class MyWalletViewModel @Inject constructor(
         val categoryId = allScopeOptions.indexOf(filters.scope).takeIf { it > 0 }?.toLong()
         val sortDir = filters.sort.name
 
-        viewModelScope.launch {
+        return viewModelScope.launch {
             getTransactionHistoryUseCase(
                 boxId = boxId,
                 currency = currentState.selectedCurrencyCode,
@@ -238,9 +240,21 @@ class MyWalletViewModel @Inject constructor(
         }
     }
 
-    fun forceRefresh() {
+    fun searchWithQuery(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+        search() // 기존의 private search 함수 재활용
+    }
+
+    fun searchWithCategory(category: String) {
+        val newFilters = uiState.value.filters.copy(scope = category)
+        onFilterConfirm(newFilters) // 기존의 필터 확인 함수 재활용
+    }
+
+
+    suspend fun forceRefresh() {
         Log.d(TAG, "Lifecycle Event: ON_RESUME. 강제 새로고침을 시작합니다.")
-        loadHistories(boxId = boxId, isInitialLoad = true)
+        loadHistories(boxId = boxId, isInitialLoad = true).join()
+        Log.d(TAG, "forceRefresh 완료. 다음 작업으로 넘어갑니다.")
     }
 
     private fun Date.toApiDateString(): String {

@@ -18,8 +18,10 @@ import java.net.URLDecoder
 import javax.inject.Inject
 
 sealed class MyWalletDetailNavEvent {
-    data object NavigateBackWithRefresh : MyWalletDetailNavEvent()
+    data class NavigateBackWithSearchQuery(val query: String) : MyWalletDetailNavEvent()
+    data class NavigateBackWithSearchCategory(val category: String) : MyWalletDetailNavEvent()
 }
+
 
 @HiltViewModel
 class MyWalletDetailViewModel @Inject constructor(
@@ -131,6 +133,20 @@ class MyWalletDetailViewModel @Inject constructor(
                 // 3. 실패 시 롤백
                 _uiState.update { it.copy(transaction = it.transaction?.copy(memo = oldMemo)) }
             }
+        }
+    }
+
+    fun onSearchTitleClick() {
+        val title = uiState.value.transaction?.title ?: return
+        viewModelScope.launch {
+            _navigationEvent.emit(MyWalletDetailNavEvent.NavigateBackWithSearchQuery(title))
+        }
+    }
+
+    fun onSearchCategoryClick() {
+        val category = uiState.value.transaction?.category ?: return
+        viewModelScope.launch {
+            _navigationEvent.emit(MyWalletDetailNavEvent.NavigateBackWithSearchCategory(category))
         }
     }
 
