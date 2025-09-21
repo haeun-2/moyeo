@@ -67,7 +67,7 @@ class BoxHistoryRepositoryImpl @Inject constructor(
             val response = api.getExchangeHistoryDetail(boxId, historyId)
 
             if (response.isSuccessful) {
-                response.body()?.firstOrNull()
+                response.body()?.firstOrNull()  // TODO: 매퍼 없이 변환 중
                     ?: throw Exception("Response body is null or empty")
             } else {
                 // 실패 시, 에러 코드와 함께 예외를 발생시킵니다.
