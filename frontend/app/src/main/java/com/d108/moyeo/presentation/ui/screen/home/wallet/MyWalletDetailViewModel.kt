@@ -4,24 +4,36 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.domain.model.history.HistoryTransaction
+import com.d108.moyeo.domain.usecase.history.UpdateHistoryUseCase
+import com.d108.moyeo.presentation.ui.component.home.FilterOptionData
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
 import javax.inject.Inject
 
+sealed class MyWalletDetailNavEvent {
+    data object NavigateBackWithRefresh : MyWalletDetailNavEvent()
+}
 
 @HiltViewModel
 class MyWalletDetailViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    // private val updateMemoUseCase: UpdateMemoUseCase // TODO: 메모 수정 UseCase 주입
+     private val updateHistoryUseCase: UpdateHistoryUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MyWalletDetailUiState())
     val uiState = _uiState.asStateFlow()
+
+    private val _navigationEvent = MutableSharedFlow<MyWalletDetailNavEvent>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
+
+    private val boxId = savedStateHandle.get<Long>("boxId") ?: -1L
 
     init {
         // 1. SavedStateHandle에서 JSON 문자열을 꺼냄.
@@ -49,8 +61,29 @@ class MyWalletDetailViewModel @Inject constructor(
         _uiState.update { it.copy(showCategorySheet = false) }
     }
 
-    fun onCategorySelected(newCategory: String) {
-        _uiState.update { it.copy(selectedCategory = newCategory, showCategorySheet = false) }
+    fun onCategorySelected(newCategoryName: String) {
+        val transaction = _uiState.value.transaction ?: return
+        val oldCategoryName = transaction.category
+
+        _uiState.update {
+            it.copy(
+                showCategorySheet = false,
+                transaction = it.transaction?.copy(category = newCategoryName)
+            )
+        }
+
+        viewModelScope.launch {
+            val newCategoryId = FilterOptionData.allScopeOptions.indexOf(newCategoryName).toLong()
+
+            updateHistoryUseCase(
+                boxId = boxId,
+                historyId = transaction.id,
+                categoryId = newCategoryId
+            ).onFailure {
+                // 3. 실패 시 롤백
+                _uiState.update { it.copy(transaction = it.transaction?.copy(category = oldCategoryName)) }
+            }
+        }
     }
 
     // 사용자가 메모를 수정할 때마다 호출될 함수
@@ -67,12 +100,6 @@ class MyWalletDetailViewModel @Inject constructor(
         }
     }
 
-    // 메모 편집 저장
-    fun saveMemoEdit() {
-        _uiState.update { it.copy(isMemoEditing = false) }
-        // TODO: 실제 저장 로직
-    }
-
     // 메모 편집 취소
     fun cancelMemoEdit() {
         _uiState.update {
@@ -83,16 +110,34 @@ class MyWalletDetailViewModel @Inject constructor(
         }
     }
 
-    // 확인 버튼을 눌렀을 때 호출될 함수
-    fun saveChanges() {
+    fun saveMemoEdit() {
         val transaction = _uiState.value.transaction ?: return
+        val oldMemo = transaction.memo ?: ""
         val newMemo = _uiState.value.editedMemo
 
+        _uiState.update {
+            it.copy(
+                isMemoEditing = false,
+                transaction = it.transaction?.copy(memo = newMemo)
+            )
+        }
+
         viewModelScope.launch {
-            // TODO: 실제 메모 수정 API를 호출하는 UseCase 실행
-            // updateMemoUseCase(transaction.id, newMemo)
-            //     .onSuccess { /* 성공 처리 */ }
-            //     .onFailure { /* 실패 처리 */ }
+            updateHistoryUseCase(
+                boxId = boxId,
+                historyId = transaction.id,
+                memo = newMemo
+            ).onFailure {
+                // 3. 실패 시 롤백
+                _uiState.update { it.copy(transaction = it.transaction?.copy(memo = oldMemo)) }
+            }
+        }
+    }
+
+    // 확인 버튼을 눌렀을 때 호출될 함수
+    fun onConfirmAndExit() {
+        viewModelScope.launch {
+            _navigationEvent.emit(MyWalletDetailNavEvent.NavigateBackWithRefresh)
         }
     }
 }

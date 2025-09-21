@@ -49,8 +49,6 @@ class MyWalletViewModel @Inject constructor(
     val navigationEvent = _navigationEvent.asSharedFlow()
     val boxId = savedStateHandle.get<Long>("boxId") ?: -1L
 
-
-
     private var searchJob: Job? = null
 
     init {
@@ -79,13 +77,18 @@ class MyWalletViewModel @Inject constructor(
                 loadHistories(boxId = boxId, isInitialLoad = true)
             }
         }
+
+        val shouldRefresh = savedStateHandle.get<Boolean>("transaction_updated")
+        if (shouldRefresh == true) {
+            loadHistories(boxId = boxId, isInitialLoad = true)
+        }
     }
 
     /**
      * 거래 내역을 불러오는 핵심 함수. 첫 페이지 로드, 다음 페이지 로드, 필터 변경 시 모두 사용
      * @param isInitialLoad true이면 기존 목록을 지우고 0페이지부터, false이면 다음 페이지를 불러와 추가.
      */
-    private fun loadHistories(boxId: Long, isInitialLoad: Boolean) {
+    fun loadHistories(boxId: Long, isInitialLoad: Boolean) {
         val currentState = _uiState.value
         val pageToLoad = if (isInitialLoad) 0 else currentState.page
 

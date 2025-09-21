@@ -138,7 +138,6 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         // 제일 아래쪽엔 확인 버튼이 있어서 누르면 카테고리 변경 사항을 저장함.
         Button(
             onClick = {
-                viewModel.saveChanges() // 변경된 카테고리 저장 로직
                 navController.popBackStack() // 이전 화면으로 돌아가기
             },
             modifier = Modifier.fillMaxWidth()
