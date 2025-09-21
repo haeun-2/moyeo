@@ -12,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -75,6 +77,16 @@ public class BoxApplicationService {
         boxMemberService.saveBoxOwner(box, user);
 
         return BoxCreateResponse.from(box);
+    }
+
+    public List<PayableBoxResponse> getPayableBoxList(User user) {
+        Box personalBox = boxService.getPersonalBoxByUserId(user.getId());
+        List<BoxMember> boxMembers = boxMemberService.getJoinedPayableGroupBoxByUser(user);
+
+        List<PayableBoxResponse> response = new ArrayList<>(PayableBoxResponse.from(boxMembers));
+        response.add(0, PayableBoxResponse.from(personalBox));
+
+        return response;
     }
 
 }

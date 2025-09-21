@@ -3,7 +3,6 @@ package com.mo.moyeo.domain.box.member.service;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.domain.box.box.entity.Box;
-import com.mo.moyeo.domain.box.box.repository.BoxRepository;
 import com.mo.moyeo.domain.box.box.service.BoxService;
 import com.mo.moyeo.domain.box.member.dto.BoxPermissionDto;
 import com.mo.moyeo.domain.box.member.entity.BoxMember;
@@ -63,7 +62,11 @@ public class BoxMemberService {
     }
 
     public List<BoxMember> getJoinedGroupBoxByUser(User user) {
-        return boxMemberRepository.selectJoinedGroupBoxByUser(user);
+        return boxMemberRepository.findJoinedGroupBoxByUser(user);
+    }
+
+    public List<BoxMember> getJoinedPayableGroupBoxByUser(User user) {
+        return boxMemberRepository.findJoinedPayableGroupBoxByUser(user);
     }
 
     public BoxMember getJoinedBoxMember(Long boxId, Long userId) {
