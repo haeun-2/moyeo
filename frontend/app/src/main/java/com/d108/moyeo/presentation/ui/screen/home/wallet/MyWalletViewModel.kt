@@ -1,69 +1,44 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
+import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.core.BoxStore
+import com.d108.moyeo.domain.model.box.BoxType
+import com.d108.moyeo.domain.usecase.history.GetTransactionHistoryUseCase
 import com.d108.moyeo.presentation.ui.component.home.FilterOptions
 import com.d108.moyeo.presentation.ui.component.home.WalletFilterOptionsAdp
 import com.d108.moyeo.presentation.ui.component.home.Currency
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import javax.inject.Inject
 
-
-// 임시 데이터 클래스
-data class WalletTransaction(
-    val id: String,
-    val date: String,
-    val description: String,  // 모여 박스로 넣은 거면 박스 이름이 표시되고, 이외의 경우에는 가맹점 정보가 표시됨
-    val amount: String,
-    val balance: String,
-    val timestamp: String, // "2025.09.08 13:42" 와 같은 전체 시각
-    val category: String   // "식/음료", "교통" 등
-)
-
-//필터 옵션을 위한 데이터 클래스
-data class WalletFilterOptions(
-    val period: String = "1개월",
-    val scope: String = "전체",
-    val sort: String = "최신"
-)
-
-// 변환 확장 함수
-fun WalletFilterOptions.toAdapter(): WalletFilterOptionsAdp =
-    WalletFilterOptionsAdp(period, scope, sort)
-
-fun FilterOptions.toWallet(): WalletFilterOptions = when (this) {
-    is WalletFilterOptionsAdp -> WalletFilterOptions(period, scope, sort)
-    else -> error("Wallet 화면에서 처리할 수 없는 FilterOptions 타입: $this")
-}
-
-// MyWalletScreen의 UI 상태
-data class MyWalletUiState(
-    val transactions: List<WalletTransaction> = emptyList(),
-    val walletName: String = "내 통장", // TODO:월렛 이름 반영
-    val totalBalance: String = "123,456,789 원",
-    val searchQuery: String = "",
-    val filters: WalletFilterOptions = WalletFilterOptions(),
-
-    // 화폐 단위 선택을 위한 바텀 시트
-    val showCurrencySheet: Boolean = false,
-    val currencies: List<Currency> = emptyList(),
-    // 선택받은 화폐 단위
-    var choosenCurrencyCode: String = "KRW",
-
-    // 필터링을 위한 바텀 시트
-    val showFilterSheet: Boolean = false
-)
 
 sealed class WalletNavigationEvent {
     data class NavigateToTransfer(val currencyCode: String) : WalletNavigationEvent()
     data object NavigateToCharge : WalletNavigationEvent() // 충전 화면 이동 이벤트 추가
 }
 
-class MyWalletViewModel : ViewModel() {
+@HiltViewModel
+class MyWalletViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    private val getTransactionHistoryUseCase: GetTransactionHistoryUseCase,
+    private val boxStore: BoxStore
+): ViewModel() {
+    private val TAG = "MyWalletViewModel"
 
     private val _uiState = MutableStateFlow(MyWalletUiState())
     val uiState = _uiState.asStateFlow()
@@ -71,53 +46,132 @@ class MyWalletViewModel : ViewModel() {
     // 내비게이션 이벤트를 전달할 SharedFlow를 추가
     private val _navigationEvent = MutableSharedFlow<WalletNavigationEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
+    val boxId = savedStateHandle.get<Long>("boxId") ?: -1L
+
+    private val allScopeOptions = listOf(
+        "전체", "입금", "출금", "환전", "식사", "교통", "숙박", "투어/액티비티", "쇼핑", "기타"
+    )
+
+    private var searchJob: Job? = null
 
     init {
-        // 임시 데이터 로드
-        loadInitialData()
+        Log.d(TAG, "${savedStateHandle.keys()}")
+        Log.d(TAG, "boxId: $boxId ")
+        val currencyCode = savedStateHandle.get<String>("currencyCode") ?: "KRW"
+
+        viewModelScope.launch {
+            val allBoxes = boxStore.boxUiStates.firstOrNull() ?: emptyList()
+            val walletInfo = allBoxes.find { it.type == BoxType.PERSONAL }
+            Log.d(TAG, "walletInfo: $walletInfo")  //
+
+            // BoxStore의 personalCurrencies는 CurrencyData 타입이므로 UI에 맞는 Currency 타입으로 변환
+            // TODO: 사실상 CurrencyData와 Currency는 같은 모양임...
+            val currencies = boxStore.personalCurrencies.value.map { Currency(it.code, it.name) }
+
+            _uiState.update {
+                it.copy(
+                    walletInfo = walletInfo,
+                    selectedCurrencyCode = currencyCode,
+                    currencies = currencies
+                )
+            }
+
+            if (boxId != -1L) {
+                loadHistories(boxId = boxId, isInitialLoad = true)
+            }
+        }
+    }
+
+    /**
+     * 거래 내역을 불러오는 핵심 함수. 첫 페이지 로드, 다음 페이지 로드, 필터 변경 시 모두 사용
+     * @param isInitialLoad true이면 기존 목록을 지우고 0페이지부터, false이면 다음 페이지를 불러와 추가.
+     */
+    private fun loadHistories(boxId: Long, isInitialLoad: Boolean) {
+        val currentState = _uiState.value
+        val pageToLoad = if (isInitialLoad) 0 else currentState.page
+
+        // 이미 로딩 중이거나, 다음 페이지가 없으면(마지막 페이지) 함수를 종료하여 중복 호출을 방지
+        if (currentState.isLoading || (!currentState.hasNext && !isInitialLoad)) return
+
+        _uiState.update { it.copy(isLoading = true) }
+
+        val filters = currentState.filters
+        val calendar = Calendar.getInstance()
+        val endDate = calendar.time.toApiDateString()
+        val startDate = when (filters.period) {
+            Period.THREE_MONTHS -> { calendar.add(Calendar.MONTH, -3); calendar.time.toApiDateString() }
+            Period.SIX_MONTHS -> { calendar.add(Calendar.MONTH, -6); calendar.time.toApiDateString() }
+            Period.CUSTOM -> { /* TODO */ "" }
+            else -> { calendar.add(Calendar.MONTH, -1); calendar.time.toApiDateString() }
+        }
+        val categoryId = allScopeOptions.indexOf(filters.scope).takeIf { it > 0 }?.toLong()
+        val sortDir = filters.sort.name
+
+        viewModelScope.launch {
+            getTransactionHistoryUseCase(
+                boxId = boxId,
+                currency = currentState.selectedCurrencyCode,
+                page = pageToLoad,
+                startDate = startDate,
+                endDate = endDate,
+                keyword = currentState.searchQuery,
+                type = "",
+                categoryId = categoryId,
+                sortDir = sortDir
+            ).onSuccess { paginatedHistory ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        // 첫 페이지 로드이면 리스트를 교체하고, 아니면 기존 리스트에 새 리스트를 추가
+                        transactions =
+                            if (isInitialLoad)
+                                paginatedHistory.content
+                            else
+                                it.transactions + paginatedHistory.content,
+                        page = paginatedHistory.page + 1, // 다음 요청할 페이지 번호
+                        hasNext = paginatedHistory.hasNext // 다음 페이지 존재 여부
+                    )
+                }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, errorMessage = "거래 내역을 불러오지 못했습니다.") }
+            }
+        }
+    }
+
+    fun loadNextPage() {
+        Log.d(TAG, "무한스크롤 시 boxId: $boxId")
+        loadHistories(boxId = boxId, isInitialLoad = false)
     }
 
     // 검색어와 관련된 로직
     fun onSearchQueryChanged(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
-        // TODO: 검색 쿼리에 따라 거래내역 필터링 로직
-    }
+        // 이전 검색 요청이 있으면 취소
+        searchJob?.cancel()
 
-    fun onFiltersChanged(newFilters: WalletFilterOptions) {
-        _uiState.update { it.copy(filters = newFilters) }
-        // TODO: 변경된 필터에 따라 거래내역 다시 불러오기
-    }
-
-    private fun loadInitialData() {
-        val transactions = List(20) {
-            WalletTransaction(
-                id = it.toString(),
-                date = "09.${String.format("%02d", 10 - it)}",
-                description = if (it % 2 == 0) "일본 여행" else "GS25 편의점",
-                amount = "- 5,${String.format("%03d", it * 100)} 원",
-                balance = "11${5 - it},${String.format("%03d", it * 100)} 원",
-                timestamp = "2025.09.${String.format("%02d", 10 - it)} 13:42",
-                category = if (it % 2 == 0) "여행" else "식/음료"
-            )
+        // 0.5초 뒤에 검색 실행 (타이핑 할 때마다 API 호출하는 문제 방지)
+        searchJob = viewModelScope.launch {
+            delay(500L)
+            search()
         }
-        val sampleCurrencies = listOf(
-            Currency("KRW", "대한민국 원"),
-            Currency("USD", "미국 달러"),
-            Currency("JPY", "일본 엔"),
-            Currency("EUR", "유럽 유로"),
-            Currency("CNY", "중국 위안"),
-            Currency("GBP", "영국 파운드"),
-            Currency("CAD", "캐나다 달러"),
-            Currency("AUD", "호주 달러")
-        )
+    }
+
+    // 검색 버튼을 클릭했을 때 호출
+    fun onSearchClick() {
+        search()
+    }
+
+    private fun search() {
+        // 목록과 페이징을 초기화하고, 새로운 검색어로 0페이지부터 다시 검색
         _uiState.update {
             it.copy(
-                transactions = transactions,
-                currencies = sampleCurrencies
+                transactions = emptyList(),
+                page = 0,
+                hasNext = true
             )
         }
+        loadHistories(boxId = boxId, isInitialLoad = true)
     }
-
 
     // 잔액 부분을 클릭했을 때 호출할 화폐 바텀 시트 관련 로직
     fun onBalanceClick() {
@@ -131,22 +185,21 @@ class MyWalletViewModel : ViewModel() {
 
     // 화폐 바텀 시트에서 확정했을 때 호출
     fun onCurrencySelected(currency: Currency?) {
-        val newBalance = if (currency == null) {
-            "123,456,789 원" // '전체 보기' 선택 시
-        } else {
-            // 실제로는 해당 화폐의 잔액을 계산해야 합니다. 여기서는 임시 값.
-            when (currency.code) {
-                "USD" -> "$ 2,500.00"
-                "JPY" -> "¥ 350,000"
-                "EUR" -> "€ 2,200.50"
-                else -> "123,456,789 원"
-            }
-        }
-        // 잔액을 업데이트하고, 바텀시트를 닫습니다.
-        _uiState.update { it.copy(totalBalance = newBalance, showCurrencySheet = false,
-            choosenCurrencyCode = currency!!.code) }  // 코드 테스트
-    }
+        val newCurrencyCode = currency?.code ?: "" // '전체 보기'는 빈 문자열 넘겨주면 됨
+        Log.d(TAG, "화폐 확정 시 boxId: $boxId")
 
+        // 상태를 업데이트하고, 목록을 비운 뒤, 0페이지부터 다시 검색합니다.
+        _uiState.update {
+            it.copy(
+                selectedCurrencyCode = newCurrencyCode,
+                transactions = emptyList(),
+                page = 0,
+                hasNext = true,
+                showCurrencySheet = false
+            )
+        }
+        loadHistories(boxId = boxId, isInitialLoad = true)
+    }
 
     // 필터링 버튼을 클릭했을 때 호출
     fun onFilterClick() {
@@ -158,13 +211,21 @@ class MyWalletViewModel : ViewModel() {
     }
 
     fun onFilterConfirm(newFilters: WalletFilterOptions) {
-        _uiState.update { it.copy(filters = newFilters, showFilterSheet = false) }
-        // TODO: 변경된 필터에 따라 거래내역 다시 불러오기
+        _uiState.update {
+            it.copy(
+                filters = newFilters,
+                showFilterSheet = false,
+                transactions = emptyList(),
+                page = 0,
+                hasNext = true
+            )
+        }
+        loadHistories(boxId = boxId, isInitialLoad = true)
     }
 
     // 보내기 버튼 클릭시 호출
     fun onTransferClick() {
-        val code = uiState.value.choosenCurrencyCode
+        val code = uiState.value.selectedCurrencyCode
         // 이 코드를 가지고 TransferScreen으로 진입해야 함
         viewModelScope.launch {
             _navigationEvent.emit(WalletNavigationEvent.NavigateToTransfer(code))
@@ -179,4 +240,8 @@ class MyWalletViewModel : ViewModel() {
         }
     }
 
+    private fun Date.toApiDateString(): String {
+        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.KOREAN)
+        return formatter.format(this)
+    }
 }

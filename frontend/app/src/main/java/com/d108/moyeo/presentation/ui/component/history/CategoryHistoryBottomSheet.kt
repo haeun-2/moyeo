@@ -145,7 +145,8 @@ private fun TransactionRow(transaction: HistoryTransaction) {
 }
 
 // String("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") -> Date? 변환 헬퍼
-private fun String.toDate(): Date? {
+// TODO: 이걸 유틸로 옮긴다?
+fun String.toDate(): Date? {
     return try {
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).parse(this.take(19))
     } catch (e: Exception) {

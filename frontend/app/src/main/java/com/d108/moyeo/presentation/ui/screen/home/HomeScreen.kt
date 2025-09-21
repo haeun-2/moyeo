@@ -1,5 +1,7 @@
 package com.d108.moyeo.presentation.ui.screen.home
 
+import android.icu.number.Precision.currency
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -64,9 +66,15 @@ fun HomeScreen(
     // ViewModel의 내비게이션 이벤트를 구독하고 처리
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->
+            Log.d(TAG, "$event")
             when (event) {
                 is HomeNavigationEvent.NavigateToMyWallet -> {
-                    navController.navigate(AppScreen.MyWallet.route)
+
+                    val route = AppScreen.MyWallet.createRoute(
+                        boxId = event.boxId,
+                        currencyCode = event.currencyCode
+                    )
+                    navController.navigate(route)
                 }
 
                 is HomeNavigationEvent.NavigateToMyBox -> {  // route에 {boxid}라 된 부분을 파라미터로 교체한 후 라우트
@@ -114,7 +122,7 @@ fun HomeScreen(
                 onTransferClick = { viewModel.onTransferClicked("KRW")},  // 한화 디폴트
                 onMoreClick = { viewModel.onWalletMoreClick() },
                 onRowClick = { currency ->  // 어떤 화폐가 눌렸는지 알 수 있도록 해야함
-                    viewModel.onWalletCurrencyClick()
+                    viewModel.onWalletCurrencyClick(currency)
                 }
             )
             Spacer(Modifier.height(Spacing.Large))

@@ -35,7 +35,11 @@ sealed class AppScreen(
 
     // 마이월렛에 파라미터를 타고 넘어가는 게 맞는 방향일까?
     // 이 주석 절대 지우지 말 것.
-    object MyWallet: AppScreen(route = "my_wallet", title = "내 지갑")
+    object MyWallet: AppScreen(route = "my_wallet/{boxId}/{currencyCode}", title = "내 지갑") {
+        fun createRoute(boxId: Long, currencyCode: String): String {
+            return "my_wallet/$boxId/$currencyCode"
+        }
+    }
 
     // 월렛에서 상세로 들어가는 화면
     object MyWalletDetail : AppScreen(route = "my_wallet_detail/{transactionId}", title = "월렛 상세")

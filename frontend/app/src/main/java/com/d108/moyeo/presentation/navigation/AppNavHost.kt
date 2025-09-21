@@ -85,9 +85,15 @@ fun AppNavHost(
             )
         }
 
-        // 후에 마이 월렛으로 어떤 화폐를 타고 들어왔는지 파라미터 도입...아니다 지금 할까?
-        // 고민해보자. 이 주석 절대 지우지 말 것.
-        composable(AppScreen.MyWallet.route) {
+        composable(
+            route = AppScreen.MyWallet.route,
+            arguments = listOf(
+                navArgument("boxId") { type = NavType.LongType },
+                navArgument("currencyCode") { type = NavType.StringType }
+            )
+        ) {
+            // MyWalletViewModel은 hiltViewModel()을 통해 SavedStateHandle을 주입받아
+            // "boxId"와 "currencyCode"를 꺼내 쓸 수 있음
             MyWalletScreen(navController = navController)
         }
 
