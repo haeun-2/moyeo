@@ -5,10 +5,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
+import com.d108.moyeo.domain.usecase.box.CreateInviteLinkUseCase
 import com.d108.moyeo.domain.usecase.history.GetTransactionHistoryUseCase
 import com.d108.moyeo.presentation.ui.component.home.Currency
 import com.d108.moyeo.presentation.ui.component.home.FilterOptionData.allScopeOptions
-import com.d108.moyeo.presentation.ui.screen.home.box.Period
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -33,13 +33,20 @@ sealed class MyBoxNavigationEvent {
 
     // 정산하기
     data class NavigateToCalculating(val boxId: String, val currencyCode: String = "KRW") : MyBoxNavigationEvent()
+
+    // 초대 링크
+    data class InviteLinkReady(val link: String): MyBoxNavigationEvent()
+
+    // Toast 출력
+    data class ShowToast(val message: String) : MyBoxNavigationEvent()
 }
 
 @HiltViewModel
 class MyBoxViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getTransactionHistoryUseCase: GetTransactionHistoryUseCase,
-    private val boxStore: BoxStore
+    private val boxStore: BoxStore,
+    private val createInviteLinkUseCase: CreateInviteLinkUseCase,
 ): ViewModel() {
 
     private val TAG = "MyBoxViewModel"
@@ -266,7 +273,13 @@ class MyBoxViewModel @Inject constructor(
 
     fun onInviteClick() {
         viewModelScope.launch {
-
+            createInviteLinkUseCase(boxId)
+                .onSuccess { result ->
+                    _navigationEvent.emit(MyBoxNavigationEvent.InviteLinkReady(result.inviteLink))
+                }
+                .onFailure {
+                    _navigationEvent.emit(MyBoxNavigationEvent.ShowToast("초대 링크 생성에 실패했어요."))
+                }
         }
     }
 

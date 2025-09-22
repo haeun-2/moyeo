@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.screen.home.box
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,7 +10,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -19,8 +19,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -28,7 +31,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.domain.model.history.HistoryTransaction
 import com.d108.moyeo.presentation.navigation.AppScreen
@@ -57,6 +59,9 @@ fun MyBoxScreen(
     val listState = rememberLazyListState()
 
     val scope = rememberCoroutineScope()
+
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -97,6 +102,13 @@ fun MyBoxScreen(
                 }
                 is MyBoxNavigationEvent.NavigateToCalculating -> {
                     navController.navigate(AppScreen.Calculating.createRoute(event.boxId, event.currencyCode)) // 원하는 currency 전달
+                }
+                is MyBoxNavigationEvent.InviteLinkReady -> {
+                    clipboard.setText(AnnotatedString(event.link))
+                    Toast.makeText(context, "초대 링크를 클립보드에 복사했어요.", Toast.LENGTH_SHORT).show()
+                }
+                is MyBoxNavigationEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -188,7 +200,7 @@ fun MyBoxScreen(
                     ?.let { "${DecimalFormat("#,###.##").format(it.balance)} ${it.currency}" }
                     ?: "전체 보기",
                 onBalanceClick = viewModel::onBalanceClick,
-                onInviteClick = viewModel::onInviteClick,  // TODO: 초대 코드
+                onInviteClick = viewModel::onInviteClick,
                 onBackClick = { navController.popBackStack() },
                 onCollectingClick = viewModel::onCollectingClick,
                 onExchangeClick = viewModel::onExchangeClick,
@@ -267,7 +279,7 @@ private fun TopBoxInfoSurface(
     onBackClick: () -> Unit,
     onCollectingClick: () -> Unit,
     onExchangeClick: () -> Unit,
-    onInviteClick: () -> Unit,  // TODO: 이거 파라미터랑 리턴타입 고려하기
+    onInviteClick: () -> Unit,
     bg: Color,
     textColor: Color
 ) {
