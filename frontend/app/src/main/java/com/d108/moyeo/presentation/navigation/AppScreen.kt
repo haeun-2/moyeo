@@ -42,13 +42,27 @@ sealed class AppScreen(
     }
 
     // 월렛에서 상세로 들어가는 화면
-    object MyWalletDetail : AppScreen(route = "my_wallet_detail/{transactionId}", title = "월렛 상세")
+    object MyWalletDetail : AppScreen(route = "my_wallet_detail/{boxId}/{historyId}?transactionJson={transactionJson}", title = "월렛 상세") {
+        fun createRoute(boxId: Long, historyId: Long, transactionJson: String): String {
+            val encodedJson = java.net.URLEncoder.encode(transactionJson, "UTF-8")
+            return "my_wallet_detail/$boxId/$historyId?transactionJson=$encodedJson"
+        }
+    }
 
     // 홈에서 모여 박스를 클릭했을 때 넘어오는 화면
-    object MyBox : AppScreen(route = "my_box/{boxId}/{bgColor}", title = "내 박스")
+    object MyBox : AppScreen(route = "my_box/{boxId}", title = "내 박스") {
+        fun createRoute(boxId: Long): String {
+            return "my_box/$boxId"
+        }
+    }
 
     // 모여 박스 화면에서 거래 내역을 클릭했을 때 넘어오는 화면
-    object MyBoxDetail : AppScreen(route = "my_box_detail/{transactionId}", title = "내 박스 상세")
+    object MyBoxDetail : AppScreen(route = "my_box_detail/{boxId}/{historyId}?transactionJson={transactionJson}", title = "내 박스 상세") {
+        fun createRoute(boxId: Long, historyId: Long, transactionJson: String): String {
+            val encodedJson = java.net.URLEncoder.encode(transactionJson, "UTF-8")
+            return "my_box_detail/$boxId/$historyId?transactionJson=$encodedJson"
+        }
+    }
 
     // 이체 또는 보내기 버튼을 클릭됐을 때 넘어갈 화면
     object Transfer : AppScreen(

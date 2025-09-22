@@ -126,7 +126,7 @@ class HomeViewModel @Inject constructor(
         // 6. 개인 지갑 통화 목록도 BoxStore에 저장
         personalResult.onSuccess { personalBox ->
             val currencies = personalBox.balances
-                .filter { it.balance != 0.0 }
+//                .filter { it.balance != 0.0 }  //TODO: 일단 이거 0원 아닌 것도 나오게 해봄
                 .map { CurrencyData(name = currencyLabel(it.currency), code = it.currency) }
             boxStore.setPersonalCurrencies(currencies)
         }
@@ -255,7 +255,7 @@ class HomeViewModel @Inject constructor(
         val clicked = _uiState.value.groups.find { it.id == boxId }
         if (clicked != null) {
             viewModelScope.launch {
-                _navigationEvent.emit(HomeNavigationEvent.NavigateToMyBox(boxId, clicked.bg.toArgb()))
+                _navigationEvent.emit(HomeNavigationEvent.NavigateToMyBox(boxId))
             }
         }
     }

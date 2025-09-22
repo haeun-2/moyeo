@@ -1,6 +1,7 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
 import android.util.Log
+import androidx.lifecycle.Observer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +11,7 @@ import com.d108.moyeo.domain.usecase.history.GetTransactionHistoryUseCase
 import com.d108.moyeo.presentation.ui.component.home.FilterOptions
 import com.d108.moyeo.presentation.ui.component.home.WalletFilterOptionsAdp
 import com.d108.moyeo.presentation.ui.component.home.Currency
+import com.d108.moyeo.presentation.ui.component.home.FilterOptionData.allScopeOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -48,22 +50,21 @@ class MyWalletViewModel @Inject constructor(
     val navigationEvent = _navigationEvent.asSharedFlow()
     val boxId = savedStateHandle.get<Long>("boxId") ?: -1L
 
-    private val allScopeOptions = listOf(
-        "전체", "입금", "출금", "환전", "식사", "교통", "숙박", "투어/액티비티", "쇼핑", "기타"
-    )
-
     private var searchJob: Job? = null
 
     init {
-        Log.d(TAG, "${savedStateHandle.keys()}")
-        Log.d(TAG, "boxId: $boxId ")
+//        Log.d(TAG, "${savedStateHandle.keys()}")
+//        Log.d(TAG, "boxId: $boxId ")
         val currencyCode = savedStateHandle.get<String>("currencyCode") ?: "KRW"
 
         viewModelScope.launch {
             val allBoxes = boxStore.boxUiStates.firstOrNull() ?: emptyList()
+            Log.d(TAG, "size: ${allBoxes.size}")
             val walletInfo = allBoxes.find { it.type == BoxType.PERSONAL }
             Log.d(TAG, "walletInfo: $walletInfo")  //
 
+
+            // TODO: 퍼스널 커런시가 뭐지
             // BoxStore의 personalCurrencies는 CurrencyData 타입이므로 UI에 맞는 Currency 타입으로 변환
             // TODO: 사실상 CurrencyData와 Currency는 같은 모양임...
             val currencies = boxStore.personalCurrencies.value.map { Currency(it.code, it.name) }
@@ -86,12 +87,14 @@ class MyWalletViewModel @Inject constructor(
      * 거래 내역을 불러오는 핵심 함수. 첫 페이지 로드, 다음 페이지 로드, 필터 변경 시 모두 사용
      * @param isInitialLoad true이면 기존 목록을 지우고 0페이지부터, false이면 다음 페이지를 불러와 추가.
      */
-    private fun loadHistories(boxId: Long, isInitialLoad: Boolean) {
+    fun loadHistories(boxId: Long, isInitialLoad: Boolean): Job {
         val currentState = _uiState.value
         val pageToLoad = if (isInitialLoad) 0 else currentState.page
 
         // 이미 로딩 중이거나, 다음 페이지가 없으면(마지막 페이지) 함수를 종료하여 중복 호출을 방지
-        if (currentState.isLoading || (!currentState.hasNext && !isInitialLoad)) return
+        if (currentState.isLoading || (!currentState.hasNext && !isInitialLoad)) {
+            return viewModelScope.launch {}
+        }
 
         _uiState.update { it.copy(isLoading = true) }
 
@@ -107,7 +110,7 @@ class MyWalletViewModel @Inject constructor(
         val categoryId = allScopeOptions.indexOf(filters.scope).takeIf { it > 0 }?.toLong()
         val sortDir = filters.sort.name
 
-        viewModelScope.launch {
+        return viewModelScope.launch {
             getTransactionHistoryUseCase(
                 boxId = boxId,
                 currency = currentState.selectedCurrencyCode,
@@ -238,6 +241,23 @@ class MyWalletViewModel @Inject constructor(
         viewModelScope.launch {
             _navigationEvent.emit(WalletNavigationEvent.NavigateToCharge)
         }
+    }
+
+    fun searchWithQuery(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+        search() // 기존의 private search 함수 재활용
+    }
+
+    fun searchWithCategory(category: String) {
+        val newFilters = uiState.value.filters.copy(scope = category)
+        onFilterConfirm(newFilters) // 기존의 필터 확인 함수 재활용
+    }
+
+
+    suspend fun forceRefresh() {
+        Log.d(TAG, "Lifecycle Event: ON_RESUME. 강제 새로고침을 시작합니다.")
+        loadHistories(boxId = boxId, isInitialLoad = true).join()
+        Log.d(TAG, "forceRefresh 완료. 다음 작업으로 넘어갑니다.")
     }
 
     private fun Date.toApiDateString(): String {

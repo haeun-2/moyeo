@@ -73,8 +73,10 @@ dependencies {
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
+    implementation(libs.gson)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
+
 
     implementation(libs.androidx.datastore.core)
     implementation(libs.androidx.datastore.preferences.core)

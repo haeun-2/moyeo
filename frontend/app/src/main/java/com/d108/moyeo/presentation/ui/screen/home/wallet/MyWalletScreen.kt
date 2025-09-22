@@ -24,6 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.domain.model.history.HistoryTransaction
@@ -37,6 +40,8 @@ import com.d108.moyeo.presentation.ui.component.history.toDate
 import com.d108.moyeo.presentation.ui.component.home.CommonFilterBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.CurrencyBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.FilterOptions
+import com.google.gson.Gson
+import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -52,6 +57,39 @@ fun MyWalletScreen(
     // ViewModel의 상태를 구독
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+
+    val scope = rememberCoroutineScope()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // [수정] scope.launch로 코루틴을 시작합니다.
+                scope.launch {
+                    // 1. ViewModel의 forceRefresh가 끝날 때까지 '반드시' 기다립니다.
+                    viewModel.forceRefresh()
+
+                    // 2. forceRefresh가 완전히 끝난 후에, 검색어/카테고리 확인 로직을 실행합니다.
+                    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+                    val searchQuery = savedStateHandle?.get<String>("search_query")
+                    if (searchQuery != null) {
+                        viewModel.searchWithQuery(searchQuery)
+                        savedStateHandle.remove<String>("search_query")
+                    } else {
+                        val searchCategory = savedStateHandle?.get<String>("search_category")
+                        if (searchCategory != null) {
+                            viewModel.searchWithCategory(searchCategory)
+                            savedStateHandle.remove<String>("search_category")
+                        }
+                    }
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->
@@ -136,7 +174,9 @@ fun MyWalletScreen(
                     ?: "전체 보기",
                 onBalanceClick = viewModel::onBalanceClick,
                 onBackClick = { navController.popBackStack() },
-                onTransferClick = viewModel::onTransferClick
+                onTransferClick = viewModel::onTransferClick,
+                bg = uiState.walletInfo?.bg ?: Color.Blue,
+                textColor = uiState.walletInfo?.textColor ?: Color.Black
             )
 
             Column(modifier = Modifier.padding(horizontal = Spacing.Medium)) {
@@ -166,7 +206,14 @@ fun MyWalletScreen(
                             TransactionRowItem(
                                 transaction = transaction,
                                 onClick = {
-                                    navController.navigate("my_wallet_detail/${transaction.id}")
+                                    val transactionJson = Gson().toJson(transaction)
+                                    navController.navigate(
+                                        AppScreen.MyWalletDetail.createRoute(
+                                            boxId = uiState.walletInfo!!.id,
+                                            historyId = transaction.id,
+                                            transactionJson = transactionJson
+                                        )
+                                    )
                                 }
                             )
                             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
@@ -198,13 +245,17 @@ private fun TopWalletInfoSurface(
     totalBalance: String,
     onBalanceClick: () -> Unit,
     onBackClick: () -> Unit,
-    onTransferClick:() -> Unit
+    onTransferClick:() -> Unit,
+    bg: Color,
+    textColor: Color
 ) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .height(300.dp), // 높이를 200dp로 조정
         tonalElevation = 0.dp,
+        color = bg,
+        contentColor = textColor
     ) {
         Column(
             modifier = Modifier
@@ -268,14 +319,14 @@ private fun TopWalletInfoSurface(
                 // !!그리고 이 버튼들이 너무 크다. 좀 작아진 다음에 좌우와 간격이 있으면 좋겠는데. !!
             ) {
                 Button(
-                        onClick = onTransferClick, // !! 이 버튼이랑 연결되어야 함
+                    onClick = onTransferClick, // !! 이 버튼이랑 연결되어야 함
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
                         contentColor = onPrimaryLight
                     ),
                     modifier = Modifier.weight(1f), // 버튼이 남은 공간을 균등하게 차지하도록
                 ) {
-                    Text("보내기")
+                    Text("보내기", color = textColor)
                 }
 
                 Button(
@@ -286,7 +337,7 @@ private fun TopWalletInfoSurface(
                     ),
                     modifier = Modifier.weight(1f) // 버튼이 남은 공간을 균등하게 차지하도록
                 ) {
-                    Text("환전하기")
+                    Text("환전하기", color = textColor)
                 }
             }
         }
@@ -376,7 +427,7 @@ private fun TransactionRowItem(
                     text = "$formattedAmount ${transaction.currency}",
                     style = Typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (transaction.amount < 0) errorLight else Color.Yellow
+                    color = if (transaction.amount < 0) errorLight else Color.Blue
                 )
                 Text(
                     text = "${DecimalFormat("#,###.##").format(transaction.balance)} ${transaction.currency}",
