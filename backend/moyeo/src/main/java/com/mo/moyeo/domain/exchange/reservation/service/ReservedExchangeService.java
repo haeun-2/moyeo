@@ -189,6 +189,7 @@ public class ReservedExchangeService {
     public void completeReservation(ReservedExchange reservedExchange) {
         //완성 처리
         reservedExchange.completeReservation();
+        processCancelReservation(reservedExchange, reservedExchange.getUser());
 
         //차감 금액 복원
         BigDecimal amount = reservedExchange.getTargetRate().multiply(reservedExchange.getAmount());
