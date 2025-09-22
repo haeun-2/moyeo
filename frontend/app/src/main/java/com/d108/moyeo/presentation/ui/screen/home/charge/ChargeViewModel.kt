@@ -3,6 +3,7 @@ package com.d108.moyeo.presentation.ui.screen.home.charge
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.data.local.UserDataManager
+import com.d108.moyeo.domain.usecase.banking.ChargeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -20,7 +21,8 @@ sealed class ChargeNavEvent {  // 내비게이션
 
 @HiltViewModel
 class ChargeViewModel @Inject constructor(
-    private val userDataManager: UserDataManager
+    private val userDataManager: UserDataManager,
+    private val chargeUseCase: ChargeUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChargeUiState())
@@ -41,6 +43,23 @@ class ChargeViewModel @Inject constructor(
         }
     }
 
+    private fun performChargeAndFinish() {
+        val amount = uiState.value.howMuch.toLongOrNull() ?: 0L
+        if (amount <= 0L) {
+            _uiState.update { it.copy(pinError = "0원 이상을 입력해주세요.") }
+            return
+        }
+        viewModelScope.launch {
+            chargeUseCase(amount)
+                .onSuccess {
+                    _uiState.update { it.copy(currentStep = ChargeStep.FINISH) }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(pinError = e.message ?: "충전에 실패했습니다.") }
+                }
+        }
+    }
+
     // --- 금액 입력 관련 함수 ---
     fun onMoneyDigitInput(digit: String) {
         val currentAmount = _uiState.value.howMuch
@@ -58,8 +77,7 @@ class ChargeViewModel @Inject constructor(
 
     // --- 인증 관련 함수 ---
     fun onBiometricsSucceeded() {
-        // TODO: 실제 서버에 충전 요청 API 호출
-        _uiState.update { it.copy(currentStep = ChargeStep.FINISH) }
+        performChargeAndFinish()
     }
 
     fun skipBiometrics() {
@@ -99,8 +117,7 @@ class ChargeViewModel @Inject constructor(
     }
 
     private fun onPinSucceeded() {
-        // TODO: 실제 서버에 충전 요청 API 호출
-        _uiState.update { it.copy(currentStep = ChargeStep.FINISH) }
+        performChargeAndFinish()
     }
 
     // --- 내비게이션 로직 ---
