@@ -9,7 +9,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -28,7 +27,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.domain.model.history.HistoryTransaction
 import com.d108.moyeo.presentation.navigation.AppScreen
@@ -92,8 +90,13 @@ fun MyBoxScreen(
     LaunchedEffect(key1 = true) {  // 내비게이션 이벤트 구독 및 처리
         viewModel.navigationEvent.collect { event ->
             when(event) {
-                is MyBoxNavigationEvent.NavigateToCollecting -> {
-                    navController.navigate(AppScreen.Collecting.createRoute(event.boxId, event.currencyCode)) // 원하는 currency 전달
+                is MyBoxNavigationEvent.NavigateToCollect -> {
+                    navController.navigate(
+                        AppScreen.Transfer.createRouteForDeposit(
+                            boxId = viewModel.boxId,
+                            currencyId = event.currencyCode
+                        )
+                    )
                 }
                 is MyBoxNavigationEvent.NavigateToCalculating -> {
                     navController.navigate(AppScreen.Calculating.createRoute(event.boxId, event.currencyCode)) // 원하는 currency 전달
@@ -190,7 +193,7 @@ fun MyBoxScreen(
                 onBalanceClick = viewModel::onBalanceClick,
                 onInviteClick = viewModel::onInviteClick,  // TODO: 초대 코드
                 onBackClick = { navController.popBackStack() },
-                onCollectingClick = viewModel::onCollectingClick,
+                onCollectClick = viewModel::onCollectClick,
                 onExchangeClick = viewModel::onExchangeClick,
                 bg = uiState.boxInfo?.bg ?: Color.Blue,
                 textColor = uiState.boxInfo?.textColor ?: Color.Black
@@ -265,7 +268,7 @@ private fun TopBoxInfoSurface(
     totalBalance: String,
     onBalanceClick: () -> Unit,
     onBackClick: () -> Unit,
-    onCollectingClick: () -> Unit,
+    onCollectClick: () -> Unit,
     onExchangeClick: () -> Unit,
     onInviteClick: () -> Unit,  // TODO: 이거 파라미터랑 리턴타입 고려하기
     bg: Color,
@@ -349,7 +352,7 @@ private fun TopBoxInfoSurface(
                 horizontalArrangement = Arrangement.spacedBy(32.dp)
             ) {
                 Button(
-                    onClick = onCollectingClick,  // 이 모으기 버튼 클릭했을 때 할 일을 할 거야
+                    onClick = onCollectClick,  // 이 모으기 버튼 클릭했을 때 할 일을 할 거야
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
                         contentColor = onPrimaryLight

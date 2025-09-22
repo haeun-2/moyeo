@@ -88,12 +88,12 @@ sealed class AppScreen(
     object Charge: AppScreen(route = "charge", title = "충전")
 
     // 모으기와 관련된 화면
-    object Collecting : AppScreen(route = "collecting/{boxId}?currencyCode={currencyCode}", title = "모으기") {
+    object Collect : AppScreen(route = "collect/{boxId}?currencyCode={currencyCode}", title = "모으기") {
         fun createRoute(boxId: String, currencyCode: String? = null): String {
             return if (currencyCode != null) {
-                "collecting/$boxId?currencyCode=$currencyCode"
+                "collect/$boxId?currencyCode=$currencyCode"
             } else {
-                "collecting/$boxId"
+                "collect/$boxId"
             }
         }
     }
