@@ -1,6 +1,7 @@
 package com.mo.moyeo.domain.transaction.history.dto;
 
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
+import com.mo.moyeo.domain.exchange.reservation.entity.ReservedExchange;
 import com.mo.moyeo.domain.transaction.exchange.entity.ExchangeTransaction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,6 +33,16 @@ public class ExchangeTransactionDetailResponse {
 
     public static List<ExchangeTransactionDetailResponse> from(List<ExchangeTransaction> exchangeTransactions) {
         return exchangeTransactions.stream().map(ExchangeTransactionDetailResponse::from).toList();
+    }
+
+    public static ExchangeTransactionDetailResponse from(ReservedExchange reservedExchange){
+        return ExchangeTransactionDetailResponse.builder()
+                .fromCurrency(reservedExchange.getFromCurrency().getCode())
+                .fromAmount(reservedExchange.getTargetRate().multiply(reservedExchange.getAmount()))
+                .toCurrency(reservedExchange.getToCurrency().getCode())
+                .toAmount(reservedExchange.getAmount())
+                .exchangeRate(reservedExchange.getTargetRate())
+                .build();
     }
 
 }

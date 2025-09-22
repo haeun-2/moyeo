@@ -239,4 +239,9 @@ public class ReservedExchangeService {
             }
         }
     }
+
+    public ReservedExchange getReservationByTxn(Transaction transaction) {
+        return reservedExchangeRepository.findByTransaction(transaction)
+                .orElseThrow(()-> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+    }
 }

@@ -3,6 +3,9 @@ package com.mo.moyeo.domain.transaction.history.service;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.common.paging.PageResponse;
+import com.mo.moyeo.domain.exchange.reservation.dto.ExchangeReserveListDto;
+import com.mo.moyeo.domain.exchange.reservation.entity.ReservedExchange;
+import com.mo.moyeo.domain.exchange.reservation.service.ReservedExchangeService;
 import com.mo.moyeo.domain.transaction.category.entity.Category;
 import com.mo.moyeo.domain.transaction.category.repository.CategoryRepository;
 import com.mo.moyeo.domain.transaction.exchange.entity.ExchangeTransaction;
@@ -29,6 +32,7 @@ public class BoxHistoryApplicationService {
     private final ExchangeService exchangeService;
     private final BoxHistoryRepository boxHistoryRepository;
     private final CategoryRepository categoryRepository;
+    private final ReservedExchangeService reservedExchangeService;
 
     public PageResponse<TransactionResponse> getTransactions(Long boxId, TransactionSearchCondition request) {
         Slice<BoxHistory> boxHistories = boxHistoryRepository.search(boxId, request);
@@ -45,7 +49,12 @@ public class BoxHistoryApplicationService {
             }
             return ExchangeTransactionDetailResponse.from(exchangeTransactions);
         }
-        throw new CustomException(ErrorCode.BAD_REQUEST);
+        else if(transaction.getTransactionType().equals(Transaction.Type.EXCHANGE_RESERVATION)){
+            ReservedExchange reservedExchange = reservedExchangeService.getReservationByTxn(transaction);
+            return List.of(ExchangeTransactionDetailResponse.from(reservedExchange));
+        }
+        else
+            throw new CustomException(ErrorCode.BAD_REQUEST);
     }
 
     @Transactional
