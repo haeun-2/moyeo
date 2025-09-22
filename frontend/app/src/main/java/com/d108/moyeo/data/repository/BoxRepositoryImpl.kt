@@ -7,18 +7,46 @@ import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.domain.repository.BoxRepository
 import javax.inject.Inject
 import com.d108.moyeo.domain.model.box.BoxDetail
+import com.d108.moyeo.domain.model.box.InviteLinkResult
 
 class BoxRepositoryImpl @Inject constructor(
     private val api: BoxService
 ) : BoxRepository {
 
-        override suspend fun createBox(name: String): Result<Long> {
+    override suspend fun createBox(name: String): Result<Long> {
         return runCatching {
             val response = api.createBox(CreateBoxRequestDto(name))
             if (response.isSuccessful) {
                 response.body()?.boxId ?: throw Exception("Response body is null")
             } else {
                 throw Exception("Server responded with error: ${response.code()}")
+            }
+        }
+    }
+
+    override suspend fun createInviteLink(boxId: Long): Result<InviteLinkResult> {
+        return runCatching {
+            val response = api.createInviteLink(boxId)
+            if (response.isSuccessful) {
+                val body = response.body() ?: throw NullPointerException("Response body is null")
+                InviteLinkResult(
+                    inviteLink = body.inviteLink,
+                    inviteCode = body.inviteCode,
+                    expiresAt  = body.expiresAt
+                )
+            } else {
+                throw Exception("Server responded with error code: ${response.code()}")
+            }
+        }
+    }
+
+    override suspend fun joinBox(code: String): Result<Long> {
+        return runCatching {
+            val response = api.joinBox(code)
+            if (response.isSuccessful) {
+                response.body()?.boxId ?: throw NullPointerException("Response body is null")
+            } else {
+                throw Exception("Server responded with error code: ${response.code()}")
             }
         }
     }

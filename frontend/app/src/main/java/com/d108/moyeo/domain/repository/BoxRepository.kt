@@ -2,9 +2,14 @@ package com.d108.moyeo.domain.repository
 
 import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.domain.model.box.BoxDetail
+import com.d108.moyeo.domain.model.box.InviteLinkResult
 
 interface BoxRepository {
     suspend fun createBox(name: String): Result<Long>
+
+    suspend fun createInviteLink(boxId: Long): Result<InviteLinkResult>
+
+    suspend fun joinBox(code: String): Result<Long>
 
     suspend fun getPersonalBox(): Result<Box>
     

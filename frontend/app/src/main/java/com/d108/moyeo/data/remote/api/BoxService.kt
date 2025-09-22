@@ -4,6 +4,8 @@ import com.d108.moyeo.data.remote.dto.box.BoxDetailResponseDto
 import com.d108.moyeo.data.remote.dto.box.CreateBoxRequestDto
 import com.d108.moyeo.data.remote.dto.box.CreateBoxResponseDto
 import com.d108.moyeo.data.remote.dto.box.GroupBoxResponseDto
+import com.d108.moyeo.data.remote.dto.box.InviteLinkResponseDto
+import com.d108.moyeo.data.remote.dto.box.JoinBoxResponseDto
 import com.d108.moyeo.data.remote.dto.box.PersonalBoxResponseDto
 import retrofit2.Response
 import retrofit2.http.Body
@@ -34,6 +36,14 @@ interface BoxService {
     // 모임 박스 생성
     @POST("api/boxes")
     suspend fun createBox(@Body request: CreateBoxRequestDto) : Response<CreateBoxResponseDto>
+
+    // 모임 박스 링크 생성
+    @POST("api/boxes/{boxId}/invite")
+    suspend fun createInviteLink(@Path("boxId") boxId: Long): Response<InviteLinkResponseDto>
+
+    // 모임 박스 가입
+    @POST("api/boxes/invite/{code}/join")
+    suspend fun joinBox(@Path("code") code: String): Response<JoinBoxResponseDto>
 
 
     // 모임 박스 즐겨찾기 관련
