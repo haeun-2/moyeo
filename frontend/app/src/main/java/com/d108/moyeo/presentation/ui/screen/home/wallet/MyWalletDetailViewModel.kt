@@ -57,7 +57,7 @@ class MyWalletDetailViewModel @Inject constructor(
             }
 
             // 환전 카테고리면 추가로 호출
-            if (transaction.category == "환전") {
+            if (transaction.category == "환전" && transaction.type == "환전") {
                 fetchExchangeDetail(transaction.id)
             }
         }

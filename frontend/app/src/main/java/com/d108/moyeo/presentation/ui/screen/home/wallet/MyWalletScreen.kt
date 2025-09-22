@@ -421,7 +421,7 @@ private fun TransactionRowItem(
                     text = "$formattedAmount ${transaction.currency}",
                     style = Typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (transaction.amount < 0) errorLight else Color.Yellow
+                    color = if (transaction.amount < 0) errorLight else Color.Blue
                 )
                 Text(
                     text = "${DecimalFormat("#,###.##").format(transaction.balance)} ${transaction.currency}",

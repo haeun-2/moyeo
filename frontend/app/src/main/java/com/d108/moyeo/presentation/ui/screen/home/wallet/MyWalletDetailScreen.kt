@@ -73,7 +73,7 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         }
     }
 
-    if (transaction.category == "환전") {
+    if (transaction.category == "환전" && transaction.type == "환전") {
         ExchangeDetailContent(
             transaction = transaction,
             uiState = uiState,
