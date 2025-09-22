@@ -8,7 +8,6 @@ import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.domain.usecase.history.GetTransactionHistoryUseCase
 import com.d108.moyeo.presentation.ui.component.home.Currency
 import com.d108.moyeo.presentation.ui.component.home.FilterOptionData.allScopeOptions
-import com.d108.moyeo.presentation.ui.screen.home.box.Period
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -29,7 +28,7 @@ import javax.inject.Inject
 sealed class MyBoxNavigationEvent {
 
     // 모으기
-    data class NavigateToCollecting(val boxId: String, val currencyCode: String = "KRW") : MyBoxNavigationEvent()
+    data class NavigateToCollect(val boxId: String, val currencyCode: String = "KRW") : MyBoxNavigationEvent()
 
     // 정산하기
     data class NavigateToCalculating(val boxId: String, val currencyCode: String = "KRW") : MyBoxNavigationEvent()
@@ -246,9 +245,16 @@ class MyBoxViewModel @Inject constructor(
 
 
 
-    fun onCollectingClick() {
+    fun onCollectClick() {
         viewModelScope.launch {
-
+            val id = boxId
+            val currency = uiState.value.selectedCurrencyCode.ifBlank { "KRW" }
+            _navigationEvent.emit(
+                MyBoxNavigationEvent.NavigateToCollect(
+                    boxId = id.toString(),
+                    currencyCode = currency
+                )
+            )
         }
     }
 
