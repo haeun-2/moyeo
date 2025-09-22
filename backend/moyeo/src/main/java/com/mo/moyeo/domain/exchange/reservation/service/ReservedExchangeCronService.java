@@ -25,6 +25,7 @@ public class ReservedExchangeCronService {
     private final ReservedExchangeService reservedExchangeService;
 
     @Scheduled(initialDelay = 1000*10, fixedDelay = 1000*60)
+    @Transactional
     public void checkReservation() {
         Map<String, CurrentExchangeRateDto> currentExchangeRate = exchangeRateCacheService.getCurrentExchangeRate();
         log.debug("예약 환전 체크");
@@ -36,10 +37,11 @@ public class ReservedExchangeCronService {
 
             log.debug("{}",reservedExchange.getFromCurrency().getCode().name());
             CurrencyType currencyType;
-            if(reservedExchange.getFromCurrency().getCode()==CurrencyType.KRW)
+            if(reservedExchange.getFromCurrency().getCode()==CurrencyType.KRW) {
                 currencyType = reservedExchange.getToCurrency().getCode();
-            else
+            } else {
                 currencyType = reservedExchange.getFromCurrency().getCode();
+            }
 
             CurrentExchangeRateDto rateDto = currentExchangeRate.get(currencyType.name());
 

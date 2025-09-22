@@ -5,15 +5,14 @@ import com.mo.moyeo.common.annotation.BoxLockParam;
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.common.util.lock.LockManager;
-import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
 import com.mo.moyeo.domain.box.balance.service.BoxBalanceService;
-import com.mo.moyeo.domain.box.member.service.BoxMemberService;
+import com.mo.moyeo.domain.box.box.entity.Box;
 import com.mo.moyeo.domain.box.box.service.BoxService;
+import com.mo.moyeo.domain.box.member.service.BoxMemberService;
 import com.mo.moyeo.domain.currency.entity.Currency;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.service.CurrencyService;
-import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
 import com.mo.moyeo.domain.exchange.rate.service.ExchangeRateCacheService;
 import com.mo.moyeo.domain.exchange.reservation.dto.ExchangeReserveDto;
 import com.mo.moyeo.domain.exchange.reservation.dto.ExchangeReserveListDto;
@@ -30,14 +29,12 @@ import com.mo.moyeo.domain.transaction.transaction.service.TransactionService;
 import com.mo.moyeo.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -83,7 +80,7 @@ public class ReservedExchangeService {
         //예상 금액 차감
         BigDecimal amount = reservedExchange.getTargetRate().multiply(reservedExchange.getAmount());
         BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(box, exchangeReserveDto.fromCurrency());
-        if(fromBoxBalance.checkSufficientBalance(amount))
+        if (fromBoxBalance.checkSufficientBalance(amount))
             throw new CustomException(ErrorCode.BAD_REQUEST, "환전에 필요한 금액이 부족합니다.");
         fromBoxBalance.decreaseBalance(amount);
 
@@ -148,7 +145,6 @@ public class ReservedExchangeService {
     public void processCancelReservation(ReservedExchange reservedExchange, User user) {
         boxMemberService.validateJoinedBoxMember(reservedExchange.getBox(), user);
 
-        reservedExchange.cancelReservation();
 
         // 차감 금액 복원
         BigDecimal amount = reservedExchange.getTargetRate().multiply(reservedExchange.getAmount());
@@ -186,6 +182,7 @@ public class ReservedExchangeService {
     @BoxDistributedLock({
             @BoxLockParam(boxId = "#reservedExchange.box.id", currencyCode = "reservedExchange.fromCurrency.code")
     })
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void completeReservation(ReservedExchange reservedExchange) {
         //완성 처리
         reservedExchange.completeReservation();
@@ -202,6 +199,6 @@ public class ReservedExchangeService {
 
     public ReservedExchange getReservationByTxn(Transaction transaction) {
         return reservedExchangeRepository.findByTransaction(transaction)
-                .orElseThrow(()-> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
     }
 }
