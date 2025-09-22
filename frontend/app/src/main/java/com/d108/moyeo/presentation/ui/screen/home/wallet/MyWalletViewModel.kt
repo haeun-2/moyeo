@@ -235,6 +235,12 @@ class MyWalletViewModel @Inject constructor(
         }
     }
 
+    fun onExchangeClick() {  // TODO: 환전
+        viewModelScope.launch {
+
+        }
+    }
+
 
     // 충전 플로팅 버튼 클릭 시 호출
     fun onChargeClick() {

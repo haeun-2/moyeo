@@ -258,6 +258,18 @@ class MyBoxViewModel @Inject constructor(
         }
     }
 
+    fun onExchangeClick() {
+        viewModelScope.launch {
+
+        }
+    }
+
+    fun onInviteClick() {
+        viewModelScope.launch {
+
+        }
+    }
+
     private fun Date.toApiDateString(): String {
         val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.KOREAN)
         return formatter.format(this)

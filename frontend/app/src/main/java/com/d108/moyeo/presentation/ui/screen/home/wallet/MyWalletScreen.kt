@@ -175,6 +175,7 @@ fun MyWalletScreen(
                 onBalanceClick = viewModel::onBalanceClick,
                 onBackClick = { navController.popBackStack() },
                 onTransferClick = viewModel::onTransferClick,
+                onExchangeClick = viewModel::onExchangeClick,
                 bg = uiState.walletInfo?.bg ?: Color.Blue,
                 textColor = uiState.walletInfo?.textColor ?: Color.Black
             )
@@ -246,6 +247,7 @@ private fun TopWalletInfoSurface(
     onBalanceClick: () -> Unit,
     onBackClick: () -> Unit,
     onTransferClick:() -> Unit,
+    onExchangeClick: () -> Unit,
     bg: Color,
     textColor: Color
 ) {
@@ -330,7 +332,7 @@ private fun TopWalletInfoSurface(
                 }
 
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = { onExchangeClick },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
                         contentColor = onPrimaryLight
