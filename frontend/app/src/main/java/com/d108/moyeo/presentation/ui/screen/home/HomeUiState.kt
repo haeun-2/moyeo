@@ -28,6 +28,7 @@ data class GroupBox(
 
 /** HomeScreen 전체 상태 */
 data class HomeUiState(
+    val userName: String = "사용자",
     val wallet: WalletSummary,
     val groups: List<GroupBox> = emptyList(),
     val showWalletEditSheet: Boolean = false,
