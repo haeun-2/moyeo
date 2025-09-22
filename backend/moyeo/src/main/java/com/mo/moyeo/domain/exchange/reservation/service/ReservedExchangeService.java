@@ -186,7 +186,7 @@ public class ReservedExchangeService {
     }
 
     @Transactional
-    @Scheduled(fixedDelay = 1000*60)
+    @Scheduled(initialDelay = 1000*60, fixedDelay = 1000*60)
     public void checkReservation() {
         Map<String, CurrentExchangeRateDto> currentExchangeRate = exchangeRateCacheService.getCurrentExchangeRate();
 
