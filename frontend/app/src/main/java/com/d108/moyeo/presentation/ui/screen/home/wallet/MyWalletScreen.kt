@@ -174,7 +174,9 @@ fun MyWalletScreen(
                     ?: "전체 보기",
                 onBalanceClick = viewModel::onBalanceClick,
                 onBackClick = { navController.popBackStack() },
-                onTransferClick = viewModel::onTransferClick
+                onTransferClick = viewModel::onTransferClick,
+                bg = uiState.walletInfo?.bg ?: Color.Blue,
+                textColor = uiState.walletInfo?.textColor ?: Color.Black
             )
 
             Column(modifier = Modifier.padding(horizontal = Spacing.Medium)) {
@@ -243,13 +245,17 @@ private fun TopWalletInfoSurface(
     totalBalance: String,
     onBalanceClick: () -> Unit,
     onBackClick: () -> Unit,
-    onTransferClick:() -> Unit
+    onTransferClick:() -> Unit,
+    bg: Color,
+    textColor: Color
 ) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .height(300.dp), // 높이를 200dp로 조정
         tonalElevation = 0.dp,
+        color = bg,
+        contentColor = textColor
     ) {
         Column(
             modifier = Modifier
@@ -313,14 +319,14 @@ private fun TopWalletInfoSurface(
                 // !!그리고 이 버튼들이 너무 크다. 좀 작아진 다음에 좌우와 간격이 있으면 좋겠는데. !!
             ) {
                 Button(
-                        onClick = onTransferClick, // !! 이 버튼이랑 연결되어야 함
+                    onClick = onTransferClick, // !! 이 버튼이랑 연결되어야 함
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
                         contentColor = onPrimaryLight
                     ),
                     modifier = Modifier.weight(1f), // 버튼이 남은 공간을 균등하게 차지하도록
                 ) {
-                    Text("보내기")
+                    Text("보내기", color = textColor)
                 }
 
                 Button(
@@ -331,7 +337,7 @@ private fun TopWalletInfoSurface(
                     ),
                     modifier = Modifier.weight(1f) // 버튼이 남은 공간을 균등하게 차지하도록
                 ) {
-                    Text("환전하기")
+                    Text("환전하기", color = textColor)
                 }
             }
         }

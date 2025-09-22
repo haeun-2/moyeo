@@ -63,6 +63,7 @@ class MyWalletViewModel @Inject constructor(
             val walletInfo = allBoxes.find { it.type == BoxType.PERSONAL }
             Log.d(TAG, "walletInfo: $walletInfo")  //
 
+
             // BoxStore의 personalCurrencies는 CurrencyData 타입이므로 UI에 맞는 Currency 타입으로 변환
             // TODO: 사실상 CurrencyData와 Currency는 같은 모양임...
             val currencies = boxStore.personalCurrencies.value.map { Currency(it.code, it.name) }
