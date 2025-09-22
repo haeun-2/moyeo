@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface NotificationRepository extends CrudRepository<Notification, Long> {
 
-    List<Notification> findAllByUserId(Long userId);
+    List<Notification> findAllByUserIdOrderByReceivedAtDesc(Long userId);
 }

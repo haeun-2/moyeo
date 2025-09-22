@@ -38,7 +38,7 @@ public class NotificationService {
     }
 
     public List<NotificationResponse> findAllByUserId(Long userId) {
-        return notificationRepository.findAllByUserId(userId).stream()
+        return notificationRepository.findAllByUserIdOrderByReceivedAtDesc(userId).stream()
                 .map(NotificationResponse::from)
                 .toList();
     }
