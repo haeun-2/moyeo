@@ -25,5 +25,5 @@ interface BoxHistoryRepository {
         categoryId: Long?
     ): Result<Unit>
 
-    suspend fun getExchangeHistoryDetail(boxId: Long, historyId: Long): Result<ExchangeHistoryDetail>
+    suspend fun getExchangeHistoryDetail(boxId: Long, historyId: Long): Result<List<ExchangeHistoryDetail>>
 }

@@ -6,7 +6,7 @@ import com.d108.moyeo.domain.model.history.HistoryTransaction
 data class MyWalletDetailUiState(
     val transaction: HistoryTransaction? = null,
 
-    val exchangeDetail: ExchangeHistoryDetail? = null,
+    val exchangeDetails: List<ExchangeHistoryDetail> = emptyList(),
 
 
     val isMemoEditing: Boolean = false,

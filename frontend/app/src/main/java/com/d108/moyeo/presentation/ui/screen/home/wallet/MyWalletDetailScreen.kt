@@ -1,6 +1,5 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
@@ -17,7 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.domain.model.history.HistoryTransaction
 import com.d108.moyeo.presentation.theme.Spacing
@@ -165,7 +163,7 @@ private fun ExchangeDetailContent(
     navController: NavController
 ) {
     val isExpense = transaction.amount < 0
-    val exchangeDetail = uiState.exchangeDetail
+    val exchangeDetail = uiState.exchangeDetails
     val formattedAmount = DecimalFormat("#,###.##").format(transaction.amount)
     val formattedBalance = DecimalFormat("#,###.##").format(transaction.balance)
     val amountColor = if (isExpense) Color.Red else Color.Blue
@@ -194,32 +192,46 @@ private fun ExchangeDetailContent(
                 // 1. API 호출 중 (로딩)
                 uiState.isLoading -> CircularProgressIndicator()
                 // 2. API 호출 성공
-                exchangeDetail != null -> Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CurrencyAmount(
-                            label = "From",
-                            amount = "- ${DecimalFormat("#,###.##").format(exchangeDetail.fromAmount)}",
-                            currency = exchangeDetail.fromCurrency,
-                            color = Color.Red
+                exchangeDetail.isNotEmpty() -> Column {
+                    exchangeDetail.forEachIndexed { index, detail ->
+                        if (index > 0) {
+                            Spacer(modifier = Modifier.height(Spacing.Medium))
+                            HorizontalDivider()
+                            Spacer(modifier = Modifier.height(Spacing.Medium))
+                        }
+                        Text(
+                            text = "${index + 1}차 환전",
+                            style = Typography.titleMedium,
+                            modifier = Modifier.fillMaxWidth()
                         )
-                        Text(text = "→", style = Typography.headlineMedium)
-                        CurrencyAmount(
-                            label = "To",
-                            amount = "+ ${DecimalFormat("#,###.##").format(exchangeDetail.toAmount)}",
-                            currency = exchangeDetail.toCurrency,
-                            color = Color.Blue
-                        )
+
+                        Spacer(modifier = Modifier.height(Spacing.Small))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CurrencyAmount(
+                                label = "From",
+                                amount = "- ${DecimalFormat("#,###.##").format(detail.fromAmount)}",
+                                currency = detail.fromCurrency,
+                                color = Color.Red
+                            )
+                            Text(text = "→", style = Typography.headlineMedium)
+                            CurrencyAmount(
+                                label = "To",
+                                amount = "+ ${DecimalFormat("#,###.##").format(detail.toAmount)}",
+                                currency = detail.toCurrency,
+                                color = Color.Blue
+                            )
+                        }
+                        DetailInfoRow(label = "적용 환율", content = {
+                            Text("1 ${detail.toCurrency} = ${detail.exchangeRate} ${detail.fromCurrency}", style = Typography.bodyLarge)
+                        })
                     }
-                    Spacer(modifier = Modifier.height(Spacing.Large))
-                    HorizontalDivider()
-                    Spacer(modifier = Modifier.height(Spacing.Large))
-                    DetailInfoRow(label = "적용 환율", content = {
-                        Text("1 ${exchangeDetail.toCurrency} = ${exchangeDetail.exchangeRate} ${exchangeDetail.fromCurrency}", style = Typography.bodyLarge)
-                    })
+
+
                 }
                 // 3. API 호출 실패
                 uiState.errorMessage != null -> Text(uiState.errorMessage, color = Color.Red)

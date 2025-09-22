@@ -168,7 +168,7 @@ class MyWalletDetailViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            exchangeDetail = details
+                            exchangeDetails = details
                         )
                     }
                 }
