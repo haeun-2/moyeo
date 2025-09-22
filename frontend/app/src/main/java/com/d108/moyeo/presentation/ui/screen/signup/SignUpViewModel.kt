@@ -3,6 +3,7 @@ package com.d108.moyeo.presentation.ui.screen.signup
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.domain.model.Bank
 import com.d108.moyeo.domain.model.SignUpInfo
 import com.d108.moyeo.domain.usecase.auth.LoginUseCase
@@ -50,7 +51,8 @@ class SignUpViewModel @Inject constructor (
     private val savePinUseCase: SavePinUseCase,
     private val saveBiometricsPreferenceUseCase: SaveBiometricsPreferenceUseCase,
     private val getFidUseCase: GetFidUseCase,
-    private val loginUseCase: LoginUseCase
+    private val loginUseCase: LoginUseCase,
+    private val userDataManager: UserDataManager
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState = _uiState.asStateFlow()
@@ -487,6 +489,9 @@ class SignUpViewModel @Inject constructor (
                 Log.d("SignUpViewModel", "자동 로그인 성공! AccessToken: ${token.accessToken}")
                 savePinUseCase(uiState.value.pin)
                 saveBiometricsPreferenceUseCase(uiState.value.isBiometricsUsed)
+                viewModelScope.launch {
+                    userDataManager.saveUserName(signUpInfo.name)
+                }
                 _navigationEvent.emit(SignUpNavigationEvent.NavigateToHome)
             }
             .onFailure { error ->

@@ -1,6 +1,5 @@
 package com.d108.moyeo.presentation.ui.screen.home
 
-import android.icu.number.Precision.currency
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -109,7 +108,7 @@ fun HomeScreen(
             Spacer(Modifier.height(Spacing.SmallMedium))
             // 헤더
             HomeHeader(
-                title = "동찬",
+                title = uiState.userName,
                 onBellClick = {
                     navController.navigate(AppScreen.Notification.route)
                 }

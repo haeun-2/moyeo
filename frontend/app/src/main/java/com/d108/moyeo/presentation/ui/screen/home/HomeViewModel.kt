@@ -19,7 +19,6 @@ import com.d108.moyeo.presentation.theme.boxAvailableColors
 import com.d108.moyeo.presentation.ui.screen.home.transfer.CurrencyData
 import com.d108.moyeo.util.textColorUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -77,6 +76,12 @@ class HomeViewModel @Inject constructor(
     init {
         // ... (토큰 로깅은 그대로)
         refresh()
+
+        viewModelScope.launch {
+            userDataManager.userNameFlow.collect { name ->
+                _uiState.update { it.copy(userName = name ?: "사용자") }
+            }
+        }
     }
 
     /**

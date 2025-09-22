@@ -37,6 +37,7 @@ class UserDataManager @Inject constructor(
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
         private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
 
+        private val USER_NAME_KEY = stringPreferencesKey("user_name")
         private val PIN_KEY = stringPreferencesKey("pin")
         private val BIOMETRICS_PREFERENCE_KEY = booleanPreferencesKey("biometrics_preference")
         // --- 개인 박스(지갑) 관련
@@ -64,6 +65,15 @@ class UserDataManager @Inject constructor(
     suspend fun clearTokens() {
         context.dataStore.edit { it.clear() }
     }
+
+    /*
+    * 이름 관련
+    */
+    suspend fun saveUserName(name: String) {
+        context.dataStore.edit { prefs -> prefs[USER_NAME_KEY] = name }
+    }
+    // 이름을 FLOW로 제공
+    val userNameFlow: Flow<String?> = context.dataStore.data.map { it[USER_NAME_KEY] }
 
     /*
     핀 관련
