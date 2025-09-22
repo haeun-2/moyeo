@@ -45,8 +45,8 @@ public class BoxInviteController {
 
     @Operation(summary = "앱 설치 페이지로 이동", description = "앱 미설치 시 실행되는 fallback 페이지입니다. 앱 설치 페이지로 리다이렉트 합니다.")
     @GetMapping("/invite/{code}")
-    public void toFallback(HttpServletResponse response) throws IOException {
-        response.sendRedirect("/download.html");
+    public void toFallback(@PathVariable String code, HttpServletResponse response) throws IOException {
+        response.sendRedirect("/download.html?code=" + code);
     }
 
 }
