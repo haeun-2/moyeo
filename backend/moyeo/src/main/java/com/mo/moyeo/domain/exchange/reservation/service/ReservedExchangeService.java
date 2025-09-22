@@ -183,52 +183,10 @@ public class ReservedExchangeService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
     }
 
-    private List<ReservedExchange> getWaitingReservation() {
-        return reservedExchangeRepository.findWaitingReservation();
-    }
-
-    @Transactional
-    @Scheduled(initialDelay = 1000*10, fixedDelay = 1000*60)
-    public void checkReservation() {
-        Map<String, CurrentExchangeRateDto> currentExchangeRate = exchangeRateCacheService.getCurrentExchangeRate();
-        log.debug("예약 환전 체크");
-
-        List<ReservedExchange> reservations = getWaitingReservation();
-        for (ReservedExchange reservedExchange : reservations) {
-            BigDecimal currentRate;
-            BigDecimal targetRate = reservedExchange.getTargetRate();
-
-            log.debug("{}",reservedExchange.getFromCurrency().getCode().name());
-            CurrencyType currencyType;
-            if(reservedExchange.getFromCurrency().getCode()==CurrencyType.KRW)
-                currencyType = reservedExchange.getToCurrency().getCode();
-            else
-                currencyType = reservedExchange.getFromCurrency().getCode();
-
-            CurrentExchangeRateDto rateDto = currentExchangeRate.get(currencyType.name());
-
-            if (reservedExchange.getFromCurrency().getCode() == CurrencyType.KRW) {
-                // 한->외, 사는 경우
-                currentRate = rateDto.getBuyRate();
-                if (currentRate.compareTo(targetRate) <= 0) { // currentRate >= targetRate
-                    completeReservation(reservedExchange);
-                }
-            } else {
-                // 외->한, 파는 경우
-                currentRate = rateDto.getSellRate();
-                if (currentRate.compareTo(targetRate) >= 0) { // currentRate <= targetRate
-                    completeReservation(reservedExchange);
-                }
-            }
-            log.debug("cur = {}, target = {}", currentRate, targetRate);
-        }
-    }
-
-
     @BoxDistributedLock({
             @BoxLockParam(boxId = "#reservedExchange.box.id", currencyCode = "reservedExchange.fromCurrency.code")
     })
-    private void completeReservation(ReservedExchange reservedExchange) {
+    public void completeReservation(ReservedExchange reservedExchange) {
         //완성 처리
         reservedExchange.completeReservation();
 
@@ -238,19 +196,7 @@ public class ReservedExchangeService {
         fromBoxBalance.increaseBalance(amount);
 
         exchangeService.exchange(reservedExchange.getUser(), new ExchangeRequestDto(reservedExchange));
-    }
-
-    // 매일 0시 1분에 실행
-    @Scheduled(cron = "0 1 0 * * *")
-    @Transactional
-    public void deleteOldExchangeRates() {
-        LocalDate now = LocalDate.now();
-        List<ReservedExchange> reservations = getWaitingReservation();
-        for (ReservedExchange reservedExchange : reservations) {
-            if(now.isAfter(reservedExchange.getExpiresAt())){
-                reservedExchange.expire();
-            }
-        }
+        reservedExchangeRepository.save(reservedExchange);
     }
 
     public ReservedExchange getReservationByTxn(Transaction transaction) {
