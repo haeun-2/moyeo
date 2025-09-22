@@ -78,10 +78,10 @@ fun HomeScreen(
                 }
 
                 is HomeNavigationEvent.NavigateToMyBox -> {  // route에 {boxid}라 된 부분을 파라미터로 교체한 후 라우트
-                    navController.navigate(AppScreen.MyBox.route
-                        .replace("{boxId}", event.boxId.toString())
-                        .replace("{bgColor}", event.bgColor.toString())
+                    val route = AppScreen.MyBox.createRoute(
+                        boxId = event.boxId
                     )
+                    navController.navigate(route)
                 }
 
                 is HomeNavigationEvent.NavigateToTransfer -> {

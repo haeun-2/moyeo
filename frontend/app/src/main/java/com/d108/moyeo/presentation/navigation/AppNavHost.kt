@@ -100,45 +100,34 @@ fun AppNavHost(
         composable(
             route = AppScreen.MyWalletDetail.route,
             // 경로에서 "transactionId"를 어떤 타입으로 받을지 정의합니다.
-            arguments = listOf(navArgument("transactionId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("boxId") { type = NavType.LongType },
+                navArgument("historyId") { type = NavType.LongType },
+                navArgument("transactionJson") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
-            // 뒤로가기 스택에서 "transactionId" 값을 꺼냅니다.
-            val transactionId = backStackEntry.arguments?.getString("transactionId")
-            if (transactionId != null) {
-                MyWalletDetailScreen(
-                    navController = navController,
-                    transactionId = transactionId // 상세 화면에 ID를 전달합니다.
-                )
-            }
+            MyWalletDetailScreen(navController = navController)
         }
 
         // 모여 박스에서 클릭
         composable(
             route = AppScreen.MyBox.route,
-            arguments = listOf(navArgument("boxId") { type = NavType.StringType },
-                navArgument("bgColor") { type = NavType.IntType }  // Color는 Int로 전달)
+            arguments = listOf(
+                navArgument("boxId") { type = NavType.LongType },
             )
         ) { backStackEntry ->
-            val boxId = backStackEntry.arguments?.getString("boxId")
-            val bgColor = backStackEntry.arguments?.getInt("bgColor")
-            if (boxId != null && bgColor != null ) {
-                MyBoxScreen(navController = navController, boxId = boxId, bgColor = bgColor)
-            }
+            MyBoxScreen(navController = navController)
         }
 
         composable(
             route = AppScreen.MyBoxDetail.route,
-            // 경로에서 "transactionId"를 어떤 타입으로 받을지 정의합니다.
-            arguments = listOf(navArgument("transactionId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("boxId") { type = NavType.LongType },
+                navArgument("historyId") { type = NavType.LongType },
+                navArgument("transactionJson") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
-            // 뒤로가기 스택에서 "transactionId" 값을 꺼냅니다.
-            val transactionId = backStackEntry.arguments?.getString("transactionId")
-            if (transactionId != null) {
-                MyBoxDetailScreen(
-                    navController = navController,
-                    transactionId = transactionId // 상세 화면에 ID를 전달합니다.
-                )
-            }
+            MyBoxDetailScreen(navController = navController)
         }
 
         // 모여박스로 돈 보내는 화면

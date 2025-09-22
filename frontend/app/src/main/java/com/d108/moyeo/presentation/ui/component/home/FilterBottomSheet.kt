@@ -135,20 +135,9 @@ private fun CategorySegmentedPager(
     selected: String,
     onSelected: (String) -> Unit
 ) {
-    // 카테고리 구성
-    val all = listOf(  // 이게 0 1 2 3 4 5 6 7 8 9 순서
-        "전체","입금","출금","환전","식사","교통","숙박","투어/액티비티","쇼핑","기타"
-    )
 
     // 페이지 구성 (1칸 / 3칸 / 3칸 / 3칸)
-    val pages = remember {  // 여기에서
-        listOf(
-            listOf("전체"),
-            listOf("입금", "출금", "환전"),
-            listOf("식사", "교통", "숙박"),
-            listOf("투어/액티비티", "쇼핑", "기타")
-        )
-    }
+    val pages = FilterOptionData.scopePages
 
     // 현재 선택된 값이 속한 페이지로 초기 위치를 설정
     fun pageOf(value: String): Int =
