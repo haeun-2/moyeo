@@ -226,8 +226,41 @@ private fun ExchangeDetailContent(
                                 color = Color.Blue
                             )
                         }
+
+                        // 적용 환율에 표시될 숫자
+                        val leftCurrency: String
+                        val leftUnit: String
+                        val rightCurrency: String
+                        val rightUnit: String
+
+                        if (detail.fromCurrency == "KRW") {  // 한화에서 외화로 가는 경우
+                            if (detail.toCurrency == "JPY") {  // 한 -> 일화
+                                leftCurrency = "KRW"
+                                leftUnit = detail.exchangeRate.toString()
+                                rightCurrency = detail.toCurrency
+                                rightUnit = "100"
+                            } else {
+                                leftCurrency = "KRW"
+                                leftUnit = detail.exchangeRate.toString()
+                                rightCurrency = detail.toCurrency
+                                rightUnit = "1"
+                            }
+                        } else {  // 외화에서 한화로 가는 경우
+                            if (detail.fromCurrency == "JPY") {
+                                leftCurrency = "KRW"
+                                leftUnit = detail.exchangeRate.toString()
+                                rightCurrency = detail.fromCurrency
+                                rightUnit = "100"
+                            } else {
+                                leftCurrency = "KRW"
+                                leftUnit = detail.exchangeRate.toString()
+                                rightCurrency = detail.fromCurrency
+                                rightUnit = "1"
+                            }
+                        }
+
                         DetailInfoRow(label = "적용 환율", content = {
-                            Text("1 ${detail.toCurrency} = ${detail.exchangeRate} ${detail.fromCurrency}", style = Typography.bodyLarge)
+                            Text("$leftUnit $leftCurrency = $rightUnit $rightCurrency", style = Typography.bodyLarge)
                         })
                     }
 
