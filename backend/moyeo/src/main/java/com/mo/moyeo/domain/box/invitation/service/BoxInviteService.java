@@ -34,7 +34,8 @@ public class BoxInviteService {
     private static final String BOX_INVITE_KEY = "box_invite_code::";
 
     @Value("${moyeo.server.base_url}")
-    private String baseUrl;
+    private String BASE_URL;
+    private final String INVITE_URL = "/invite";
 
     public BoxInviteResponse createBoxInviteLink(Long boxId, User user) {
         Box box = boxService.getBoxById(boxId);
@@ -49,7 +50,7 @@ public class BoxInviteService {
         redisTemplate.opsForValue().set(key, boxInviteDto, Duration.ofDays(1));
 
         // 3. 응답 리턴
-        return BoxInviteResponse.from(baseUrl, inviteCode, boxInviteDto.getExpiresAt());
+        return BoxInviteResponse.from(BASE_URL + INVITE_URL, inviteCode, boxInviteDto.getExpiresAt());
     }
 
     @Transactional
