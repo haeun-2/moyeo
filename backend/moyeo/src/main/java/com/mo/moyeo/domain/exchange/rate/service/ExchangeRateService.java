@@ -121,7 +121,7 @@ public class ExchangeRateService {
         exchangeRateCacheService.cacheCurrentExchangeRate(exchangeRates);
 
         //예약환전 체크
-        reservedExchangeService.checkReservation();
+//        reservedExchangeService.checkReservation();
     }
 
     private ExchangeRateResponse apiCall() {
@@ -157,26 +157,26 @@ public class ExchangeRateService {
                             proj.getPeriod()
                     ))
                     .toList();
-        } else if ("1h".equals(unit)) {
-            list = exchangeRateRepository.getHistoryBy1h(currencyType)
-                    .stream()
-                    .map(proj -> new ExchangeRateHistoryDto(
-                            proj.getBuyRate(),
-                            proj.getSellRate(),
-                            proj.getOriginalRate(),
-                            proj.getPeriod()
-                    ))
-                    .toList();
-        } else if ("1d".equals(unit)) {
-            list = exchangeRateRepository.getHistoryBy1d(currencyType)
-                    .stream()
-                    .map(proj -> new ExchangeRateHistoryDto(
-                            proj.getBuyRate(),
-                            proj.getSellRate(),
-                            proj.getOriginalRate(),
-                            proj.getPeriod()
-                    ))
-                    .toList();
+//        } else if ("1h".equals(unit)) {
+//            list = exchangeRateRepository.getHistoryBy1h(currencyType)
+//                    .stream()
+//                    .map(proj -> new ExchangeRateHistoryDto(
+//                            proj.getBuyRate(),
+//                            proj.getSellRate(),
+//                            proj.getOriginalRate(),
+//                            proj.getPeriod()
+//                    ))
+//                    .toList();
+//        } else if ("1d".equals(unit)) {
+//            list = exchangeRateRepository.getHistoryBy1d(currencyType)
+//                    .stream()
+//                    .map(proj -> new ExchangeRateHistoryDto(
+//                            proj.getBuyRate(),
+//                            proj.getSellRate(),
+//                            proj.getOriginalRate(),
+//                            proj.getPeriod()
+//                    ))
+//                    .toList();
         } else {
             list = exchangeRateRepository.getHistoryBy10m(currencyType)
                     .stream()

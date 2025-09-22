@@ -186,6 +186,7 @@ public class ReservedExchangeService {
     }
 
     @Transactional
+    @Scheduled(fixedDelay = 1000*60)
     public void checkReservation() {
         Map<String, CurrentExchangeRateDto> currentExchangeRate = exchangeRateCacheService.getCurrentExchangeRate();
 
@@ -199,13 +200,13 @@ public class ReservedExchangeService {
             if (reservedExchange.getFromCurrency().getCode() == CurrencyType.KRW) {
                 // 한->외, 사는 경우
                 currentRate = rateDto.getBuyRate();
-                if (currentRate.compareTo(targetRate) >= 0) { // currentRate >= targetRate
+                if (currentRate.compareTo(targetRate) <= 0) { // currentRate >= targetRate
                     completeReservation(reservedExchange);
                 }
             } else {
                 // 외->한, 파는 경우
                 currentRate = rateDto.getSellRate();
-                if (currentRate.compareTo(targetRate) <= 0) { // currentRate <= targetRate
+                if (currentRate.compareTo(targetRate) >= 0) { // currentRate <= targetRate
                     completeReservation(reservedExchange);
                 }
             }
