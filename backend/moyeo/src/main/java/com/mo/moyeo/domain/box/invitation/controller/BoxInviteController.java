@@ -17,28 +17,27 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/boxes")
 @Tag(name = "BoxInviteController", description = "모임 박스 초대 API")
 public class BoxInviteController {
 
     private final BoxInviteService boxInviteService;
 
     @Operation(summary = "모임 박스 초대 링크 생성", description = "모임 박스 초대 링크를 생성합니다. 링크 유효기간은 1일 입니다.")
-    @PostMapping("/{boxId}/invite")
+    @PostMapping("/api/boxes/{boxId}/invite")
     public ResponseEntity<BoxInviteResponse> createBoxInviteLink(@PathVariable Long boxId, @AuthenticationPrincipal CustomUserDetails userDetails) {
         BoxInviteResponse response = boxInviteService.createBoxInviteLink(boxId, userDetails.getUser());
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "초대 링크로 모임 박스 가입", description = "초대 링크로 모임 박스에 가입합니다.")
-    @PostMapping("/invite/{code}/join")
+    @PostMapping("/api/boxes/invite/{code}/join")
     public ResponseEntity<BoxJoinResponse> joinBoxByInviteLink(@PathVariable String code, @AuthenticationPrincipal CustomUserDetails userDetails) {
         BoxJoinResponse response = boxInviteService.joinBoxByInviteLink(code, userDetails.getUser());
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "초대 링크 정보 조회", description = "초대 링크의 정보를 조회합니다. 모임 박스 이름과 유효기간이 반화됩니다.")
-    @GetMapping("/invite/{code}/info")
+    @GetMapping("/api/boxes/invite/{code}/info")
     public ResponseEntity<BoxInviteInfoResponse> getInviteInfo(@PathVariable String code) {
         BoxInviteInfoResponse response = boxInviteService.getInviteInfo(code);
         return ResponseEntity.ok(response);
