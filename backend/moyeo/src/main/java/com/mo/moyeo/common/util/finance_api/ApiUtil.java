@@ -8,12 +8,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 @Component
 public class ApiUtil {
     @Value("${MOYEO_API_KEY}")
     private String apiKeyInstance;
 
+    private static final Random random = new Random();
     public static String apiKey;
 
     @PostConstruct
@@ -26,7 +28,7 @@ public class ApiUtil {
         LocalDateTime now = LocalDateTime.now();
         String currentDate = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String currentTime = now.format(DateTimeFormatter.ofPattern("HHmmss"));
-        String uniqueNo = currentDate + currentTime + "123456";//TODO : 랜덤번호 변경하기
+        String uniqueNo = currentDate + currentTime + String.valueOf(random.nextInt(900000)+ 100000);//TODO : 랜덤번호 변경하기
 
         map.put("apiName", apiName);
         map.put("transmissionDate", currentDate);
