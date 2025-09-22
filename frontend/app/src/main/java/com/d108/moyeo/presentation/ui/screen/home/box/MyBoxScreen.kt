@@ -9,8 +9,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -154,7 +157,17 @@ fun MyBoxScreen(
         )
     }
 
-    Scaffold { innerPadding ->
+    Scaffold(
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = viewModel::onCalculatingClick,  // 여기에서 정산하기 화면으로 이동
+                icon = { Icon(Icons.Default.ThumbUp, "정산 아이콘") },
+                text = { Text(text = "정산하기") }
+            )
+        },
+        floatingActionButtonPosition = FabPosition.End
+    ) { innerPadding ->
+
         val layoutDir = LocalLayoutDirection.current
 
         Column(
@@ -175,9 +188,10 @@ fun MyBoxScreen(
                     ?.let { "${DecimalFormat("#,###.##").format(it.balance)} ${it.currency}" }
                     ?: "전체 보기",
                 onBalanceClick = viewModel::onBalanceClick,
-                onBackClick = { /* TODO: 뒤로가기 로직 추가 */ },
+                onInviteClick = viewModel::onInviteClick,  // TODO: 초대 코드
+                onBackClick = { navController.popBackStack() },
                 onCollectingClick = viewModel::onCollectingClick,
-                onCalculatingClick = viewModel::onCalculatingClick,
+                onExchangeClick = viewModel::onExchangeClick,
                 bg = uiState.boxInfo?.bg ?: Color.Blue,
                 textColor = uiState.boxInfo?.textColor ?: Color.Black
             )
@@ -252,7 +266,8 @@ private fun TopBoxInfoSurface(
     onBalanceClick: () -> Unit,
     onBackClick: () -> Unit,
     onCollectingClick: () -> Unit,
-    onCalculatingClick:() -> Unit,
+    onExchangeClick: () -> Unit,
+    onInviteClick: () -> Unit,  // TODO: 이거 파라미터랑 리턴타입 고려하기
     bg: Color,
     textColor: Color
 ) {
@@ -289,6 +304,16 @@ private fun TopBoxInfoSurface(
                     style = Typography.titleLarge,
                     modifier = Modifier.align(Alignment.Center)
                 )
+
+                IconButton(
+                    onClick = onInviteClick,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "초대하기"
+                    )
+                }
             }
 
             Row(
@@ -335,15 +360,17 @@ private fun TopBoxInfoSurface(
                 }
 
                 Button(
-                    onClick = onCalculatingClick,
+                    onClick = {
+                        // TODO: 환전하기 로직
+                        onExchangeClick
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
                         contentColor = onPrimaryLight
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("정산하기") // 버튼 텍스트 수정
-
+                    Text("환전하기") // 버튼 텍스트 수정
                 }
             }
         }
