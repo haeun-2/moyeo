@@ -2,7 +2,9 @@ package com.d108.moyeo.presentation.ui.screen.home.wallet
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
@@ -105,44 +107,53 @@ private fun GeneralTransactionDetailContent(
         modifier = Modifier.fillMaxSize().padding(Spacing.Large),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = transaction.title, style = Typography.titleLarge)
-        Spacer(modifier = Modifier.height(Spacing.Medium))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(Spacing.Large))
+        Column(  // 스크롤 영역
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState()), // 스크롤 기능 추가
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = transaction.title, style = Typography.titleLarge)
+            Spacer(modifier = Modifier.height(Spacing.Medium))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(Spacing.Large))
 
-        DetailInfoRow(
-            label = "카테고리",
-            content = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = transaction.category, style = Typography.bodyLarge)
-                    Spacer(modifier = Modifier.width(Spacing.Medium))
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "카테고리 수정",
-                        modifier = Modifier.size(20.dp).clickable { viewModel.onCategoryEditClick() }
-                    )
+            DetailInfoRow(
+                label = "카테고리",
+                content = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = transaction.category, style = Typography.bodyLarge)
+                        Spacer(modifier = Modifier.width(Spacing.Medium))
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "카테고리 수정",
+                            modifier = Modifier.size(20.dp).clickable { viewModel.onCategoryEditClick() }
+                        )
+                    }
                 }
-            }
-        )
-        DetailInfoRow(label = "거래시각", content = { Text(transaction.datetime, style = Typography.bodyLarge) })
-        DetailInfoRow(label = "거래 금액", content = { Text("$formattedAmount ${transaction.currency}", style = Typography.bodyLarge, color = amountColor) })
-        DetailInfoRow(label = "거래 후 잔액", content = { Text("$formattedBalance ${transaction.currency}", style = Typography.bodyLarge) })
+            )
+            DetailInfoRow(label = "거래시각", content = { Text(transaction.datetime, style = Typography.bodyLarge) })
+            DetailInfoRow(label = "거래 금액", content = { Text("$formattedAmount ${transaction.currency}", style = Typography.bodyLarge, color = amountColor) })
+            DetailInfoRow(label = "거래 후 잔액", content = { Text("$formattedBalance ${transaction.currency}", style = Typography.bodyLarge) })
 
-        InlineEditMemoRow(
-            memo = uiState.editedMemo,
-            isEditing = uiState.isMemoEditing,
-            onMemoChanged = viewModel::onMemoChanged,
-            onEditClick = viewModel::startEditingMemo,
-            onSaveClick = viewModel::saveMemoEdit,
-            onCancelClick = viewModel::cancelMemoEdit
-        )
-        Spacer(modifier = Modifier.height(Spacing.Large))
-        HorizontalDivider()
-        SearchActionRow(text = "\"${transaction.title}\" 검색하기", onClick = viewModel::onSearchTitleClick)
-        HorizontalDivider()
-        SearchActionRow(text = "\"${transaction.category}\" 카테고리 검색하기", onClick = viewModel::onSearchCategoryClick)
+            InlineEditMemoRow(
+                memo = uiState.editedMemo,
+                isEditing = uiState.isMemoEditing,
+                onMemoChanged = viewModel::onMemoChanged,
+                onEditClick = viewModel::startEditingMemo,
+                onSaveClick = viewModel::saveMemoEdit,
+                onCancelClick = viewModel::cancelMemoEdit
+            )
+            Spacer(modifier = Modifier.height(Spacing.Large))
+            HorizontalDivider()
+            SearchActionRow(text = "\"${transaction.title}\" 검색하기", onClick = viewModel::onSearchTitleClick)
+            HorizontalDivider()
+            SearchActionRow(text = "\"${transaction.category}\" 카테고리 검색하기", onClick = viewModel::onSearchCategoryClick)
 
-        Spacer(modifier = Modifier.weight(1f))
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.Medium))
+
         Button(
             onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth()
@@ -172,116 +183,129 @@ private fun ExchangeDetailContent(
         modifier = Modifier.fillMaxSize().padding(Spacing.Large),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = transaction.title, style = Typography.titleLarge)
-        Spacer(modifier = Modifier.height(Spacing.Medium))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(Spacing.Large))
-
-        // 기본 정보 (API 호출과 무관하게 즉시 표시)
-        DetailInfoRow(label = "거래 시각", content = { Text(transaction.datetime, style = Typography.bodyLarge) })
-        DetailInfoRow(label = "거래 금액", content = { Text("$formattedAmount ${transaction.currency}", style = Typography.bodyLarge, color = amountColor) })
-        DetailInfoRow(label = "거래 후 잔액", content = { Text("$formattedBalance ${transaction.currency}", style = Typography.bodyLarge) })
-
-
-        // 추가 정보 (API 호출 상태에 따라 표시)
-        Box(
-            modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.Medium),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState()), // 스크롤 기능 추가
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            when {
-                // 1. API 호출 중 (로딩)
-                uiState.isLoading -> CircularProgressIndicator()
-                // 2. API 호출 성공
-                exchangeDetail.isNotEmpty() -> Column {
-                    exchangeDetail.forEachIndexed { index, detail ->
-                        if (index > 0) {
-                            Spacer(modifier = Modifier.height(Spacing.Medium))
-                            HorizontalDivider()
-                            Spacer(modifier = Modifier.height(Spacing.Medium))
-                        }
-                        Text(
-                            text = "${index + 1}차 환전",
-                            style = Typography.titleMedium,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+            Text(text = transaction.title, style = Typography.titleLarge)
+            Spacer(modifier = Modifier.height(Spacing.Medium))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(Spacing.Large))
 
-                        Spacer(modifier = Modifier.height(Spacing.Small))
+            // 기본 정보 (API 호출과 무관하게 즉시 표시)
+            DetailInfoRow(label = "거래 시각", content = { Text(transaction.datetime, style = Typography.bodyLarge) })
+            DetailInfoRow(label = "거래 금액", content = { Text("$formattedAmount ${transaction.currency}", style = Typography.bodyLarge, color = amountColor) })
+            DetailInfoRow(label = "거래 후 잔액", content = { Text("$formattedBalance ${transaction.currency}", style = Typography.bodyLarge) })
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            CurrencyAmount(
-                                label = "From",
-                                amount = "- ${DecimalFormat("#,###.##").format(detail.fromAmount)}",
-                                currency = detail.fromCurrency,
-                                color = Color.Red
-                            )
-                            Text(text = "→", style = Typography.headlineMedium)
-                            CurrencyAmount(
-                                label = "To",
-                                amount = "+ ${DecimalFormat("#,###.##").format(detail.toAmount)}",
-                                currency = detail.toCurrency,
-                                color = Color.Blue
-                            )
-                        }
 
-                        // 적용 환율에 표시될 숫자
-                        val leftCurrency: String
-                        val leftUnit: String
-                        val rightCurrency: String
-                        val rightUnit: String
-
-                        if (detail.fromCurrency == "KRW") {  // 한화에서 외화로 가는 경우
-                            if (detail.toCurrency == "JPY") {  // 한 -> 일화
-                                leftCurrency = "KRW"
-                                leftUnit = detail.exchangeRate.toString()
-                                rightCurrency = detail.toCurrency
-                                rightUnit = "100"
-                            } else {
-                                leftCurrency = "KRW"
-                                leftUnit = detail.exchangeRate.toString()
-                                rightCurrency = detail.toCurrency
-                                rightUnit = "1"
+            // 추가 정보 (API 호출 상태에 따라 표시)
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.Medium),
+                contentAlignment = Alignment.Center
+            ) {
+                when {
+                    // 1. API 호출 중 (로딩)
+                    uiState.isLoading -> CircularProgressIndicator()
+                    // 2. API 호출 성공
+                    exchangeDetail.isNotEmpty() -> Column {
+                        exchangeDetail.forEachIndexed { index, detail ->
+                            if (index > 0) {
+                                Spacer(modifier = Modifier.height(Spacing.Medium))
+                                HorizontalDivider()
+                                Spacer(modifier = Modifier.height(Spacing.Medium))
                             }
-                        } else {  // 외화에서 한화로 가는 경우
-                            if (detail.fromCurrency == "JPY") {
-                                leftCurrency = "KRW"
-                                leftUnit = detail.exchangeRate.toString()
-                                rightCurrency = detail.fromCurrency
-                                rightUnit = "100"
-                            } else {
-                                leftCurrency = "KRW"
-                                leftUnit = detail.exchangeRate.toString()
-                                rightCurrency = detail.fromCurrency
-                                rightUnit = "1"
+                            Text(
+                                text = "${index + 1}차 환전",
+                                style = Typography.titleMedium,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(Spacing.Small))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceAround,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CurrencyAmount(
+                                    label = "From",
+                                    amount = "- ${DecimalFormat("#,###.##").format(detail.fromAmount)}",
+                                    currency = detail.fromCurrency,
+                                    color = Color.Red
+                                )
+                                Text(text = "→", style = Typography.headlineMedium)
+                                CurrencyAmount(
+                                    label = "To",
+                                    amount = "+ ${DecimalFormat("#,###.##").format(detail.toAmount)}",
+                                    currency = detail.toCurrency,
+                                    color = Color.Blue
+                                )
                             }
+
+                            // 적용 환율에 표시될 숫자
+                            val leftCurrency: String
+                            val leftUnit: String
+                            val rightCurrency: String
+                            val rightUnit: String
+
+                            if (detail.fromCurrency == "KRW") {  // 한화에서 외화로 가는 경우
+                                if (detail.toCurrency == "JPY") {  // 한 -> 일화
+                                    leftCurrency = "KRW"
+                                    leftUnit = detail.exchangeRate.toString()
+                                    rightCurrency = detail.toCurrency
+                                    rightUnit = "100"
+                                } else {
+                                    leftCurrency = "KRW"
+                                    leftUnit = detail.exchangeRate.toString()
+                                    rightCurrency = detail.toCurrency
+                                    rightUnit = "1"
+                                }
+                            } else {  // 외화에서 한화로 가는 경우
+                                if (detail.fromCurrency == "JPY") {
+                                    leftCurrency = "KRW"
+                                    leftUnit = detail.exchangeRate.toString()
+                                    rightCurrency = detail.fromCurrency
+                                    rightUnit = "100"
+                                } else {
+                                    leftCurrency = "KRW"
+                                    leftUnit = detail.exchangeRate.toString()
+                                    rightCurrency = detail.fromCurrency
+                                    rightUnit = "1"
+                                }
+                            }
+
+                            DetailInfoRow(label = "적용 환율", content = {
+                                Text("$leftUnit $leftCurrency = $rightUnit $rightCurrency", style = Typography.bodyLarge)
+                            })
                         }
 
-                        DetailInfoRow(label = "적용 환율", content = {
-                            Text("$leftUnit $leftCurrency = $rightUnit $rightCurrency", style = Typography.bodyLarge)
-                        })
+
                     }
-
-
+                    // 3. API 호출 실패
+                    uiState.errorMessage != null -> Text(uiState.errorMessage, color = Color.Red)
                 }
-                // 3. API 호출 실패
-                uiState.errorMessage != null -> Text(uiState.errorMessage, color = Color.Red)
             }
+
+            // 메모 편집 기능
+            InlineEditMemoRow(
+                memo = uiState.editedMemo,
+                isEditing = uiState.isMemoEditing,
+                onMemoChanged = viewModel::onMemoChanged,
+                onEditClick = viewModel::startEditingMemo,
+                onSaveClick = viewModel::saveMemoEdit,
+                onCancelClick = viewModel::cancelMemoEdit
+            )
+
+            Spacer(modifier = Modifier.height(Spacing.Large))
+            HorizontalDivider()
+            SearchActionRow(text = "\"${transaction.title}\" 검색하기", onClick = viewModel::onSearchTitleClick)
+            HorizontalDivider()
+            SearchActionRow(text = "\"${transaction.category}\" 카테고리 검색하기", onClick = viewModel::onSearchCategoryClick)
         }
 
-        // 메모 편집 기능
-        InlineEditMemoRow(
-            memo = uiState.editedMemo,
-            isEditing = uiState.isMemoEditing,
-            onMemoChanged = viewModel::onMemoChanged,
-            onEditClick = viewModel::startEditingMemo,
-            onSaveClick = viewModel::saveMemoEdit,
-            onCancelClick = viewModel::cancelMemoEdit
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(Spacing.Medium))
         Button(
             onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth()
