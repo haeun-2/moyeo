@@ -163,7 +163,7 @@ public class ExchangeService {
                     .divide(sellRate, 0, RoundingMode.HALF_UP);
         } else {
             // USD, EUR 같은 경우는 1 단위 기준
-            fromAmount = sellRate.multiply(toAmount);
+            fromAmount = toAmount.divide(sellRate,0, RoundingMode.HALF_UP);
         }
 
         return ExchangeTransaction.builder()
@@ -186,7 +186,7 @@ public class ExchangeService {
         if (toCurrency == CurrencyType.JPY) {
             // JPY는 100엔 기준
             fromAmount = buyRate
-                    .divide(BigDecimal.valueOf(100)) // div 100
+                    .divide(BigDecimal.valueOf(100),0, RoundingMode.HALF_UP) // div 100
                     .multiply(toAmount);
         } else {
             // USD, EUR 같은 경우는 1 단위 기준
