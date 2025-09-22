@@ -54,7 +54,7 @@ fun FinishContent(viewModel: ChargeViewModel) {
                     color = primaryLight
                 )
                 ) {
-                    append("$formattedAmount ${uiState.howMuch}")
+                    append("$formattedAmount")
                 }
                 append("원이 충전되었어요")
             },

@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
@@ -33,7 +33,7 @@ import com.d108.moyeo.util.BiometricAuthManager
 @Composable
 fun ChargeScreen(
     navController: NavController,
-    viewModel: ChargeViewModel = viewModel()
+    viewModel: ChargeViewModel = hiltViewModel()
 ) {
 
     // 생체 인증에 필요
