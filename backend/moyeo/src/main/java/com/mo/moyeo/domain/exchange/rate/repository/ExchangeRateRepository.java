@@ -18,10 +18,10 @@ public interface ExchangeRateRepository extends JpaRepository<ExchangeRate, Long
 
 //    @Query("""
 //        SELECT NEW com.mo.moyeo.domain.exchange.rate.dto.ExchangeRateHistoryDto(
-//            FUNCTION('DATE_FORMAT', er.recordedAt, '%Y-%m-%d %H:%i'),
 //            AVG(er.buyRate),
 //            AVG(er.sellRate),
-//            AVG(er.originalRate)
+//            AVG(er.originalRate),
+//            FUNCTION('DATE_FORMAT', er.recordedAt, '%Y-%m-%d %H:%i')
 //        )
 //        FROM ExchangeRate er
 //        WHERE er.currency = :currencyType

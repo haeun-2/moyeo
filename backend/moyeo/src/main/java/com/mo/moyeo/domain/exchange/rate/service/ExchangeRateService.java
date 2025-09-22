@@ -143,9 +143,17 @@ public class ExchangeRateService {
     }
 
     public List<ExchangeRateHistoryDto> getHistory(String unit, CurrencyType currencyType) {
-        List<ExchangeRateHistoryDto> list;
-
+        List<ExchangeRateHistoryDto> list = new ArrayList<>();
         log.debug("환율 조회 {} {}", currencyType, unit);
+//        list = exchangeRateRepository.getHistoryBy10m(currencyType)
+//                    .stream()
+//                    .map(proj -> new ExchangeRateHistoryDto(
+//                            proj.getBuyRate(),
+//                            proj.getSellRate(),
+//                            proj.getOriginalRate(),
+//                            proj.getPeriod()
+//                    ))
+//                    .toList();
 
 //        if ("10m".equals(unit)) {
 //            list = exchangeRateRepository.getHistoryBy10m(currencyType)
