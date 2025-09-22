@@ -59,6 +59,7 @@ class MyWalletViewModel @Inject constructor(
 
         viewModelScope.launch {
             val allBoxes = boxStore.boxUiStates.firstOrNull() ?: emptyList()
+            Log.d(TAG, "size: ${allBoxes.size}")
             val walletInfo = allBoxes.find { it.type == BoxType.PERSONAL }
             Log.d(TAG, "walletInfo: $walletInfo")  //
 
