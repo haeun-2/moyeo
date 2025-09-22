@@ -145,58 +145,37 @@ public class ExchangeRateService {
     public List<ExchangeRateHistoryDto> getHistory(String unit, CurrencyType currencyType) {
         List<ExchangeRateHistoryDto> list = new ArrayList<>();
         log.debug("환율 조회 {} {}", currencyType, unit);
-//        list = exchangeRateRepository.getHistoryBy10m(currencyType)
-//                    .stream()
-//                    .map(proj -> new ExchangeRateHistoryDto(
-//                            proj.getBuyRate(),
-//                            proj.getSellRate(),
-//                            proj.getOriginalRate(),
-//                            proj.getPeriod()
-//                    ))
-//                    .toList();
 
-//        if ("10m".equals(unit)) {
-//            list = exchangeRateRepository.getHistoryBy10m(currencyType)
-//                    .stream()
-//                    .map(proj -> new ExchangeRateHistoryDto(
-//                            proj.getBuyRate(),
-//                            proj.getSellRate(),
-//                            proj.getOriginalRate(),
-//                            proj.getPeriod()
-//                    ))
-//                    .toList();
-////        } else if ("1h".equals(unit)) {
-////            list = exchangeRateRepository.getHistoryBy1h(currencyType)
-////                    .stream()
-////                    .map(proj -> new ExchangeRateHistoryDto(
-////                            proj.getBuyRate(),
-////                            proj.getSellRate(),
-////                            proj.getOriginalRate(),
-////                            proj.getPeriod()
-////                    ))
-////                    .toList();
-////        } else if ("1d".equals(unit)) {
-////            list = exchangeRateRepository.getHistoryBy1d(currencyType)
-////                    .stream()
-////                    .map(proj -> new ExchangeRateHistoryDto(
-////                            proj.getBuyRate(),
-////                            proj.getSellRate(),
-////                            proj.getOriginalRate(),
-////                            proj.getPeriod()
-////                    ))
-////                    .toList();
-//        } else {
-//            list = exchangeRateRepository.getHistoryBy10m(currencyType)
-//                    .stream()
-//                    .map(proj -> new ExchangeRateHistoryDto(
-//                            proj.getBuyRate(),
-//                            proj.getSellRate(),
-//                            proj.getOriginalRate(),
-//                            proj.getPeriod()
-//                    ))
-//                    .toList();
-//        }
 
-        return new ArrayList<>();
+        if ("1h".equals(unit)) {
+            list = exchangeRateRepository.getHistoryBy1h(currencyType.name()).stream()
+                    .map(proj -> new ExchangeRateHistoryDto(
+                            proj.getBuyRate(),
+                            proj.getSellRate(),
+                            proj.getOriginalRate(),
+                            proj.getPeriod()
+                    ))
+                    .toList();
+        } else if ("1d".equals(unit)) {
+            list = exchangeRateRepository.getHistoryBy1d(currencyType.name()).stream()
+                    .map(proj -> new ExchangeRateHistoryDto(
+                            proj.getBuyRate(),
+                            proj.getSellRate(),
+                            proj.getOriginalRate(),
+                            proj.getPeriod()
+                    ))
+                    .toList();
+        } else {
+            list = exchangeRateRepository.getHistoryBy10m(currencyType.name()).stream()
+                    .map(proj -> new ExchangeRateHistoryDto(
+                            proj.getBuyRate(),
+                            proj.getSellRate(),
+                            proj.getOriginalRate(),
+                            proj.getPeriod()
+                    ))
+                    .toList();
+        }
+
+        return list;
     }
 }
