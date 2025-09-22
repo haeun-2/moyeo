@@ -89,7 +89,7 @@ public class ReservedExchangeService {
         BoxHistory boxHistory = BoxHistory.builder()
                 .box(box)
                 .transaction(transaction)
-                .amount(amount)
+                .amount(amount.negate())
                 .currencyCode(exchangeReserveDto.fromCurrency())
                 .totalAmount(fromBoxBalance.getBalance())
                 .title("예약 환전")
@@ -169,6 +169,7 @@ public class ReservedExchangeService {
                 .totalAmount(fromBoxBalance.getBalance())
                 .title("예약 환전 취소")
                 .type(Transaction.Type.EXCHANGE_RESERVATION)
+                .category(categoryCacheService.getByName(CategoryType.EXCHANGE))
                 .createdAt(transaction.getCreatedAt())
                 .build();
 
