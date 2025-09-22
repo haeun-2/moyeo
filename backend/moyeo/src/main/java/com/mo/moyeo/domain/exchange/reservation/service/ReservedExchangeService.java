@@ -29,6 +29,7 @@ import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import com.mo.moyeo.domain.transaction.transaction.service.TransactionService;
 import com.mo.moyeo.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReservedExchangeService {
     private final ReservedExchangeRepository reservedExchangeRepository;
     private final BoxService boxService;
@@ -186,16 +188,24 @@ public class ReservedExchangeService {
     }
 
     @Transactional
-    @Scheduled(initialDelay = 1000*60, fixedDelay = 1000*60)
+    @Scheduled(initialDelay = 1000*10, fixedDelay = 1000*60)
     public void checkReservation() {
         Map<String, CurrentExchangeRateDto> currentExchangeRate = exchangeRateCacheService.getCurrentExchangeRate();
+        log.debug("예약 환전 체크");
 
         List<ReservedExchange> reservations = getWaitingReservation();
         for (ReservedExchange reservedExchange : reservations) {
             BigDecimal currentRate;
             BigDecimal targetRate = reservedExchange.getTargetRate();
 
-            CurrentExchangeRateDto rateDto = currentExchangeRate.get(reservedExchange.getFromCurrency().getCode().name());
+            log.debug("{}",reservedExchange.getFromCurrency().getCode().name());
+            CurrencyType currencyType;
+            if(reservedExchange.getFromCurrency().getCode()==CurrencyType.KRW)
+                currencyType = reservedExchange.getToCurrency().getCode();
+            else
+                currencyType = reservedExchange.getFromCurrency().getCode();
+
+            CurrentExchangeRateDto rateDto = currentExchangeRate.get(currencyType.name());
 
             if (reservedExchange.getFromCurrency().getCode() == CurrencyType.KRW) {
                 // 한->외, 사는 경우
@@ -210,6 +220,7 @@ public class ReservedExchangeService {
                     completeReservation(reservedExchange);
                 }
             }
+            log.debug("cur = {}, target = {}", currentRate, targetRate);
         }
     }
 

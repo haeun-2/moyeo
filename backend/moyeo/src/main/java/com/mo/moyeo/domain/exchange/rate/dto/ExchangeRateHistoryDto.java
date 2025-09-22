@@ -2,6 +2,7 @@ package com.mo.moyeo.domain.exchange.rate.dto;
 
 import com.mo.moyeo.domain.exchange.rate.repository.ExchangeRateProjection;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
+@Data
 public class ExchangeRateHistoryDto {
     BigDecimal buyRate;
     BigDecimal sellRate;
