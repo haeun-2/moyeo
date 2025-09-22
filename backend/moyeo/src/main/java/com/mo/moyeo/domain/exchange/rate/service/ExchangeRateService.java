@@ -10,6 +10,7 @@ import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.repository.CurrencyRepository;
 import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
 import com.mo.moyeo.domain.exchange.rate.dto.ExchangeRateHistoryDto;
+import com.mo.moyeo.domain.exchange.rate.repository.ExchangeRateProjection;
 import com.mo.moyeo.domain.exchange.rate.repository.ExchangeRateRepository;
 import com.mo.moyeo.domain.exchange.rate.dto.ExchangeRateResponse;
 import com.mo.moyeo.domain.exchange.rate.entity.ExchangeRate;
@@ -120,7 +121,7 @@ public class ExchangeRateService {
         exchangeRateCacheService.cacheCurrentExchangeRate(exchangeRates);
 
         //예약환전 체크
-        reservedExchangeService.checkReservation();
+//        reservedExchangeService.checkReservation();
     }
 
     private ExchangeRateResponse apiCall() {
@@ -142,25 +143,39 @@ public class ExchangeRateService {
     }
 
     public List<ExchangeRateHistoryDto> getHistory(String unit, CurrencyType currencyType) {
-        String timeFormat;
-        if ("10m".equals(unit)) {
-            timeFormat = "%Y-%m-%d %H:%i";
-        } else if ("1h".equals(unit)) {
-            timeFormat = "%Y-%m-%d %H:00:00";
+        List<ExchangeRateHistoryDto> list = new ArrayList<>();
+        log.debug("환율 조회 {} {}", currencyType, unit);
+
+
+        if ("1h".equals(unit)) {
+            list = exchangeRateRepository.getHistoryBy1h(currencyType.name()).stream()
+                    .map(proj -> new ExchangeRateHistoryDto(
+                            proj.getBuyRate(),
+                            proj.getSellRate(),
+                            proj.getOriginalRate(),
+                            proj.getPeriod()
+                    ))
+                    .toList();
         } else if ("1d".equals(unit)) {
-            timeFormat = "%Y-%m-%d";
+            list = exchangeRateRepository.getHistoryBy1d(currencyType.name()).stream()
+                    .map(proj -> new ExchangeRateHistoryDto(
+                            proj.getBuyRate(),
+                            proj.getSellRate(),
+                            proj.getOriginalRate(),
+                            proj.getPeriod()
+                    ))
+                    .toList();
         } else {
-            timeFormat = "%Y-%m-%d %H:%i";
+            list = exchangeRateRepository.getHistoryBy10m(currencyType.name()).stream()
+                    .map(proj -> new ExchangeRateHistoryDto(
+                            proj.getBuyRate(),
+                            proj.getSellRate(),
+                            proj.getOriginalRate(),
+                            proj.getPeriod()
+                    ))
+                    .toList();
         }
 
-        return exchangeRateRepository.getExchangeRateStatisticsByCurrency(timeFormat, currencyType)
-                .stream()
-                .map(proj -> new ExchangeRateHistoryDto(
-                        proj.getBuyRate(),
-                        proj.getSellRate(),
-                        proj.getOriginalRate(),
-                        proj.getPeriod()
-                ))
-                .toList();
+        return list;
     }
 }

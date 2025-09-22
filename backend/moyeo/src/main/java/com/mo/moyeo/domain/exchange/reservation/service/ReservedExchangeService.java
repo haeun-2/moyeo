@@ -29,6 +29,7 @@ import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import com.mo.moyeo.domain.transaction.transaction.service.TransactionService;
 import com.mo.moyeo.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReservedExchangeService {
     private final ReservedExchangeRepository reservedExchangeRepository;
     private final BoxService boxService;
@@ -181,44 +183,13 @@ public class ReservedExchangeService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
     }
 
-    private List<ReservedExchange> getWaitingReservation() {
-        return reservedExchangeRepository.findWaitingReservation();
-    }
-
-    @Transactional
-    public void checkReservation() {
-        Map<String, CurrentExchangeRateDto> currentExchangeRate = exchangeRateCacheService.getCurrentExchangeRate();
-
-        List<ReservedExchange> reservations = getWaitingReservation();
-        for (ReservedExchange reservedExchange : reservations) {
-            BigDecimal currentRate;
-            BigDecimal targetRate = reservedExchange.getTargetRate();
-
-            CurrentExchangeRateDto rateDto = currentExchangeRate.get(reservedExchange.getFromCurrency().getCode().name());
-
-            if (reservedExchange.getFromCurrency().getCode() == CurrencyType.KRW) {
-                // 한->외, 사는 경우
-                currentRate = rateDto.getBuyRate();
-                if (currentRate.compareTo(targetRate) >= 0) { // currentRate >= targetRate
-                    completeReservation(reservedExchange);
-                }
-            } else {
-                // 외->한, 파는 경우
-                currentRate = rateDto.getSellRate();
-                if (currentRate.compareTo(targetRate) <= 0) { // currentRate <= targetRate
-                    completeReservation(reservedExchange);
-                }
-            }
-        }
-    }
-
-
     @BoxDistributedLock({
             @BoxLockParam(boxId = "#reservedExchange.box.id", currencyCode = "reservedExchange.fromCurrency.code")
     })
-    private void completeReservation(ReservedExchange reservedExchange) {
+    public void completeReservation(ReservedExchange reservedExchange) {
         //완성 처리
         reservedExchange.completeReservation();
+        processCancelReservation(reservedExchange, reservedExchange.getUser());
 
         //차감 금액 복원
         BigDecimal amount = reservedExchange.getTargetRate().multiply(reservedExchange.getAmount());
@@ -226,19 +197,7 @@ public class ReservedExchangeService {
         fromBoxBalance.increaseBalance(amount);
 
         exchangeService.exchange(reservedExchange.getUser(), new ExchangeRequestDto(reservedExchange));
-    }
-
-    // 매일 0시 1분에 실행
-    @Scheduled(cron = "0 1 0 * * *")
-    @Transactional
-    public void deleteOldExchangeRates() {
-        LocalDate now = LocalDate.now();
-        List<ReservedExchange> reservations = getWaitingReservation();
-        for (ReservedExchange reservedExchange : reservations) {
-            if(now.isAfter(reservedExchange.getExpiresAt())){
-                reservedExchange.expire();
-            }
-        }
+        reservedExchangeRepository.save(reservedExchange);
     }
 
     public ReservedExchange getReservationByTxn(Transaction transaction) {

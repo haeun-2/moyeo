@@ -40,7 +40,7 @@ public class ExchangeTransactionDetailResponse {
                 .fromCurrency(reservedExchange.getFromCurrency().getCode())
                 .fromAmount(reservedExchange.getTargetRate().multiply(reservedExchange.getAmount()))
                 .toCurrency(reservedExchange.getToCurrency().getCode())
-                .toAmount(reservedExchange.getAmount().negate())
+                .toAmount(reservedExchange.getAmount())
                 .exchangeRate(reservedExchange.getTargetRate())
                 .build();
     }
