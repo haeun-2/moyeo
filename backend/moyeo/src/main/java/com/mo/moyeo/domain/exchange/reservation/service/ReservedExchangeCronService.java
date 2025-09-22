@@ -35,7 +35,6 @@ public class ReservedExchangeCronService {
             BigDecimal currentRate;
             BigDecimal targetRate = reservedExchange.getTargetRate();
 
-            log.debug("{}",reservedExchange.getFromCurrency().getCode().name());
             CurrencyType currencyType;
             if(reservedExchange.getFromCurrency().getCode()==CurrencyType.KRW) {
                 currencyType = reservedExchange.getToCurrency().getCode();

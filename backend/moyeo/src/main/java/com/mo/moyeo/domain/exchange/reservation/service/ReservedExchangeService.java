@@ -145,7 +145,6 @@ public class ReservedExchangeService {
     public void processCancelReservation(ReservedExchange reservedExchange, User user) {
         boxMemberService.validateJoinedBoxMember(reservedExchange.getBox(), user);
 
-
         // 차감 금액 복원
         BigDecimal amount = reservedExchange.getTargetRate().multiply(reservedExchange.getAmount());
         BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(
@@ -186,16 +185,16 @@ public class ReservedExchangeService {
     public void completeReservation(ReservedExchange reservedExchange) {
         //완성 처리
         reservedExchange.completeReservation();
-        processCancelReservation(reservedExchange, reservedExchange.getUser());
 
-        //차감 금액 복원
-        BigDecimal amount = reservedExchange.getTargetRate().multiply(reservedExchange.getAmount());
-        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(reservedExchange.getBox(), reservedExchange.getFromCurrency().getCode());
-        fromBoxBalance.increaseBalance(amount);
+        //예약 환전 취소처리
+        processCancelReservation(reservedExchange, reservedExchange.getUser());
+        log.debug("예약 환전 취소");
 
         exchangeService.exchange(reservedExchange.getUser(), new ExchangeRequestDto(reservedExchange));
         reservedExchangeRepository.save(reservedExchange);
     }
+
+
 
     public ReservedExchange getReservationByTxn(Transaction transaction) {
         return reservedExchangeRepository.findByTransaction(transaction)
