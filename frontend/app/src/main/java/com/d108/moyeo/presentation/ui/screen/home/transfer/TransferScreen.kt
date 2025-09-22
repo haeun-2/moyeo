@@ -30,6 +30,8 @@ import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.util.BiometricAuthManager
 
+// TODO: 이체 시 돈이 모자랄 때 이체 취소 로직 추가
+
 @Composable
 fun TransferScreen(
     navController: NavController,

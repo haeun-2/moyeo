@@ -9,6 +9,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.d108.moyeo.presentation.ui.screen.exchange.CurrencySelectionScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeAddScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeCompleteScreen
@@ -29,6 +30,7 @@ import com.d108.moyeo.presentation.ui.screen.home.box.calculating.CalculatingScr
 import com.d108.moyeo.presentation.ui.screen.home.box.collecting.CollectingScreen
 import com.d108.moyeo.presentation.ui.screen.home.charge.ChargeScreen
 import com.d108.moyeo.presentation.ui.screen.home.create.CreateBoxScreen
+import com.d108.moyeo.presentation.ui.screen.home.join.JoinScreen
 import com.d108.moyeo.presentation.ui.screen.home.transfer.TransferScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
@@ -377,6 +379,33 @@ fun AppNavHost(
             // URL 경로로부터 "consultationId" 값을 안전하게 추출합니다.
             val consultationId = backStackEntry.arguments?.getInt("consultationId") ?: -1
             MyConsultationDetail(navController = navController, consultationId = consultationId)
+        }
+
+        composable(
+            route = "join?code={code}",
+            arguments = listOf(
+                navArgument("code") {
+                    type = NavType.StringType
+                    defaultValue = ""   // 빈 문자열도 허용
+                    nullable = true
+                }
+            ),
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "moyeo://invite?code={code}" },
+                navDeepLink { uriPattern = "http://j13d108.p.ssafy.io:8080/invite/{code}" },
+                navDeepLink { uriPattern = "https://j13d108.p.ssafy.io/invite/{code}" }
+            )
+        ) { backStackEntry ->
+            val inviteCode = backStackEntry.arguments?.getString("code")
+                ?.takeIf { !it.isNullOrBlank() }
+
+            JoinScreen(
+                codeFromDeepLink = inviteCode, // <- JoinViewModel.startAuthFlow()로 전달됨
+                onFinished = {
+                    // 합류 완료 후 뒤로 가기 또는 홈으로
+                     navController.navigate(AppScreen.Home.route) { popUpTo(0) }
+                }
+            )
         }
     }
 }
