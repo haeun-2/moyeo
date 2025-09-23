@@ -115,6 +115,9 @@ fun MyBoxScreen(
                 is MyBoxNavigationEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
+                is MyBoxNavigationEvent.NavigateToMember -> {
+                    navController.navigate(AppScreen.Member.createRoute(event.boxId))
+                }
             }
         }
     }
@@ -188,6 +191,7 @@ fun MyBoxScreen(
                 onBackClick = { navController.popBackStack() },
                 onCollectClick = viewModel::onCollectClick,
                 onExchangeClick = viewModel::onExchangeClick,
+                onMemberClick = viewModel::onMemberClick,
                 bg = uiState.boxInfo?.bg ?: Color.Blue,
                 textColor = uiState.boxInfo?.textColor ?: Color.Black
             )
@@ -264,6 +268,7 @@ private fun TopBoxInfoSurface(
     onCollectClick: () -> Unit,
     onExchangeClick: () -> Unit,
     onInviteClick: () -> Unit,
+    onMemberClick: () -> Unit,
     bg: Color,
     textColor: Color
 ) {
@@ -282,6 +287,7 @@ private fun TopBoxInfoSurface(
 //            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
+
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -294,6 +300,23 @@ private fun TopBoxInfoSurface(
                         contentDescription = "뒤로가기"
                     )
                 }
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = boxName, style = Typography.titleLarge)
+
+                    Spacer(Modifier.height(6.dp))
+                    AssistChip(              // ← 작게 들어가는 버튼
+                        onClick = onMemberClick,
+                        label = { Text("회원 목록") }
+                    )
+                }
+
+                IconButton(
+                    onClick = onInviteClick,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) { Icon(Icons.Default.Share, contentDescription = "초대하기") }
 
                 Text(
                     text = boxName,
