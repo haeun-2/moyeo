@@ -1,18 +1,18 @@
 package com.mo.moyeo.domain.notification.service;
 
+import com.mo.moyeo.common.paging.PageResponse;
 import com.mo.moyeo.domain.fcm.dto.FcmMessageDTO;
 import com.mo.moyeo.domain.notification.dto.NotificationResponse;
+import com.mo.moyeo.domain.notification.dto.NotificationSearchCondition;
 import com.mo.moyeo.domain.notification.entity.Notification;
 import com.mo.moyeo.domain.notification.repository.NotificationRepository;
-import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
-import com.mo.moyeo.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -37,9 +37,9 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
-    public List<NotificationResponse> findAllByUserId(Long userId) {
-        return notificationRepository.findAllByUserIdOrderByReceivedAtDesc(userId).stream()
-                .map(NotificationResponse::from)
-                .toList();
+    public PageResponse<NotificationResponse> findAllByUserId(Long userId, NotificationSearchCondition condition) {
+
+        Slice<Notification> notifications = notificationRepository.search(userId, condition);
+        return PageResponse.from(notifications, NotificationResponse::from);
     }
 }
