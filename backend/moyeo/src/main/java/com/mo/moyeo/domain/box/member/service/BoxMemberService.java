@@ -69,6 +69,10 @@ public class BoxMemberService {
         return boxMemberRepository.findJoinedPayableGroupBoxByUser(user);
     }
 
+    public List<BoxMember> getJoinedExchangeableGroupBoxByUser(User user) {
+        return boxMemberRepository.findJoinedExchangeableGroupBoxByUser(user);
+    }
+
     public BoxMember getJoinedBoxMember(Long boxId, Long userId) {
         return boxMemberRepository.findJoinedByBoxIdAndUserId(boxId, userId).orElseThrow(() -> new CustomException(ErrorCode.BOX_NOT_FOUND));
     }
