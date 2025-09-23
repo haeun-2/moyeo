@@ -99,13 +99,9 @@ sealed class AppScreen(
     }
 
     // 정산하기와 관련된 화면
-    object Calculating: AppScreen(route="calculating/{boxId}?currencyCode={currencyCode}", title = "정산하기") {
-        fun createRoute(boxId: String, currencyCode: String? = null): String {
-            return if (currencyCode != null) {
-                "calculating/$boxId?currencyCode=$currencyCode"
-            } else {
-                "calculating/$boxId"
-            }
+    object Calculate: AppScreen(route="calculate/{boxId}", title = "정산하기") {
+        fun createRoute(boxId: Long): String {
+            return "calculate/$boxId"
         }
     }
 

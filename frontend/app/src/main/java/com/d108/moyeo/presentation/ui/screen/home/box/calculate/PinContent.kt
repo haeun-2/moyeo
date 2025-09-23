@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.box.calculating
+package com.d108.moyeo.presentation.ui.screen.home.box.calculate
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -31,7 +31,7 @@ import com.d108.moyeo.presentation.ui.component.KeypadKey
 
 
 @Composable
-fun PinContent(viewModel: CalculatingViewModel) {
+fun PinContent(viewModel: CalculateViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
     Column (

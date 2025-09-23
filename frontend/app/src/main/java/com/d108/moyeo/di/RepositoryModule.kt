@@ -3,8 +3,10 @@ package com.d108.moyeo.di
 import com.d108.moyeo.data.repository.AuthRepositoryImpl
 import com.d108.moyeo.data.repository.BankRepositoryImpl
 import com.d108.moyeo.data.repository.BoxHistoryRepositoryImpl
+import com.d108.moyeo.data.repository.BoxMemberRepositoryImpl
 import com.d108.moyeo.data.repository.FidRepositoryImpl
 import com.d108.moyeo.data.repository.BoxRepositoryImpl
+import com.d108.moyeo.data.repository.BoxSettlementRepositoryImpl
 import com.d108.moyeo.data.repository.BoxStatisticsRepositoryImpl
 import com.d108.moyeo.data.repository.ChargeRepositoryImpl
 import com.d108.moyeo.data.repository.ExchangeRepositoryImpl
@@ -15,7 +17,9 @@ import com.d108.moyeo.data.repository.TransferRepositoryImpl
 import com.d108.moyeo.domain.repository.AuthRepository
 import com.d108.moyeo.domain.repository.BankRepository
 import com.d108.moyeo.domain.repository.BoxHistoryRepository
+import com.d108.moyeo.domain.repository.BoxMemberRepository
 import com.d108.moyeo.domain.repository.BoxRepository
+import com.d108.moyeo.domain.repository.BoxSettlementRepository
 import com.d108.moyeo.domain.repository.BoxStatisticsRepository
 import com.d108.moyeo.domain.repository.ChargeRepository
 import com.d108.moyeo.domain.repository.ExchangeRepository
@@ -101,6 +105,18 @@ abstract class RepositoryModule {  // @Binds 함수는 함수 본문이 없어�
     abstract fun bindChargeRepository(
         chargeRepositoryImpl: ChargeRepositoryImpl
     ): ChargeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBoxMemberRepository(
+        boxMemberRepositoryImpl: BoxMemberRepositoryImpl
+    ): BoxMemberRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBoxSettlementRepository(
+        boxSettlementRepositoryImpl: BoxSettlementRepositoryImpl
+    ): BoxSettlementRepository
 
     @Binds
     @Singleton

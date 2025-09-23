@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.box.calculating
+package com.d108.moyeo.presentation.ui.screen.home.box.calculate
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

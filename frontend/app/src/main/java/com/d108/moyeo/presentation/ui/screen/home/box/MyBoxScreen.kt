@@ -105,8 +105,8 @@ fun MyBoxScreen(
                         )
                     )
                 }
-                is MyBoxNavigationEvent.NavigateToCalculating -> {
-                    navController.navigate(AppScreen.Calculating.createRoute(event.boxId, event.currencyCode)) // 원하는 currency 전달
+                is MyBoxNavigationEvent.NavigateToCalculate -> {
+                    navController.navigate(AppScreen.Calculate.createRoute(event.boxId)) // 복수의 화폐 정산 가능
                 }
                 is MyBoxNavigationEvent.InviteLinkReady -> {
                     clipboard.setText(AnnotatedString(event.link))
@@ -133,27 +133,6 @@ fun MyBoxScreen(
         }
     }
 
-    // 잔액 클릭 시 열릴 바텀 시트
-    if (uiState.showCurrencySheet) {
-        CurrencyBottomSheet(
-            currencies = uiState.currencies,
-            onItemSelected = viewModel::onCurrencySelected,
-            onDismiss = viewModel::onCurrencySheetDismiss
-        )
-    }
-
-    // 필터 클릭 시 열릴 바텀 시트
-    if (uiState.showFilterSheet) {
-        CommonFilterBottomSheet(
-            initialFilters = uiState.filters.toAdapter(),
-            onConfirm = { updatedFilters ->
-                // 바텀시트가 전달해준 '어댑터'를 '내부 모델'로 변환하여 ViewModel에 전달
-                viewModel.onFilterConfirm(updatedFilters.toBox())
-            },
-            onDismiss = viewModel::onFilterSheetDismiss
-        )
-    }
-
     // 잔액 클릭 시 열림
     if (uiState.showCurrencySheet) {
         CurrencyBottomSheet(
@@ -177,7 +156,7 @@ fun MyBoxScreen(
     Scaffold(
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = viewModel::onCalculatingClick,  // 여기에서 정산하기 화면으로 이동
+                onClick = viewModel::onCalculateClick,  // 여기에서 정산하기 화면으로 이동
                 icon = { Icon(Icons.Default.ThumbUp, "정산 아이콘") },
                 text = { Text(text = "정산하기") }
             )
