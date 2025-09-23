@@ -1,6 +1,7 @@
 package com.d108.moyeo.presentation.ui.screen.home.box
 
 import com.d108.moyeo.core.BoxStoreUiState
+import com.d108.moyeo.domain.model.box.BoxMember
 import com.d108.moyeo.domain.model.history.HistoryTransaction
 import com.d108.moyeo.presentation.ui.component.home.BoxFilterOptionsAdp
 import com.d108.moyeo.presentation.ui.component.home.Currency
@@ -12,6 +13,7 @@ data class MyBoxUiState(
     val transactions: List<HistoryTransaction> = emptyList(), // 실제 거래 내역 리스트
     val page: Int = 0,  // 무한 스크롤
     val hasNext: Boolean = true,  // 무한 스크롤
+    val members: List<BoxMember> = emptyList(),  // 박스 멤버
 
     // --- UI 컨트롤 관련 ---
     val searchQuery: String = "",

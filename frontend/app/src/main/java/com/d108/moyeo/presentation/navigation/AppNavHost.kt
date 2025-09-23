@@ -27,6 +27,7 @@ import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletScreen
 import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxDetailScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.calculate.CalculateScreen
+import com.d108.moyeo.presentation.ui.screen.home.box.member.MemberScreen
 //import com.d108.moyeo.presentation.ui.screen.home.box.collect.CollectScreen
 import com.d108.moyeo.presentation.ui.screen.home.charge.ChargeScreen
 import com.d108.moyeo.presentation.ui.screen.home.create.CreateBoxScreen
@@ -119,6 +120,17 @@ fun AppNavHost(
             )
         ) { backStackEntry ->
             MyBoxScreen(navController = navController)
+        }
+
+        composable(
+            route = AppScreen.Member.route,
+            arguments = listOf(
+                navArgument("boxId") { type = NavType.LongType }
+            )
+        ) {
+            MemberScreen(
+                navController = navController
+            )
         }
 
         composable(

@@ -1,21 +1,15 @@
 package com.d108.moyeo.presentation.ui.screen.home.box.member
 
-data class MemberCapabilities(
-    val settleAllowed: Boolean,
-    val payAllowed: Boolean,
-    val fxAllowed: Boolean
-)
+import com.d108.moyeo.domain.model.box.BoxMember
+import com.d108.moyeo.domain.model.box.Permission
 
 data class BoxMemberUi(
-    val id: Long,
-    val name: String,
-    val isOwner: Boolean,
-    val capabilities: MemberCapabilities,
-    val expanded: Boolean = false
+    val member: BoxMember,
+    val expanded: Boolean = false //
 )
 
 data class MemberUiState(
     val isLoading: Boolean = false,
-    val members: List<BoxMemberUi> = emptyList(),
+    val members: List<BoxMemberUi> = emptyList(), // [수정] BoxMemberUi의 리스트를 가짐
     val error: String? = null
 )
