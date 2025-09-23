@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-@Entity(name="exchange_transactions")
+@Entity
+@Table(name="exchange_transactions")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
