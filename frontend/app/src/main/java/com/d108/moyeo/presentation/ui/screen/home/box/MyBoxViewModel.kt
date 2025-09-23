@@ -39,6 +39,9 @@ sealed class MyBoxNavigationEvent {
 
     // Toast 출력
     data class ShowToast(val message: String) : MyBoxNavigationEvent()
+
+    // 박스 멤버 확인
+    data class NavigateToMember(val boxId: Long) : MyBoxNavigationEvent()
 }
 
 @HiltViewModel
@@ -287,6 +290,12 @@ class MyBoxViewModel @Inject constructor(
                 .onFailure {
                     _navigationEvent.emit(MyBoxNavigationEvent.ShowToast("초대 링크 생성에 실패했어요."))
                 }
+        }
+    }
+
+    fun onMemberClick() {
+        viewModelScope.launch {
+            _navigationEvent.emit(MyBoxNavigationEvent.NavigateToMember(boxId))
         }
     }
 
