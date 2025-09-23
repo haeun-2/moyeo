@@ -3,11 +3,11 @@ package com.mo.moyeo.domain.notification.service;
 import com.mo.moyeo.common.paging.PageResponse;
 import com.mo.moyeo.domain.fcm.dto.FcmMessageDTO;
 import com.mo.moyeo.domain.notification.dto.NotificationResponse;
-import com.mo.moyeo.domain.notification.dto.NotificationSearchCondition;
 import com.mo.moyeo.domain.notification.entity.Notification;
 import com.mo.moyeo.domain.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,9 +37,9 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
-    public PageResponse<NotificationResponse> findAllByUserId(Long userId, NotificationSearchCondition condition) {
+    public PageResponse<NotificationResponse> findAllByUserId(Long userId, Pageable pageable) {
 
-        Slice<Notification> notifications = notificationRepository.search(userId, condition);
+        Slice<Notification> notifications = notificationRepository.findByUserId(userId, pageable);
         return PageResponse.from(notifications, NotificationResponse::from);
     }
 }

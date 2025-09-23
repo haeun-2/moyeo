@@ -11,10 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,10 +23,9 @@ public class NotificationController {
 
     @GetMapping
     @Operation(summary = "유저 알림 목록 조회", description = "유저가 받은 알림을 전체 조회합니다.")
-    public ResponseEntity<PageResponse<NotificationResponse>> getAllNotifications(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                                                                  @Valid @ModelAttribute NotificationSearchCondition condition) {
+    public ResponseEntity<PageResponse<NotificationResponse>> getAllNotifications(@AuthenticationPrincipal CustomUserDetails userDetails, @ModelAttribute @Valid NotificationSearchCondition condition) {
 
-        PageResponse<NotificationResponse> responses = notificationService.findAllByUserId(userDetails.getUser().getId(), condition);
+        PageResponse<NotificationResponse> responses = notificationService.findAllByUserId(userDetails.getUser().getId(), condition.toPageable());
         return ResponseEntity.ok(responses);
     }
 }
