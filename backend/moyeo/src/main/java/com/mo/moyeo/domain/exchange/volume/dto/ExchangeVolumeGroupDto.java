@@ -1,16 +1,16 @@
 package com.mo.moyeo.domain.exchange.volume.dto;
 
+import com.mo.moyeo.domain.currency.entity.Currency;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-@Getter
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
-public class ExchangeVolumeDto {
-    private LocalDateTime recordedAt;
-    private BigDecimal totalAmount;
+public class ExchangeVolumeGroupDto {
+    private String currencyCode;
+    private BigDecimal amount;
 }
