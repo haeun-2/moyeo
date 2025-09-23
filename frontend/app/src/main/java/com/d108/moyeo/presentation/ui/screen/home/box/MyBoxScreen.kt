@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ThumbUp
@@ -186,6 +187,7 @@ fun MyBoxScreen(
                     ?.find { it.currency == uiState.selectedCurrencyCode }
                     ?.let { "${DecimalFormat("#,###.##").format(it.balance)} ${it.currency}" }
                     ?: "전체 보기",
+                members = uiState.members,
                 onBalanceClick = viewModel::onBalanceClick,
                 onInviteClick = viewModel::onInviteClick,
                 onBackClick = { navController.popBackStack() },
@@ -193,7 +195,7 @@ fun MyBoxScreen(
                 onExchangeClick = viewModel::onExchangeClick,
                 onMemberClick = viewModel::onMemberClick,
                 bg = uiState.boxInfo?.bg ?: Color.Blue,
-                textColor = uiState.boxInfo?.textColor ?: Color.Black
+                textColor = uiState.boxInfo?.textColor ?: Color.Black,
             )
 
             // 검색 및 필터 바 (MyWalletScreen의 구조 재사용)
@@ -259,10 +261,14 @@ fun MyBoxScreen(
     }
 }
 // 상단 정보 카드 UI
+// presentation/ui/screen/home/box/MyBoxScreen.kt
+
+// [수정] TopBoxInfoSurface Composable
 @Composable
 private fun TopBoxInfoSurface(
     boxName: String,
     totalBalance: String,
+    members: List<com.d108.moyeo.domain.model.box.BoxMember>,
     onBalanceClick: () -> Unit,
     onBackClick: () -> Unit,
     onCollectClick: () -> Unit,
@@ -284,10 +290,10 @@ private fun TopBoxInfoSurface(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(Spacing.Medium),
-//            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.CenterHorizontally, // 모든 자식들을 수평 중앙 정렬
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-
+            // --- 1. 최상단 영역 (뒤로가기, 박스이름, 초대하기) ---
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -300,23 +306,6 @@ private fun TopBoxInfoSurface(
                         contentDescription = "뒤로가기"
                     )
                 }
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = boxName, style = Typography.titleLarge)
-
-                    Spacer(Modifier.height(6.dp))
-                    AssistChip(              // ← 작게 들어가는 버튼
-                        onClick = onMemberClick,
-                        label = { Text("회원 목록") }
-                    )
-                }
-
-                IconButton(
-                    onClick = onInviteClick,
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                ) { Icon(Icons.Default.Share, contentDescription = "초대하기") }
 
                 Text(
                     text = boxName,
@@ -335,12 +324,27 @@ private fun TopBoxInfoSurface(
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+            // --- 2. 중간 영역 (멤버 수, 잔액) ---
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
+                // 멤버 수 표시
+                AssistChip(
+                    onClick = onMemberClick,
+                    label = { Text("${members.size}명") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "멤버 목록",
+                            modifier = Modifier.size(AssistChipDefaults.IconSize)
+                        )
+                    }
+                )
+
+                Spacer(Modifier.height(Spacing.Small))
+
+                // 잔액 표시
                 Row (
                     modifier = Modifier
                         .clickable(
@@ -361,39 +365,35 @@ private fun TopBoxInfoSurface(
                 }
             }
 
+            // --- 3. 최하단 버튼 영역 (모으기, 환전하기) ---
             Row(
                 modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .align(Alignment.CenterHorizontally),
+                    .fillMaxWidth(0.85f),
                 horizontalArrangement = Arrangement.spacedBy(32.dp)
             ) {
                 Button(
-                    onClick = onCollectClick,  // 이 모으기 버튼 클릭했을 때 할 일을 할 거야
+                    onClick = onCollectClick,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
                         contentColor = onPrimaryLight
                     ),
                     modifier = Modifier.weight(1f),
                 ) {
-                    Text("모으기") // 버튼 텍스트 수정
+                    Text("모으기")
                 }
 
                 Button(
-                    onClick = {
-                        // TODO: 환전하기 로직
-                        onExchangeClick
-                    },
+                    onClick = onExchangeClick,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
                         contentColor = onPrimaryLight
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("환전하기") // 버튼 텍스트 수정
+                    Text("환전하기")
                 }
             }
         }
-
     }
 }
 

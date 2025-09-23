@@ -6,11 +6,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.domain.usecase.box.CreateInviteLinkUseCase
+import com.d108.moyeo.domain.usecase.box.GetBoxMembersUseCase
 import com.d108.moyeo.domain.usecase.history.GetTransactionHistoryUseCase
 import com.d108.moyeo.presentation.ui.component.home.Currency
 import com.d108.moyeo.presentation.ui.component.home.FilterOptionData.allScopeOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,6 +52,7 @@ class MyBoxViewModel @Inject constructor(
     private val getTransactionHistoryUseCase: GetTransactionHistoryUseCase,
     private val boxStore: BoxStore,
     private val createInviteLinkUseCase: CreateInviteLinkUseCase,
+    private val getBoxMembersUseCase: GetBoxMembersUseCase,  // 멤버 조회
 ): ViewModel() {
 
     private val TAG = "MyBoxViewModel"
@@ -68,27 +71,29 @@ class MyBoxViewModel @Inject constructor(
         val currencyCode = savedStateHandle.get<String>("currencyCode") ?: "KRW"
 
         viewModelScope.launch {
+            // 멤버 목록 가져오기 시작
+            val membersDeferred = async { getBoxMembersUseCase(boxId).getOrNull() ?: emptyList() }
+
+            val historiesJob = if (boxId != -1L) {
+                loadHistories(boxId = boxId, isInitialLoad = true)
+            } else {
+                null
+            }
+
             val allBoxes = boxStore.boxUiStates.firstOrNull() ?: emptyList()
-            Log.d(TAG, "size: ${allBoxes.size}")
             val boxInfo = allBoxes.find { it.id == boxId }
-            Log.d(TAG, "boxInfo: $boxInfo")  //
-
-
-            // TODO: 퍼스널 커런시가 뭐지
-            // BoxStore의 personalCurrencies는 CurrencyData 타입이므로 UI에 맞는 Currency 타입으로 변환
-            // TODO: 사실상 CurrencyData와 Currency는 같은 모양임...
             val currencies = boxStore.personalCurrencies.value.map { Currency(it.code, it.name) }
+
+            val members = membersDeferred.await()
+            historiesJob?.join()
 
             _uiState.update {
                 it.copy(
                     boxInfo = boxInfo,
                     selectedCurrencyCode = currencyCode,
-                    currencies = currencies
+                    currencies = currencies,
+                    members = members
                 )
-            }
-
-            if (boxId != -1L) {
-                loadHistories(boxId = boxId, isInitialLoad = true)
             }
         }
     }

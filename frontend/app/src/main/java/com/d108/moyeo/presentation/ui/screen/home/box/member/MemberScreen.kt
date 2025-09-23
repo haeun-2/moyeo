@@ -23,25 +23,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.d108.moyeo.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemberScreen(
-    boxId: Long,
-    onBack: () -> Unit,
+    navController: NavController,
     viewModel: MemberViewModel = hiltViewModel()
 ) {
+
     val ui by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(boxId) { viewModel.load(boxId) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("회원 목록") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = navController::popBackStack) {
                         Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "뒤로가기")
                     }
                 }
@@ -70,10 +70,10 @@ fun MemberScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(ui.members, key = { it.id }) { member ->
+                items(ui.members, key = { it.member.id }) { uiModel ->
                     MemberCard(
-                        member = member,
-                        onToggle = { viewModel.toggleExpand(member.id) }
+                        memberUi = uiModel,
+                        onToggle = { viewModel.toggleExpand(uiModel.member.id) }
                     )
                 }
             }
@@ -83,7 +83,7 @@ fun MemberScreen(
 
 @Composable
 private fun MemberCard(
-    member: BoxMemberUi,
+    memberUi: BoxMemberUi,
     onToggle: () -> Unit
 ) {
     Surface(
@@ -107,14 +107,14 @@ private fun MemberCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = member.name,
+                    text = memberUi.member.name,
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                if (member.isOwner) {
+                if (memberUi.member.permission.isOwner) {
                     Icon(
                         painter = painterResource(R.drawable.crown_24), // 왕관 아이콘
                         contentDescription = "방장",
@@ -126,13 +126,13 @@ private fun MemberCard(
                 }
 
                 Icon(
-                    imageVector = if (member.expanded) Icons.Filled.KeyboardArrowUp
+                    imageVector = if (memberUi.expanded) Icons.Filled.KeyboardArrowUp
                     else Icons.Filled.KeyboardArrowDown,
-                    contentDescription = if (member.expanded) "닫기" else "열기"
+                    contentDescription = if (memberUi.expanded) "닫기" else "열기"
                 )
             }
 
-            if (member.expanded) {
+            if (memberUi.expanded) {
                 Spacer(Modifier.height(8.dp))
                 Column(
                     modifier = Modifier
@@ -144,7 +144,7 @@ private fun MemberCard(
                 ) {
                     // 디자인 시안의 섹션 타이틀(불필요하면 제거)
                     Text(
-                        text = member.name,
+                        text = memberUi.member.name,
                         style = MaterialTheme.typography.labelLarge.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -153,17 +153,17 @@ private fun MemberCard(
                         CapabilityChip(
                             labelWhenTrue = "정산 가능",
                             labelWhenFalse = "정산 불가",
-                            enabled = member.capabilities.settleAllowed
+                            enabled = memberUi.member.permission.canTransfer
                         )
                         CapabilityChip(
                             labelWhenTrue = "결제 가능",
                             labelWhenFalse = "결제 불가",
-                            enabled = member.capabilities.payAllowed
+                            enabled = memberUi.member.permission.canPayment
                         )
                         CapabilityChip(
                             labelWhenTrue = "환전 가능",
                             labelWhenFalse = "환전 불가",
-                            enabled = member.capabilities.fxAllowed
+                            enabled = memberUi.member.permission.canExchange
                         )
                     }
                 }

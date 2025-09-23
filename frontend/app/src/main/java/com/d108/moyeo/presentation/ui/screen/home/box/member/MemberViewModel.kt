@@ -1,7 +1,9 @@
 package com.d108.moyeo.presentation.ui.screen.home.box.member
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.domain.repository.BoxMemberRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,37 +13,56 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MemberViewModel @Inject constructor(
-    // TODO: private val repository: BoxMemberRepository
+    savedStateHandle: SavedStateHandle,
+    private val repository: BoxMemberRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MemberUiState())
     val uiState: StateFlow<MemberUiState> = _uiState
+    private val boxId: Long = savedStateHandle.get<Long>("boxId") ?: -1L
 
-    fun load(boxId: Long) {
+    init {
+        load(boxId)
+    }
+
+    private fun load(boxId: Long) {
+        if (boxId == -1L) {
+            _uiState.update { it.copy(error = "잘못된 접근입니다.") }
+            return
+        }
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            try {
-                // TODO: repository.getMembers(boxId)
-                val demo = listOf(
-                    BoxMemberUi(1, "김동찬", true,  MemberCapabilities(false, false, true)),
-                    BoxMemberUi(2, "박상훈", false, MemberCapabilities(false, false, false)),
-                    BoxMemberUi(3, "정자빈", false, MemberCapabilities(false, true,  false), expanded = true),
-                    BoxMemberUi(4, "김하은", false, MemberCapabilities(false, false, false))
-                )
-                _uiState.update { it.copy(isLoading = false, members = demo) }
-            } catch (t: Throwable) {
-                _uiState.update { it.copy(isLoading = false, error = t.message ?: "알 수 없는 오류") }
-            }
+            repository.getBoxMembers(boxId)
+                .onSuccess { domainMembers ->
+                    _uiState.update { memberUiState->
+                        memberUiState.copy(
+                            isLoading = false,
+                            members = domainMembers.map { BoxMemberUi(member = it) }
+                        )
+                    }
+                }
+                .onFailure { t ->
+                    _uiState.update { it.copy(isLoading = false, error = t.message ?: "알 수 없는 오류") }
+                }
         }
     }
 
     fun toggleExpand(id: Long) {
         _uiState.update { state ->
             state.copy(
-                members = state.members.map { m ->
-                    if (m.id == id) m.copy(expanded = !m.expanded) else m
+                members = state.members.map { uiModel ->
+                    if (uiModel.member.id == id) {
+                        uiModel.copy(expanded = !uiModel.expanded)
+                    } else {
+                        uiModel
+                    }
                 }
             )
         }
+    }
+
+    fun onBack() {
+
     }
 }

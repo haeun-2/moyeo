@@ -56,6 +56,13 @@ sealed class AppScreen(
         }
     }
 
+    // 모여 박스에서 멤버 목록 조회
+    object Member: AppScreen(route = "{boxId}/member", title = "멤버 목록") {
+        fun createRoute(boxId: Long): String {
+            return "$boxId/member"
+        }
+    }
+
     // 모여 박스 화면에서 거래 내역을 클릭했을 때 넘어오는 화면
     object MyBoxDetail : AppScreen(route = "my_box_detail/{boxId}/{historyId}?transactionJson={transactionJson}", title = "내 박스 상세") {
         fun createRoute(boxId: Long, historyId: Long, transactionJson: String): String {
