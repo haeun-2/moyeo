@@ -1,15 +1,12 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
 import android.util.Log
-import androidx.lifecycle.Observer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.domain.model.box.BoxType
 import com.d108.moyeo.domain.usecase.history.GetTransactionHistoryUseCase
-import com.d108.moyeo.presentation.ui.component.home.FilterOptions
-import com.d108.moyeo.presentation.ui.component.home.WalletFilterOptionsAdp
 import com.d108.moyeo.presentation.ui.component.home.Currency
 import com.d108.moyeo.presentation.ui.component.home.FilterOptionData.allScopeOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,6 +25,7 @@ import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
+private val TAG = "MyWalletViewModel"
 
 sealed class WalletNavigationEvent {
     data class NavigateToTransfer(val currencyCode: String) : WalletNavigationEvent()
@@ -40,7 +38,6 @@ class MyWalletViewModel @Inject constructor(
     private val getTransactionHistoryUseCase: GetTransactionHistoryUseCase,
     private val boxStore: BoxStore
 ): ViewModel() {
-    private val TAG = "MyWalletViewModel"
 
     private val _uiState = MutableStateFlow(MyWalletUiState())
     val uiState = _uiState.asStateFlow()

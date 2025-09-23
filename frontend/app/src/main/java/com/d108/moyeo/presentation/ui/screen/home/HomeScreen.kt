@@ -10,9 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -25,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -37,6 +36,7 @@ import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.*
 import com.d108.moyeo.presentation.ui.component.home.BoxEditBottomSheet
 import com.d108.moyeo.util.textColorUtil
+import com.d108.moyeo.R
 
 private val TAG = "HomeScreen"
 
@@ -49,6 +49,13 @@ fun HomeScreen(
     // lifecycle 관리
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    // ViewModel의 상태를 구독합니다.
+    val uiState by viewModel.uiState.collectAsState()
+
+    // 최상단에서 아래로 당겨 새로고침
+    val pullToRefreshState = rememberPullToRefreshState()
+    val isRefreshing = uiState.isRefreshing
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -58,9 +65,6 @@ fun HomeScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-
-    // ViewModel의 상태를 구독합니다.
-    val uiState by viewModel.uiState.collectAsState()
 
     // ViewModel의 내비게이션 이벤트를 구독하고 처리
     LaunchedEffect(key1 = true) {
@@ -88,132 +92,143 @@ fun HomeScreen(
                 }
 
                 is HomeNavigationEvent.NavigateToDeposit -> {
-                    navController.navigate(AppScreen.Transfer.createRouteForDeposit(event.boxId, event.currencyId))
+                    navController.navigate(
+                        AppScreen.Transfer.createRouteForDeposit(
+                            event.boxId,
+                            event.currencyId
+                        )
+                    )
                 }
             }
         }
     }
 
-    // 최상단에서 아래로 당겨 새로고침
-    val pullToRefreshState = rememberPullToRefreshState()
-    val isRefreshing = uiState.isRefreshing
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = Spacing.Medium)
-        ) {
-            // --- 고정된 상단 영역 ---
-            Spacer(Modifier.height(Spacing.SmallMedium))
-            // 헤더
-            HomeHeader(
-                title = uiState.userName,
-                onBellClick = {
-                    navController.navigate(AppScreen.Notification.route)
-                }
-            )
-            Spacer(Modifier.height(Spacing.Medium))
-            // 지갑 요약 카드
-            WalletSummaryCard(
-                data = uiState.wallet,
-                onTitleClick = { viewModel.onWalletTitleClick()},
-                onTransferClick = { viewModel.onTransferClicked("KRW")},  // 한화 디폴트
-                onMoreClick = { viewModel.onWalletMoreClick() },
-                onRowClick = { currency ->  // 어떤 화폐가 눌렸는지 알 수 있도록 해야함
-                    viewModel.onWalletCurrencyClick(currency)
-                }
-            )
-            Spacer(Modifier.height(Spacing.Large))
-
-            // 최상단에서 아래로 당겨 새로고침
-            PullToRefreshBox(
-                state = pullToRefreshState,
-                isRefreshing = isRefreshing,
-                onRefresh = { viewModel.refresh() }, // 새로고침 동작
-                modifier = Modifier.weight(1f),
+    Scaffold(
+        contentWindowInsets = WindowInsets(0),
+        bottomBar = {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = Spacing.Medium)
             ) {
-                // --- 스크롤되는 메인 콘텐츠 영역 ---
-                // 이 LazyColumn이 남은 공간을 모두 차지합니다.
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    // 그룹별 포켓 카드들
-                    itemsIndexed(uiState.groups) { index, item ->
-                        GroupBoxCard(
-                            data = item,
-                            onDepositClick = { viewModel.onDepositClick(item.id) },
-                            onMoreClick = { viewModel.onGroupMoreClick(item.id) },
-                            onColumnClick = { viewModel.onGroupBoxClick(item.id) },
-                            onBookmarkToggle = { viewModel.onToggleBookmark(item.id, item.isBookmarked) }
-                        )
-                        if (index < uiState.groups.lastIndex) {
-                            Spacer(Modifier.height(Spacing.Large))
-                        }
-                    }
-                }
-            }
-
-            // --- 고정된 하단 영역 ---
-            // 하단 + 버튼형 영역
-            Spacer(Modifier.height(Spacing.Large))
-            AddBar(
-                label = "추가",
-                onClick = { navController.navigate(AppScreen.CreateBox.route) }
-            )
-            Spacer(Modifier.height(Spacing.Small))
-        }
-
-        // 바텀 시트 영역 (Box의 자식이므로 LazyColumn 위에 오버레이)
-        if (uiState.showWalletEditSheet) {
-            BoxEditBottomSheet (
-                initialName = uiState.wallet.title,
-                initialColor = uiState.wallet.bg,
-                availableColors = boxAvailableColors,
-                onConfirm = viewModel::onWalletEditConfirm, // ViewModel 함수 호출
-                onDismiss = viewModel::onWalletEditDismiss // ViewModel 함수 호출
-            )
-        }
-
-        if (uiState.showGroupEditSheet) {
-            val target = uiState.groups.firstOrNull { it.id == uiState.editingGroupId }
-            if (target != null) {
-                BoxEditBottomSheet(
-                    initialName = target.title,
-                    initialColor = target.bg,
-                    availableColors = boxAvailableColors,
-                    onConfirm = { name, color -> viewModel.onGroupEditConfirm(name, color) },
-                    onDismiss = viewModel::onGroupEditDismiss
+                AddBar(
+                    label = "추가",
+                    onClick = { navController.navigate(AppScreen.CreateBox.route) },
                 )
             }
         }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)   // ✅ MainActivity의 bottomBar 높이 반영
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = Spacing.Medium)
+            ) {
+                Spacer(Modifier.height(Spacing.SmallMedium))
 
+                HomeHeader(
+                    title = uiState.userName,
+                    onBellClick = { navController.navigate(AppScreen.Notification.route) }
+                )
+
+                Spacer(Modifier.height(Spacing.Medium))
+
+                WalletSummaryCard(
+                    data = uiState.wallet,
+                    onTitleClick = { viewModel.onWalletTitleClick() },
+                    onTransferClick = { viewModel.onTransferClicked("KRW") },
+                    onMoreClick = { viewModel.onWalletMoreClick() },
+                    onRowClick = { currency -> viewModel.onWalletCurrencyClick(currency) }
+                )
+
+                Spacer(Modifier.height(Spacing.Large))
+
+                PullToRefreshBox(
+                    state = pullToRefreshState,
+                    isRefreshing = isRefreshing,
+                    onRefresh = { viewModel.refresh() },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    LazyColumn(Modifier.fillMaxSize()) {
+                        itemsIndexed(uiState.groups) { index, item ->
+                            GroupBoxCard(
+                                data = item,
+                                onDepositClick = { viewModel.onDepositClick(item.id) },
+                                onMoreClick = { viewModel.onGroupMoreClick(item.id) },
+                                onColumnClick = { viewModel.onGroupBoxClick(item.id) },
+                                onBookmarkToggle = {
+                                    viewModel.onToggleBookmark(item.id, item.isBookmarked)
+                                }
+                            )
+                            if (index < uiState.groups.lastIndex) {
+                                Spacer(Modifier.height(Spacing.Large))
+                            }
+                        }
+                    }
+                }
+
+                // ✅ 기존에는 하단 AddBar를 여기 두었는데, 이제 Scaffold.bottomBar로 옮겼으므로
+                // 아래의 Spacer/Bar는 제거했습니다.
+            }
+
+            // 바텀시트는 그대로 유지
+            if (uiState.showWalletEditSheet) {
+                BoxEditBottomSheet(
+                    initialName = uiState.wallet.title,
+                    initialColor = uiState.wallet.bg,
+                    availableColors = boxAvailableColors,
+                    onConfirm = viewModel::onWalletEditConfirm,
+                    onDismiss = viewModel::onWalletEditDismiss
+                )
+            }
+            if (uiState.showGroupEditSheet) {
+                val target = uiState.groups.firstOrNull { it.id == uiState.editingGroupId }
+                if (target != null) {
+                    BoxEditBottomSheet(
+                        initialName = target.title,
+                        initialColor = target.bg,
+                        availableColors = boxAvailableColors,
+                        onConfirm = { name, color -> viewModel.onGroupEditConfirm(name, color) },
+                        onDismiss = viewModel::onGroupEditDismiss
+                    )
+                }
+            }
+        }
     }
 }
 
 /* ---------- Header ---------- */
 
 @Composable
-private fun HomeHeader(
+fun HomeHeader(
     title: String,
     onBellClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+    Column (
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.Small)
     ) {
-        Text(
-            text = title,
-            style = Typography.headlineSmall,
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = Spacing.Small)
-        )
-        IconButton(onClick = onBellClick) {
-            Icon(
-                imageVector = Icons.Outlined.Notifications,
-                contentDescription = "알림"
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = title,
+                style = Typography.headlineSmall,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = Spacing.Small)
             )
+            IconButton(onClick = onBellClick) {
+                Icon(
+                    imageVector = Icons.Outlined.Notifications,
+                    contentDescription = "알림"
+                )
+            }
         }
     }
 }
@@ -267,7 +282,12 @@ private fun WalletSummaryCard(
                 AssistChip(
                     onClick = onTransferClick,
                     label = { Text("이체") },
-                    shape = CircleShape
+                    shape = CircleShape,
+                    border = null,
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = button,
+                        labelColor = Color.White,
+                    )
                 )
                 IconButton(onClick = onMoreClick) {
                     Icon(
@@ -353,13 +373,16 @@ private fun GroupBoxCard(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = data.bg),
     ) {
-        Box(Modifier.fillMaxWidth()) {
+        Box(Modifier
+            .fillMaxWidth()
+            .clickable { onColumnClick() }
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(Spacing.Medium)
-                    .clickable { onColumnClick() }
-            ) {// 이 컬럼 영역을 클릭했을 때 상세 화면으로 이동
+            ) {
+
                 Text(  // 모여 박스 이름
                     text = data.title,
                     style = MaterialTheme.typography.bodyMedium,
@@ -372,7 +395,7 @@ private fun GroupBoxCard(
 
                 Text(  // 금액
                     text = data.amount,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
                     color = textColorUtil(data.bg)
                 )
             }
@@ -386,7 +409,10 @@ private fun GroupBoxCard(
             ) {
                 IconButton(onClick = onBookmarkToggle) {
                     Icon(
-                        imageVector = if (data.isBookmarked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        painter = painterResource(
+                            id = if (data.isBookmarked) R.drawable.round_star_24
+                                 else R.drawable.round_star_border_24
+                        ),
                         contentDescription = "즐겨찾기 토글",
                         tint = if (data.isBookmarked) Color.Yellow else textColorUtil(data.bg)
                     )
@@ -397,10 +423,10 @@ private fun GroupBoxCard(
                     onClick = onDepositClick,
                     label = { Text("입금") },
                     shape = CircleShape,
+                    border = null,
                     colors = AssistChipDefaults.assistChipColors(
-                        labelColor = Color.Black,
-                        containerColor = Color(0x30FFFFFF),
-                        leadingIconContentColor = Color.Black
+                        labelColor = Color.White,
+                        containerColor = button,
                     )
                 )
                 IconButton(onClick = onMoreClick) {
@@ -422,14 +448,14 @@ private fun AddBar(
     label: String,
     onClick: () -> Unit
 ) {
-    val bg = Color(0xFFE0E0E0)
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = bg,
+        color = grey,
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(44.dp)
+            .height(56.dp)
+            .padding(vertical = Spacing.Small)
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
