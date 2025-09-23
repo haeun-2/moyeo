@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -79,14 +78,22 @@ public class BoxApplicationService {
         return BoxCreateResponse.from(box);
     }
 
-    public List<PayableBoxResponse> getPayableBoxList(User user) {
+    public List<PermissibleBoxResponse> getPayableBoxList(User user) {
         Box personalBox = boxService.getPersonalBoxByUserId(user.getId());
         List<BoxMember> boxMembers = boxMemberService.getJoinedPayableGroupBoxByUser(user);
 
-        List<PayableBoxResponse> response = new ArrayList<>(PayableBoxResponse.from(boxMembers));
-        response.add(0, PayableBoxResponse.from(personalBox));
+        List<PermissibleBoxResponse> response = new ArrayList<>(PermissibleBoxResponse.from(boxMembers));
+        response.add(0, PermissibleBoxResponse.from(personalBox));
 
         return response;
     }
 
+    public List<PermissibleBoxResponse> getExchangeableBoxList(User user) {
+        Box personalBox = boxService.getPersonalBoxByUserId(user.getId());
+        List<BoxMember> boxMembers = boxMemberService.getJoinedExchangeableGroupBoxByUser(user);
+
+        List<PermissibleBoxResponse> response = new ArrayList<>(PermissibleBoxResponse.from(boxMembers));
+        response.add(0, PermissibleBoxResponse.from(personalBox));
+
+        return response;    }
 }

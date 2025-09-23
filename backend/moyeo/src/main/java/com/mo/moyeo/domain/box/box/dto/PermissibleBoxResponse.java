@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Getter
-public class PayableBoxResponse {
+public class PermissibleBoxResponse {
 
     private Long boxId;
     private String name;
@@ -19,8 +19,8 @@ public class PayableBoxResponse {
     private String type;
     private Boolean isBookmarked;
 
-    public static PayableBoxResponse from(Box box) {
-        return PayableBoxResponse.builder()
+    public static PermissibleBoxResponse from(Box box) {
+        return PermissibleBoxResponse.builder()
                 .boxId(box.getId())
                 .name(box.getBoxName())
                 .balances(BalanceDto.from(box.getBalances()))
@@ -29,8 +29,8 @@ public class PayableBoxResponse {
     }
 
 
-    public static PayableBoxResponse from(BoxMember boxMember) {
-        return PayableBoxResponse.builder()
+    public static PermissibleBoxResponse from(BoxMember boxMember) {
+        return PermissibleBoxResponse.builder()
                 .boxId(boxMember.getBox().getId())
                 .name(boxMember.getBox().getBoxName())
                 .balances(BalanceDto.from(boxMember.getBox().getBalances()))
@@ -39,8 +39,8 @@ public class PayableBoxResponse {
                 .build();
     }
 
-    public static List<PayableBoxResponse> from(List<BoxMember> boxMembers) {
-        return boxMembers.stream().map(PayableBoxResponse::from).toList();
+    public static List<PermissibleBoxResponse> from(List<BoxMember> boxMembers) {
+        return boxMembers.stream().map(PermissibleBoxResponse::from).toList();
     }
 
 }
