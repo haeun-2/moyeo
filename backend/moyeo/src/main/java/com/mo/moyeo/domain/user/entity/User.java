@@ -54,6 +54,11 @@ public class User extends BaseTimeEntity {
         ADMIN
     }
 
+    public void updateAccount(String bankCode, String bankAccount) {
+        this.connectedBankCode = bankCode;
+        this.connectedBankAccount = bankAccount;
+    }
+
     public static User from(SignupCompleteRequest request, String hashedFid, String encryptedBankKey) {
         return User.builder()
                 .name(request.getName())

@@ -6,7 +6,7 @@ import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
 import com.mo.moyeo.common.util.finance_api.ApiType;
 import com.mo.moyeo.common.util.finance_api.ApiUtil;
-import com.mo.moyeo.domain.auth.signup.service.EncryptionService;
+import com.mo.moyeo.common.util.EncryptionUtil;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.transaction.bank.dto.BankTransferDTO;
 import com.mo.moyeo.domain.transaction.bank.entity.BankTransaction;
@@ -34,18 +34,12 @@ public class BankApiService {
 
     private final RestTemplate restTemplate;
 
-    private final EncryptionService encryptionService;
+    private final EncryptionUtil encryptionUtil;
 
-    @Value("${moyeo.api.base_url}")
-    private String BASE_URL;
-
-    @Value("${moyeo.api.endpoint.demand_deposit}")
-    private String DEMAND_DEPOSIT_URL;
-
-    @Value("${moyeo.api.account}")
+    @Value("${MOYEO_API_ACCOUNT}")
     private String MOYEO_ACCOUNT;
 
-    @Value("${moyeo.api.user_key}")
+    @Value("${MOYEO_API_USER_KEY}")
     private String MOYEO_USER_KEY;
 
     @Value("${FOREIGN_WITHDRAW_ENDPOINT}")
@@ -65,7 +59,7 @@ public class BankApiService {
      * 박스로 입금 (연결 계좌 -> 법인 계좌 -> 박스)
      */
     public void deposit(User user, BigDecimal amount, BankTransaction bankTransaction) {
-        String userKey = encryptionService.decrypt(user.getConnectedBankKey());
+        String userKey = encryptionUtil.decrypt(user.getConnectedBankKey());
 
         BankTransferDTO dto = BankTransferDTO.builder()
                 .depositAccountNo(MOYEO_ACCOUNT)

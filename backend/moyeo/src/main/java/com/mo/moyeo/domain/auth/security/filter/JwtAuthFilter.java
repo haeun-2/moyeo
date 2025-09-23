@@ -34,7 +34,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         return uri.equals("/api/auth/login") ||
                 uri.equals("/api/auth/refresh") ||
                 uri.startsWith("/api/auth/signup") ||
-                uri.startsWith("/api/v1/users");
+                uri.startsWith("/api/v1/users/test");
     }
 
     @Override

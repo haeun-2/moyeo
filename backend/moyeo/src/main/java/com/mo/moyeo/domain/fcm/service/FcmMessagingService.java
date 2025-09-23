@@ -12,7 +12,10 @@ import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -38,6 +41,7 @@ public class FcmMessagingService {
     /**
      * 일반 거래 알림
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void sendTransactionMessage(BoxHistory boxHistory) {
         FcmMessageDTO message = createTransactionMessage(boxHistory);
         sendMessage(boxHistory, message);
@@ -46,6 +50,7 @@ public class FcmMessagingService {
     /**
      * 환전 거래 알림
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void sendExchangeMessage(BoxHistory fromHistory, BoxHistory toHistory) {
         FcmMessageDTO message = createExchangeMessage(fromHistory, toHistory);
         sendMessage(fromHistory, message);
