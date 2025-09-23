@@ -17,6 +17,7 @@ import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import com.d108.moyeo.domain.repository.AuthRepository
 import com.d108.moyeo.presentation.theme.boxAvailableColors
 import com.d108.moyeo.presentation.ui.screen.home.transfer.CurrencyData
+import com.d108.moyeo.util.CurrencyUtils.getCurrencyName
 import com.d108.moyeo.util.textColorUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -132,7 +133,7 @@ class HomeViewModel @Inject constructor(
         personalResult.onSuccess { personalBox ->
             val currencies = personalBox.balances
 //                .filter { it.balance != 0.0 }  //TODO: 일단 이거 0원 아닌 것도 나오게 해봄
-                .map { CurrencyData(name = currencyLabel(it.currency), code = it.currency) }
+                .map { CurrencyData(name = getCurrencyName(it.currency), code = it.currency) }
             boxStore.setPersonalCurrencies(currencies)
         }
 
@@ -316,7 +317,7 @@ class HomeViewModel @Inject constructor(
         bg = this.bg,
         balances = this.balances.map {
             CurrencyBalance(
-                label = currencyLabel(it.currency),
+                label = getCurrencyName(it.currency),
                 value = formatAmount(it.currency, it.balance),
                 code = it.currency
             )
@@ -328,7 +329,7 @@ class HomeViewModel @Inject constructor(
             .filter { it.balance != 0.0 }
             .map {
                 CurrencyBalance(
-                    label = currencyLabel(it.currency),
+                    label = getCurrencyName(it.currency),
                     value = formatAmount(it.currency, it.balance),
                     code = it.currency)
             }
@@ -338,19 +339,6 @@ class HomeViewModel @Inject constructor(
             bg = _uiState.value.wallet.bg,
             balances = balances
         )
-    }
-
-    private fun currencyLabel(code: String): String =
-        when (code) {
-            "KRW" -> "한국 원"
-            "USD" -> "미국 달러"
-            "JPY" -> "일본 엔"
-            "EUR" -> "유럽 유로"
-            "GBP" -> "영국 파운드"
-            "CNY" -> "중국 위안"
-            "CHF" -> "스위스 프랑"
-            "CAD" -> "캐나다 달러"
-            else -> code
     }
 
     private fun formatAmount(code: String, amount: Double): String {

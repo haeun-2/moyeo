@@ -60,7 +60,7 @@ class BoxStore @Inject constructor() {
     // 개인 박스 통화 종류 저장
     // 통화량 등의 민감 정보는 배제
     fun setPersonalCurrencies(list: List<CurrencyData>) {
-        _personalCurrencies.value = list
+        _personalCurrencies.value = list  //
     }
 
     // BoxStore 초기화

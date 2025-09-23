@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.box.calculating
+package com.d108.moyeo.presentation.ui.screen.home.box.calculate
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,11 +17,9 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import com.d108.moyeo.presentation.theme.Spacing
-import com.d108.moyeo.presentation.theme.primaryLight
-import java.text.DecimalFormat
 
 @Composable
-fun FinishContent(viewModel: CalculatingViewModel) {
+fun FinishContent(viewModel: CalculateViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
 
@@ -42,9 +40,8 @@ fun FinishContent(viewModel: CalculatingViewModel) {
         // buildAnnotatedString을 사용하여 텍스트의 특정 부분만 강조합니다.
         Text(
             text = buildAnnotatedString {
-                // TODO: targetBox ID를 실제 이름으로 변환하는 로직 필요
                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append("'${uiState.boxId}'")
+                    append("'${uiState.boxInfo!!.title}'")
                 }
                 append("에서 정산이 완료되었어요")
             },

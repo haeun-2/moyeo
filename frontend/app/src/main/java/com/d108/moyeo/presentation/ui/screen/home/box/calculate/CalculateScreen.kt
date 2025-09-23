@@ -1,4 +1,4 @@
-package com.d108.moyeo.presentation.ui.screen.home.box.calculating
+package com.d108.moyeo.presentation.ui.screen.home.box.calculate
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -24,15 +24,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.util.BiometricAuthManager
 
 @Composable
-fun CalculatingScreen(navController: NavController,
-                      viewModel: CalculatingViewModel = viewModel()) {
+fun CalculateScreen(
+    navController: NavController,
+    viewModel: CalculateViewModel = hiltViewModel()
+) {
 
     // 생체 인증에 필요
     val context = LocalContext.current
@@ -47,10 +49,10 @@ fun CalculatingScreen(navController: NavController,
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collect { event ->
             when (event) {
-                is CalculatingNavEvent.NavigateBack -> {
+                is CalculateNavEvent.NavigateBack -> {
                     navController.popBackStack()
                 }
-                is CalculatingNavEvent.ShowBiometricPrompt -> {
+                is CalculateNavEvent.ShowBiometricPrompt -> {
                     if (biometricManager.canAuthenticate()) {
                         biometricManager.authenticate(
                             title = "본인 인증",
@@ -102,26 +104,32 @@ fun CalculatingScreen(navController: NavController,
                 .padding(Spacing.Medium)
         ) { // 스텝에 따라서 컴포저블이 보일 영역
             when (uiState.currentStep) {
-                CalculatingStep.CHOOSE_CURRENCY -> ChooseCurrencyContent(
-                    selectedCurrency = uiState.currency,
+                CalculateStep.CHOOSE_CURRENCY -> ChooseCurrencyContent(
+                    availableCurrencies = uiState.availableCurrencies,
+                    selectedCurrencies = uiState.selectedCurrencies,
                     onCurrencySelect = viewModel::onCurrencySelected
                 )
-                CalculatingStep.HOW_TO_CALCULATE -> HowToCalculateContent(viewModel = viewModel)
-                CalculatingStep.BIOMETRIC -> BiometricContent()
-                CalculatingStep.PIN -> PinContent(viewModel = viewModel)
-                CalculatingStep.FINISH -> FinishContent(viewModel = viewModel)
+                CalculateStep.HOW_TO_CALCULATE -> HowToCalculateContent(
+                    uiState = uiState,
+                    onParticipantAmountChanged = viewModel::onParticipantAmountChanged,
+                    onParticipantSelectionChanged = viewModel::onParticipantSelectionChanged
+
+                )
+                CalculateStep.BIOMETRIC -> BiometricContent()
+                CalculateStep.PIN -> PinContent(viewModel = viewModel) // PIN 화면은 상태가 복잡하므로 일단 ViewModel 전달 유지
+                CalculateStep.FINISH -> FinishContent(viewModel = viewModel)
             }
         }
 
         val isButtonEnabled = when (uiState.currentStep) {
-            CalculatingStep.CHOOSE_CURRENCY -> uiState.currency.isNotBlank()
-            CalculatingStep.HOW_TO_CALCULATE -> true // 정산 버튼 확인
-            CalculatingStep.BIOMETRIC -> true
-            CalculatingStep.PIN -> uiState.pin.length == 6
-            CalculatingStep.FINISH -> true
+            CalculateStep.CHOOSE_CURRENCY -> uiState.selectedCurrencies.isNotEmpty()
+            CalculateStep.HOW_TO_CALCULATE -> uiState.isSettlementSumValid // 정산 버튼 확인
+            CalculateStep.BIOMETRIC -> true
+            CalculateStep.PIN -> uiState.pin.length == 6
+            CalculateStep.FINISH -> true
         }
 
-        if (uiState.currentStep != CalculatingStep.BIOMETRIC) {
+        if (uiState.currentStep != CalculateStep.BIOMETRIC) {
             Button(
                 onClick = { viewModel.onNextClicked() },
                 modifier = Modifier
@@ -130,9 +138,9 @@ fun CalculatingScreen(navController: NavController,
                 enabled = isButtonEnabled
             ) {
                 val buttonText = when (uiState.currentStep) {
-                    CalculatingStep.FINISH -> "확인"
-                    CalculatingStep.HOW_TO_CALCULATE -> "다음"
-                    CalculatingStep.PIN -> "인증하기"
+                    CalculateStep.FINISH -> "확인"
+                    CalculateStep.HOW_TO_CALCULATE -> "다음"
+                    CalculateStep.PIN -> "인증하기"
                     else -> "다음"
                 }
                 Text(buttonText)

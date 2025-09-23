@@ -32,7 +32,7 @@ sealed class MyBoxNavigationEvent {
     data class NavigateToCollect(val boxId: String, val currencyCode: String = "KRW") : MyBoxNavigationEvent()
 
     // 정산하기
-    data class NavigateToCalculating(val boxId: String, val currencyCode: String = "KRW") : MyBoxNavigationEvent()
+    data class NavigateToCalculate(val boxId: Long) : MyBoxNavigationEvent()
 
     // 초대 링크
     data class InviteLinkReady(val link: String): MyBoxNavigationEvent()
@@ -266,9 +266,9 @@ class MyBoxViewModel @Inject constructor(
         }
     }
 
-    fun onCalculatingClick() {
+    fun onCalculateClick() {
         viewModelScope.launch {
-
+            _navigationEvent.emit(MyBoxNavigationEvent.NavigateToCalculate(boxId = boxId))
         }
     }
 

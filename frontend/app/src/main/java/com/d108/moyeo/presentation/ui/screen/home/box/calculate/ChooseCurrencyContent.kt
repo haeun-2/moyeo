@@ -1,8 +1,10 @@
-package com.d108.moyeo.presentation.ui.screen.home.box.calculating
+package com.d108.moyeo.presentation.ui.screen.home.box.calculate
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -14,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -23,23 +26,16 @@ import com.d108.moyeo.presentation.theme.onPrimaryLight
 import com.d108.moyeo.presentation.theme.onSurfaceVariantLight
 import com.d108.moyeo.presentation.theme.primaryLight
 import com.d108.moyeo.presentation.theme.surfaceVariantLight
+import com.d108.moyeo.presentation.ui.component.home.Currency
 import com.d108.moyeo.presentation.ui.screen.home.transfer.CurrencyData
+import com.d108.moyeo.util.CurrencyUtils.getCurrencyName
 
 @Composable
 fun ChooseCurrencyContent(
-    selectedCurrency: String,
+    availableCurrencies: List<Currency>,
+    selectedCurrencies: Set<String>,
     onCurrencySelect: (String) -> Unit
 ) {
-// TODO: 이 더미 데이터는 추후 ViewModel에서 실제 보유 통화 목록으로 받아와야 합니다.
-    val dummyCurrencies = listOf(
-        CurrencyData("대한민국 원", "KRW"),
-        CurrencyData("미국 달러", "USD"),
-        CurrencyData("유럽 유로", "EUR"),
-        CurrencyData("일본 엔", "JPY"),
-        CurrencyData("중국 위안", "CNY"),
-        CurrencyData("영국 파운드", "GBP")
-    )
-
     Column {
         Text(
             text = "어떤 통화를 정산할까요?",
@@ -47,19 +43,26 @@ fun ChooseCurrencyContent(
         )
         Spacer(Modifier.height(Spacing.Large))
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2), // 2열 그리드
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
-            verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
-        ) {
-            items(dummyCurrencies) { currency ->
-                val isSelected = (currency.code == selectedCurrency)
-                CurrencyButton(
-                    text = "${currency.name}\n(${currency.code})",
-                    isSelected = isSelected,
-                    onClick = { onCurrencySelect(currency.code) }
-                )
+        if (availableCurrencies.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("정산할 수 있는 통화가 없습니다.")
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
+                verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
+            ) {
+                items(availableCurrencies) { currency ->
+                    val isSelected = selectedCurrencies.contains(currency.code)
+                    val currencyName = getCurrencyName(currency.code)
+                    CurrencyButton(
+                        text = "${currencyName}\n(${currency.code})",
+                        isSelected = isSelected,
+                        onClick = { onCurrencySelect(currency.code) }
+                    )
+                }
             }
         }
     }
