@@ -2,6 +2,7 @@ package com.mo.moyeo.domain.auth.signup.service;
 
 import com.mo.moyeo.common.exception.CustomException;
 import com.mo.moyeo.common.exception.ErrorCode;
+import com.mo.moyeo.common.util.EncryptionUtil;
 import com.mo.moyeo.domain.auth.signup.dto.*;
 import com.mo.moyeo.domain.user.entity.User;
 import com.mo.moyeo.domain.user.service.UserService;
@@ -22,8 +23,7 @@ public class SignupService {
 
     private final SignupSessionRedisService signupSessionRedisService;
     private final VerificationService verificationService;
-    private final AccountConnectionService accountConnectionService;
-    private final EncryptionService encryptionService;
+    private final EncryptionUtil encryptionUtil;
     private final UserService userService;
 
     /**
@@ -150,7 +150,7 @@ public class SignupService {
 
         String bankAccount = request.getBankAccount();
 
-        accountConnectionService.sendVerificationWon(request.getEmail(), bankAccount);
+        verificationService.sendWonCode(request.getEmail(), bankAccount);
 
         return new VerificationResponse(sessionId);
     }
@@ -167,7 +167,7 @@ public class SignupService {
             throw new CustomException(ErrorCode.BAD_REQUEST, "유효하지 않은 인증 단계입니다.");
         }
 
-        accountConnectionService.verifyWonCode(request.getEmail(), request.getBankAccount(), request.getVerificationCode());
+        verificationService.verifyWonCode(request.getEmail(), request.getBankAccount(), request.getVerificationCode());
 
         // 세션 업데이트
         signupSession.setBankAccountVerified(true);
@@ -188,11 +188,11 @@ public class SignupService {
             throw new CustomException(ErrorCode.BAD_REQUEST, "유효하지 않은 인증 단계입니다.");
         }
 
-        String bankKey = accountConnectionService.getUserKey(request.getEmail());
+        String bankKey = verificationService.getUserKeyFromApi(request.getEmail());
 
         // 암호화
         String hashedFid = passwordEncoder.encode(request.getFid());
-        String encryptedBankKey = encryptionService.encrypt(bankKey);
+        String encryptedBankKey = encryptionUtil.encrypt(bankKey);
 
         // 유저 가입 처리
         userService.registerUser(User.from(request, hashedFid, encryptedBankKey));

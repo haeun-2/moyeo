@@ -1,4 +1,4 @@
-package com.mo.moyeo.domain.auth.signup.service;
+package com.mo.moyeo.domain.bank.service;
 
 import com.mo.moyeo.common.util.finance_api.ApiUtil;
 import lombok.RequiredArgsConstructor;
@@ -14,74 +14,45 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AccountConnectionService {
+public class AccountVerificationService {
 
-    @Value("${moyeo.api.auth_text}")
+    @Value("${MOYEO_API_AUTH_TEXT}")
     private String AUTH_TEXT;
 
-    @Value("${moyeo.api.base_url}")
+    @Value("${BASE_URL}")
     private String BASE_URL;
 
-    @Value("${moyeo.api.endpoint.user_search}")
-    private String USER_SEARCH_ENDPOINT;
-
-    @Value("${moyeo.api.endpoint.open_auth}")
+    @Value("${OPEN_AUTH_ENDPOINT}")
     private String OPEN_AUTH_ENDPOINT;
 
-    @Value("${moyeo.api.endpoint.check_auth}")
+    @Value("${CHECK_AUTH_ENDPOINT}")
     private String CHECK_AUTH_ENDPOINT;
 
     private final RestTemplate restTemplate;
 
-    @Value("${moyeo.api.key}")
-    private String apiKey;
-
-    /**
-     * 금융망 사용자 키 조회
-     */
-    protected String getUserKey(String email) {
-        String url = BASE_URL + USER_SEARCH_ENDPOINT;
-
-        Map<String, String> body = new HashMap<>();
-        body.put("userId", email);
-        body.put("apiKey", apiKey);
-
-        HttpEntity<Map<String, String>> entity = new HttpEntity<>(body);
-        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, entity, Map.class);
-
-        Map<String, Object> responseBody = response.getBody();
-        if (responseBody == null) {
-            throw new RuntimeException("사용자 키 조회 실패: 응답이 없습니다");
-        }
-
-        return (String) responseBody.get("userKey");
-    }
-
     /**
      * 1원 인증 송금 요청
      */
-    public void sendVerificationWon(String email, String accountNo) {
-        String userKey = getUserKey(email);
+    public void sendWonCode(String userKey, String accountNo) {
+
         String url = BASE_URL + OPEN_AUTH_ENDPOINT;
 
         Map<String, Object> requestBody = createAuthRequestBody("openAccountAuth", userKey, accountNo, null);
-        HttpEntity<Map<String, Object>> request = createHttpEntity(requestBody);
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, createHttpEntity(requestBody), Map.class);
         log.debug("1원 인증 송금 응답: {}", response);
     }
 
     /**
      * 1원 인증 코드 검증
      */
-    public String verifyWonCode(String email, String accountNo, String verificationCode) {
-        String userKey = getUserKey(email);
+    public void verifyWonCode(String userKey, String accountNo, String verificationCode) {
+
         String url = BASE_URL + CHECK_AUTH_ENDPOINT;
 
         Map<String, Object> requestBody = createAuthRequestBody("checkAuthCode", userKey, accountNo, verificationCode);
-        HttpEntity<Map<String, Object>> request = createHttpEntity(requestBody);
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, createHttpEntity(requestBody), Map.class);
 
         Map<String, Object> responseBody = response.getBody();
         if (responseBody == null) {
@@ -92,21 +63,20 @@ public class AccountConnectionService {
         if (rec == null) {
             throw new RuntimeException("인증 코드 검증 실패: REC 정보가 없습니다");
         }
-
-        return (String) rec.get("status");
     }
 
     /**
      * 인증 요청 바디 생성
      */
     private Map<String, Object> createAuthRequestBody(String apiName, String userKey, String accountNo, String authCode) {
-        Map<String, Object> headerMap = ApiUtil.createHeader(apiName);
-        headerMap.put("userKey", userKey);
+        Map<String, Object> header = ApiUtil.createHeader(apiName);
+        header.put("userKey", userKey);
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("Header", headerMap);
-        body.put("accountNo", accountNo);
-        body.put("authText", AUTH_TEXT);
+        Map<String, Object> body = new HashMap<>(Map.of(
+                "Header", header,
+                "accountNo", accountNo,
+                "authText", AUTH_TEXT
+        ));
 
         if (authCode != null) {
             body.put("authCode", authCode);

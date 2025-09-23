@@ -1,4 +1,4 @@
-package com.mo.moyeo.domain.auth.signup.service;
+package com.mo.moyeo.common.util;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,7 +12,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 @Service
-public class EncryptionService {
+public class EncryptionUtil {
 
     private static final String ALGORITHM = "AES";
     private static final String TRANSFORMATION = "AES/GCM/NoPadding";
@@ -21,7 +21,7 @@ public class EncryptionService {
 
     private final SecretKey secretKey;
 
-    public EncryptionService(@Value("${moyeo.encryption.key}") String base64Key) {
+    public EncryptionUtil(@Value("${MOYEO_ENCRYPTION_KEY}") String base64Key) {
         // Base64로 인코딩된 키를 디코딩하여 SecretKey 생성
         byte[] keyBytes = Base64.getDecoder().decode(base64Key);
         this.secretKey = new SecretKeySpec(keyBytes, ALGORITHM);

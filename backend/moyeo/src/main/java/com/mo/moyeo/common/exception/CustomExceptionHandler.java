@@ -50,6 +50,9 @@ public class CustomExceptionHandler {
         };
 
         log.error("클라이언트 에러 발생 - 상태코드: {}, URL: {}", status.value(), request.getRequestURI());
+        log.error("예외 타입: {}", e.getClass().getSimpleName());
+        log.error("예외 메시지: {}", e.getMessage(), e);
+
         return ErrorResponse.toResponseEntity(errorCode);
     }
 
@@ -63,6 +66,9 @@ public class CustomExceptionHandler {
         };
 
         log.error("서버 에러 발생 - 상태코드: {}, URL: {}", status.value(), request.getRequestURI());
+        log.error("예외 타입: {}", e.getClass().getSimpleName());
+        log.error("예외 메시지: {}", e.getMessage(), e);
+
         return ErrorResponse.toResponseEntity(errorCode);
     }
 

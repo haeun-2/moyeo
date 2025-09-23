@@ -33,7 +33,7 @@ public class BoxInviteService {
 
     private static final String BOX_INVITE_KEY = "box_invite_code::";
 
-    @Value("${moyeo.server.base_url}")
+    @Value("${SERVER_BASE_URL}")
     private String BASE_URL;
     private final String INVITE_URL = "/invite";
 
