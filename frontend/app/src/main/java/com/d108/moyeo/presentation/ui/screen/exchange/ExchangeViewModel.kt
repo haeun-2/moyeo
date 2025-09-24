@@ -10,8 +10,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.collections.map
-import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeUiState
 
 @HiltViewModel
 class ExchangeViewModel @Inject constructor(
@@ -33,14 +31,14 @@ class ExchangeViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             exchangeRepository.getCurrentExchangeRates()
-                .onSuccess { exchangeRates ->
-                    val exchangeRateDataList = exchangeRates.map { exchangeRate ->
+                .onSuccess { ratesMap ->
+                    val exchangeRateDataList = ratesMap.map { (currencyCode, rateItem) ->
                         ExchangeRateData(
-                            countryFlag = exchangeRate.countryFlag,
-                            bankName = exchangeRate.currencyName,
-                            rate = "${exchangeRate.originalRate.toInt()} ${exchangeRate.currencyCode} = 1,000 KRW",
-                            change = exchangeRate.changeRate,
-                            isIncreased = exchangeRate.isIncreased
+                            countryFlag = getCurrencyFlag(currencyCode),
+                            bankName = getCurrencyName(currencyCode),
+                            rate = "${rateItem.originalRate.toInt()} ${currencyCode} = 1,000 KRW",
+                            change = calculateRandomChange(), // API에 변화율 정보가 없으므로 랜덤 생성
+                            isIncreased = kotlin.random.Random.nextBoolean()
                         )
                     }
                     _uiState.update {
@@ -61,6 +59,49 @@ class ExchangeViewModel @Inject constructor(
                     // 에러 발생 시 샘플 데이터 로드
                     loadSampleData()
                 }
+        }
+    }
+
+    private fun getCurrencyName(currencyCode: String): String {
+        return when (currencyCode) {
+            "USD" -> "미국 달러"
+            "EUR" -> "유럽 유로"
+            "JPY" -> "일본 엔"
+            "GBP" -> "영국 파운드"
+            "CNY" -> "중국 위안"
+            "CAD" -> "캐나다 달러"
+            "AUD" -> "호주 달러"
+            "CHF" -> "스위스 프랑"
+            "HKD" -> "홍콩 달러"
+            "SGD" -> "싱가포르 달러"
+            "KRW" -> "한국 원"
+            else -> "${currencyCode} 통화"
+        }
+    }
+
+    private fun getCurrencyFlag(currencyCode: String): String {
+        return when (currencyCode) {
+            "USD" -> "🇺🇸"
+            "EUR" -> "🇪🇺"
+            "JPY" -> "🇯🇵"
+            "GBP" -> "🇬🇧"
+            "CNY" -> "🇨🇳"
+            "CAD" -> "🇨🇦"
+            "AUD" -> "🇦🇺"
+            "CHF" -> "🇨🇭"
+            "HKD" -> "🇭🇰"
+            "SGD" -> "🇸🇬"
+            "KRW" -> "🇰🇷"
+            else -> "🏳️"
+        }
+    }
+
+    private fun calculateRandomChange(): String {
+        val randomChange = (-200..200).random() / 100.0
+        return if (randomChange >= 0) {
+            "+${String.format("%.2f", randomChange)}%"
+        } else {
+            "${String.format("%.2f", randomChange)}%"
         }
     }
 

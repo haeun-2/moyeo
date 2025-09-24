@@ -101,7 +101,7 @@ fun CurrencySelectionScreen(
             onClick = {
                 // 해당 국가에 맞게 네비게이션 이동
                 viewModel.getSelectedCurrency()?.let {currency->
-                    navController.navigate("exchange_reservation/${currency.code}/${currency.name}")
+                    navController.navigate("reservation_rate_input/${currency.code}/${currency.name}")
                 }
             },
             enabled = uiState.selectedCurrency != null,
