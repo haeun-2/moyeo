@@ -20,7 +20,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/exchange/rates")
+@RequestMapping("/api/exchanges/rates")
 @Tag(name = "ExchangeRateController", description = "환율 관련 정보")
 public class ExchangeRateController {
     private final ExchangeRateService exchangeRateService;
@@ -32,7 +32,7 @@ public class ExchangeRateController {
         return ResponseEntity.ok(exchangeRateCacheService.getCurrentExchangeRate());
     }
 
-    @GetMapping("/history")
+    @GetMapping("/histories")
     @Operation(summary = "환율 단일 조회", description = "unit(1h,1d) 중 하나 입력하면 단위 바뀜 없으면 10분 기준임")
     public ResponseEntity<List<ExchangeRateHistoryDto>> getHistory(
             @RequestParam(required = false) String unit,

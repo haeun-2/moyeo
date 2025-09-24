@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/exchange")
+@RequestMapping("/api/exchanges")
 @Tag(name = "ExchangeController", description = "환전 관련 기능 제공")
 public class ExchangeController {
     private final ExchangeService exchangeService;
