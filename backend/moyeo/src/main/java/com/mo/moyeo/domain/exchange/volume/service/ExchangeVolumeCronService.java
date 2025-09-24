@@ -1,6 +1,7 @@
 package com.mo.moyeo.domain.exchange.volume.service;
 
 import com.mo.moyeo.common.util.batch.BatchInsert;
+import com.mo.moyeo.domain.currency.dto.CurrencyListDto;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.service.CurrencyService;
 import com.mo.moyeo.domain.exchange.volume.dto.ExchangeVolumeGroupDto;
@@ -13,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,6 +27,7 @@ public class ExchangeVolumeCronService {
     private final CurrencyService currencyService;
 
     @Scheduled(cron = "0 */10 * * * *") // 초, 분, 시, 일, 월, 요일
+//    @Scheduled(fixedDelay = 1000*60*10)
     @Transactional
     public void collectRecentVolume() {
         //현재 시간을 yyyy-mm-dd hh:mm으로 가져옴
@@ -65,16 +68,19 @@ public class ExchangeVolumeCronService {
     }
 
     private void saveVolumeHistory(LocalDateTime startTime, LocalDateTime endTime, ExchangeVolume.Type type) {
-        List<ExchangeVolumeGroupDto> transactions =
-                exchangeRepository.findVolumeByCurrency(startTime, endTime);
+        List<ExchangeVolume> exchangeVolumes = currencyService.getCurrencyList().stream()
+                .map(CurrencyListDto::getCode) // String 코드
+                .map(code -> {
+                    BigDecimal amount =
+                            exchangeRepository.findVolumeByCurrencyAndTime(startTime, endTime, code);
 
-        List<ExchangeVolume> exchangeVolumes = transactions.stream()
-                .map(t -> ExchangeVolume.builder()
-                        .currency(currencyService.getReferenceByType(CurrencyType.valueOf(t.getCurrencyCode())))
-                        .amount(t.getAmount())
-                        .type(type)
-                        .recordedAt(endTime)
-                        .build())
+                    return ExchangeVolume.builder()
+                            .currency(currencyService.getReferenceByType(code)) // code 기반
+                            .amount(amount)
+                            .type(type)
+                            .recordedAt(endTime)
+                            .build();
+                })
                 .toList();
 
         exchangeVolumeRepository.saveAll(exchangeVolumes);
