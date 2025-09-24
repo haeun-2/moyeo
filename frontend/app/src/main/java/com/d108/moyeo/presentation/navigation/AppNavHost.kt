@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.d108.moyeo.presentation.ui.screen.more.account.change.AccountChangeScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.CurrencySelectionScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeAddScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeCompleteScreen
@@ -41,7 +42,7 @@ import com.d108.moyeo.presentation.ui.screen.home.transfer.TransferScreen
 import com.d108.moyeo.presentation.ui.screen.login.LoginScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChangePasswordScreen
 import com.d108.moyeo.presentation.ui.screen.more.ChatConsultationScreen
-import com.d108.moyeo.presentation.ui.screen.more.ConnectedAccountSettingsScreen
+import com.d108.moyeo.presentation.ui.screen.more.account.ConnectedAccountSettingsScreen
 import com.d108.moyeo.presentation.ui.screen.more.FAQScreen
 import com.d108.moyeo.presentation.ui.screen.more.MoreScreen
 import com.d108.moyeo.presentation.ui.screen.more.MyConsultationScreen
@@ -434,6 +435,10 @@ fun AppNavHost(
 
         composable(AppScreen.ConnectedAccountSettings.route) {
             ConnectedAccountSettingsScreen(navController = navController)
+        }
+
+        composable("account/change") {
+            AccountChangeScreen(navController = navController)
         }
 
         composable(AppScreen.Notices.route) {
