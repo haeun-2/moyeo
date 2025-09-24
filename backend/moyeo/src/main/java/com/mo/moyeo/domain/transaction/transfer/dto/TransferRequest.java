@@ -1,6 +1,7 @@
 package com.mo.moyeo.domain.transaction.transfer.dto;
 
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,7 @@ public class TransferRequest {
 
     @NotNull(message = "금액은 필수 입력값입니다.")
     @Positive(message = "금액은 0보다 커야 합니다.")
+    @DecimalMax(value = "3000000", message = "최대 금액 한도 초과")
     private BigDecimal amount;
 
 }

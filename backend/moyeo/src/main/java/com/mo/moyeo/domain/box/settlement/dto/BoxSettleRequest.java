@@ -1,6 +1,7 @@
 package com.mo.moyeo.domain.box.settlement.dto;
 
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,6 +16,7 @@ public class BoxSettleRequest {
     private Long boxMemberId;
 
     @NotNull(message = "정산 금액은 필수 입력값입니다.")
+    @DecimalMax(value = "3000000", message = "최대 금액 한도 초과")
     private BigDecimal amount;
 
     @NotNull(message = "정산할 통화가 필요합니다.")
