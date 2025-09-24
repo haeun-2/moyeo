@@ -21,13 +21,7 @@ public interface ExchangeRepository extends JpaRepository<ExchangeTransaction, L
     List<ExchangeTransaction> findAllByTransactionId(@Param("transactionId") Long transactionId);
 
     @Query("""
-    SELECT COALESCE(
-        (SELECT SUM(e.fromAmount)
-         FROM ExchangeTransaction e
-         WHERE e.fromCurrency.code = :currencyType
-           AND e.transaction.createdAt BETWEEN :startTime AND :endTime), 0
-    )
-    +
+    SELECT
     COALESCE(
         (SELECT SUM(e.toAmount)
          FROM ExchangeTransaction e
@@ -35,9 +29,26 @@ public interface ExchangeRepository extends JpaRepository<ExchangeTransaction, L
            AND e.transaction.createdAt BETWEEN :startTime AND :endTime), 0
     )
 """)
-    BigDecimal findVolumeByCurrencyAndTime(
+    BigDecimal findBuyVolumeByCurrencyAndTime(
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
             @Param("currencyType")CurrencyType currencyType
             );
+
+
+    @Query("""
+    SELECT
+    COALESCE(
+             (SELECT SUM(e.fromAmount)
+         FROM ExchangeTransaction e
+         WHERE e.fromCurrency.code = :currencyType
+         AND e.transaction.createdAt BETWEEN :startTime AND :endTime), 0
+                 )
+    """)
+    BigDecimal findSellVolumeByCurrencyAndTime(
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
+            @Param("currencyType")CurrencyType currencyType
+    );
+
 }

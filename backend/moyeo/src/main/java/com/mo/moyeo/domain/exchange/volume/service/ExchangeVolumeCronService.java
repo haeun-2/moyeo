@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Currency;
 import java.util.List;
 
 @Service
@@ -26,8 +27,8 @@ public class ExchangeVolumeCronService {
     private final ExchangeVolumeRepository exchangeVolumeRepository;
     private final CurrencyService currencyService;
 
-    @Scheduled(cron = "0 */10 * * * *") // 초, 분, 시, 일, 월, 요일
-//    @Scheduled(fixedDelay = 1000*60*10)
+//    @Scheduled(cron = "0 */10 * * * *") // 초, 분, 시, 일, 월, 요일
+    @Scheduled(fixedDelay = 1000*60*10)
     @Transactional
     public void collectRecentVolume() {
         //현재 시간을 yyyy-mm-dd hh:mm으로 가져옴
@@ -40,7 +41,7 @@ public class ExchangeVolumeCronService {
         // 10분 전 시간
         LocalDateTime startTime = endTime.minusMinutes(10);
 
-        saveVolumeHistory(startTime, endTime, ExchangeVolume.Type.m);
+        saveVolumeHistory(startTime, endTime, ExchangeVolume.Unit.m);
     }
 
     // 1시간 단위
@@ -52,7 +53,7 @@ public class ExchangeVolumeCronService {
         LocalDateTime endTime = now.withMinute(0).withSecond(0).withNano(0);
         LocalDateTime startTime = endTime.minusHours(1);
 
-        saveVolumeHistory(startTime, endTime, ExchangeVolume.Type.h);
+        saveVolumeHistory(startTime, endTime, ExchangeVolume.Unit.h);
     }
 
     // 1일 단위
@@ -64,25 +65,43 @@ public class ExchangeVolumeCronService {
         LocalDateTime endTime = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
         LocalDateTime startTime = endTime.minusDays(1);
 
-        saveVolumeHistory(startTime, endTime, ExchangeVolume.Type.d);
+        saveVolumeHistory(startTime, endTime, ExchangeVolume.Unit.d);
     }
 
-    private void saveVolumeHistory(LocalDateTime startTime, LocalDateTime endTime, ExchangeVolume.Type type) {
-        List<ExchangeVolume> exchangeVolumes = currencyService.getCurrencyList().stream()
-                .map(CurrencyListDto::getCode) // String 코드
+    private void saveVolumeHistory(LocalDateTime startTime, LocalDateTime endTime, ExchangeVolume.Unit unit) {
+        List<CurrencyType> currencyList = currencyService.getCurrencyList().stream().map(CurrencyListDto::getCode).toList();
+
+        List<ExchangeVolume> exchangeBuyVolumes = currencyList.stream() // String 코드
                 .map(code -> {
                     BigDecimal amount =
-                            exchangeRepository.findVolumeByCurrencyAndTime(startTime, endTime, code);
+                            exchangeRepository.findBuyVolumeByCurrencyAndTime(startTime, endTime, code);
 
                     return ExchangeVolume.builder()
                             .currency(currencyService.getReferenceByType(code)) // code 기반
                             .amount(amount)
-                            .type(type)
+                            .unit(unit)
+                            .type(ExchangeVolume.Type.buy)
                             .recordedAt(endTime)
                             .build();
                 })
                 .toList();
 
-        exchangeVolumeRepository.saveAll(exchangeVolumes);
+        List<ExchangeVolume> exchangeSellVolumes = currencyList.stream() // String 코드
+                .map(code -> {
+                    BigDecimal amount =
+                            exchangeRepository.findSellVolumeByCurrencyAndTime(startTime, endTime, code);
+
+                    return ExchangeVolume.builder()
+                            .currency(currencyService.getReferenceByType(code)) // code 기반
+                            .amount(amount)
+                            .unit(unit)
+                            .type(ExchangeVolume.Type.sell)
+                            .recordedAt(endTime)
+                            .build();
+                })
+                .toList();
+
+        exchangeVolumeRepository.saveAll(exchangeBuyVolumes);
+        exchangeVolumeRepository.saveAll(exchangeSellVolumes);
     }
 }
