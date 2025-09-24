@@ -86,4 +86,6 @@ dependencies {
     implementation("com.google.firebase:firebase-installations")
 
     implementation(libs.zxing.core)
+
+    implementation(libs.vico.compose.m3)
 }
