@@ -30,7 +30,7 @@ class ExchangeHistoryViewModel @Inject constructor(
                             currentRate = "${history.originalRate.toInt()} ${currencyCode} = 1,000 KRW",
                             userCount = "1,247명", // 실제로는 API에서 가져와야 함
                             averageAmount = "245만원", // 실제로는 API에서 가져와야 함
-                            chartData = history.chartData.map { data -> data.rate },
+                            chartData = generateSampleChartData(),
                             isLoading = false,
                             errorMessage = null
                         )
@@ -47,6 +47,10 @@ class ExchangeHistoryViewModel @Inject constructor(
                     loadSampleData(currencyCode, mode)
                 }
         }
+    }
+
+    private fun generateSampleChartData(): List<Float> {
+        return listOf(1349f, 1365f, 1356f, 1343f, 1329f, 1346f, 1367f, 1379f)
     }
 
     /**

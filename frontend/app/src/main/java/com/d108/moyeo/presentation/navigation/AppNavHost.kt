@@ -15,9 +15,14 @@ import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeAddScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeCompleteScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeHistoryScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeKeypadScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeReservationHomeScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ReservationCompleteScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeReservationScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ReservationAmountInputScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ReservationFinalCompleteScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ReservationPeriodSelectionScreen
+import com.d108.moyeo.presentation.ui.screen.exchange.ReservationRateInputScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryBoxesScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
@@ -169,7 +174,13 @@ fun AppNavHost(
         composable(
             route = AppScreen.Calculate.route,
             arguments = listOf(
-                navArgument("boxId") { type = NavType.LongType},
+                navArgument("boxId") { type = NavType.LongType },
+                // currencyCode는 null일 수 있는 선택적 인자임을 정의
+                navArgument("currencyCode") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = "KRW"
+                }
             )
         ) { backStackEntry ->
             // ViewModel에서 SavedStateHandle을 통해 boxId를 직접 받으므로,
@@ -201,6 +212,104 @@ fun AppNavHost(
                 mode = backStackEntry.arguments?.getString("mode") ?: "charge",
                 currencyCode = backStackEntry.arguments?.getString("currencyCode"),
                 currencyName = backStackEntry.arguments?.getString("currencyName")
+            )
+        }
+
+        // 예약환전 홈
+        composable("exchange_reservation_home") {
+            ExchangeReservationHomeScreen(navController = navController)
+        }
+
+// 희망환율 입력
+        composable(
+            route = "reservation_rate_input/{currencyCode}/{currencyName}",
+            arguments = listOf(
+                navArgument("currencyCode") { type = NavType.StringType },
+                navArgument("currencyName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
+            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
+
+            ReservationRateInputScreen(
+                navController = navController,
+                currencyCode = currencyCode,
+                currencyName = currencyName
+            )
+        }
+
+// 환전할 금액 입력
+        composable(
+            route = "reservation_amount_input/{currencyCode}/{currencyName}/{targetRate}",
+            arguments = listOf(
+                navArgument("currencyCode") { type = NavType.StringType },
+                navArgument("currencyName") { type = NavType.StringType },
+                navArgument("targetRate") { type = NavType.LongType }
+            )
+        ) { backStackEntry ->
+            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
+            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
+            val targetRate = backStackEntry.arguments?.getLong("targetRate") ?: 0L
+
+            ReservationAmountInputScreen(
+                navController = navController,
+                currencyCode = currencyCode,
+                currencyName = currencyName,
+                targetRate = targetRate
+            )
+        }
+
+// 예약기간 선택
+        composable(
+            route = "reservation_period_selection/{currencyCode}/{currencyName}/{targetRate}/{amount}",
+            arguments = listOf(
+                navArgument("currencyCode") { type = NavType.StringType },
+                navArgument("currencyName") { type = NavType.StringType },
+                navArgument("targetRate") { type = NavType.LongType },
+                navArgument("amount") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
+            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
+            val targetRate = backStackEntry.arguments?.getLong ("targetRate") ?: 0L
+            val amount = backStackEntry.arguments?.getString("amount") ?: ""
+
+            ReservationPeriodSelectionScreen(
+                navController = navController,
+                currencyCode = currencyCode,
+                currencyName = currencyName,
+                targetRate = targetRate,
+                amount = amount
+            )
+        }
+
+// 예약환전 완료
+        composable(
+            route = "reservation_complete/{currencyCode}/{currencyName}/{targetRate}/{amount}/{startDate}/{endDate}",
+            arguments = listOf(
+                navArgument("currencyCode") { type = NavType.StringType },
+                navArgument("currencyName") { type = NavType.StringType },
+                navArgument("targetRate") { type = NavType.StringType },
+                navArgument("amount") { type = NavType.StringType },
+                navArgument("startDate") { type = NavType.StringType },
+                navArgument("endDate") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
+            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
+            val targetRate = backStackEntry.arguments?.getString("targetRate") ?: ""
+            val amount = backStackEntry.arguments?.getString("amount") ?: ""
+            val startDate = backStackEntry.arguments?.getString("startDate") ?: ""
+            val endDate = backStackEntry.arguments?.getString("endDate") ?: ""
+
+            ReservationFinalCompleteScreen(
+                navController = navController,
+                currencyCode = currencyCode,
+                currencyName = currencyName,
+                targetRate = targetRate,
+                amount = amount,
+                startDate = startDate,
+                endDate = endDate
             )
         }
 
