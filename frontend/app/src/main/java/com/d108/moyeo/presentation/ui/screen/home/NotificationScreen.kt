@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.CircularProgressIndicator
@@ -16,8 +17,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,15 +32,16 @@ import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.ui.component.home.notification.NotificationItem
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun NotificationScreen(
     navController: NavController,
     viewModel: NotificationViewModel = hiltViewModel()
 ) {
+
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-
 
     Column(
         modifier = Modifier.padding(
@@ -72,33 +76,63 @@ fun NotificationScreen(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            if (uiState.isLoading) {
-                // 로딩 중일 때
-                CircularProgressIndicator()
-            } else if (uiState.notifications.isEmpty()) {
-                // 값이 없으면 "아직 알림이 없습니다"를 표시
-                Text(
-                    text = "아직 알림이 없습니다",
-                    style = Typography.bodyLarge,
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center
-                )
-            } else {
-                // 값이 있으면 알림을 하나씩 표시
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(
-                        items = uiState.notifications,
-                        key = { it.id } // 각 아이템의 고유 키
-                    ) { notification ->
-                        val isLast = notification == uiState.notifications.lastOrNull()
-                        NotificationItem(
-                            notification = notification,
-                            onClick = {
-                                // TODO: boxId 통해 해당 박스로 이동
-                                Toast.makeText(context, "'${notification.title}' 클릭됨", Toast.LENGTH_SHORT).show()
-                            },
-                            showDivider = !isLast
-                        )
+            when {
+                uiState.isLoadingInitial -> {
+                    CircularProgressIndicator()
+                }
+                uiState.notifications.isEmpty() -> {
+                    Text(
+                        text = "아직 알림이 없습니다",
+                        style = Typography.bodyLarge,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                else -> {
+                    val listState = rememberLazyListState()
+
+                    // 끝 근처 도달 시 추가 로딩
+                    LaunchedEffect(listState) {
+                        snapshotFlow {
+                            val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+                            val total = listState.layoutInfo.totalItemsCount
+                            lastVisible != null && total > 0 && lastVisible >= total - 3 // 끝에서 3개 남았을 때
+                        }.collectLatest { nearEnd ->
+                            if (nearEnd && !uiState.isLoadingMore && uiState.hasNext) {
+                                viewModel.loadMore()
+                            }
+                        }
+                    }
+
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState
+                    ) {
+                        items(
+                            items = uiState.notifications,
+                            key = { it.id }
+                        ) { notification ->
+                            val isLast = notification == uiState.notifications.lastOrNull()
+                            NotificationItem(
+                                notification = notification,
+                                onClick = {
+                                    Toast.makeText(context, "'${notification.title}' 클릭됨", Toast.LENGTH_SHORT).show()
+                                },
+                                showDivider = !isLast
+                            )
+                        }
+
+                        // 로딩 푸터
+                        if (uiState.isLoadingMore) {
+                            item(key = "loading_footer") {
+                                Box(
+                                    modifier = Modifier
+                                        .fillParentMaxWidth()
+                                        .padding(vertical = Spacing.Medium),
+                                    contentAlignment = Alignment.Center
+                                ) { CircularProgressIndicator() }
+                            }
+                        }
                     }
                 }
             }

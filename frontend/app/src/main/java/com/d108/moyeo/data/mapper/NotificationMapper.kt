@@ -1,9 +1,9 @@
 package com.d108.moyeo.data.mapper
 
-import com.d108.moyeo.data.remote.dto.NotificationResponseDto
+import com.d108.moyeo.data.remote.dto.NotificationContentDto
 import com.d108.moyeo.domain.model.Notification
 
-private fun NotificationResponseDto.parseBody(): ParsedBody {
+private fun NotificationContentDto.parseBody(): ParsedBody {
     val lines = body
         .trim()
         .split('\n')
@@ -52,7 +52,7 @@ private data class ParsedBody(
     val balance: String?
 )
 
-fun NotificationResponseDto.toDomain(): Notification {
+fun NotificationContentDto.toDomain(): Notification {
     val parsed = parseBody()
     return Notification(
         transactionId = transactionId,

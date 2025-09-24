@@ -5,8 +5,8 @@ import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.data.remote.api.ExchangeService
 import com.d108.moyeo.data.remote.api.AuthService
 import com.d108.moyeo.data.remote.dto.exchange.ExchangeRateItem
-import com.d108.moyeo.data.remote.dto.exchange.ExchangeHistoryResponse
-import com.d108.moyeo.domain.model.exchange.ExchangeHistory
+import com.d108.moyeo.data.remote.dto.exchange.CreateReservationRequestDto
+import com.d108.moyeo.data.remote.dto.exchange.ExchangeReservationResponseDto
 import com.d108.moyeo.domain.model.exchange.ExchangeRate
 import com.d108.moyeo.domain.repository.ExchangeRepository
 import javax.inject.Inject
@@ -29,7 +29,7 @@ class ExchangeRepositoryImpl @Inject constructor(
     private var lastRates: Map<String, Double> = emptyMap()
     private var lastUpdateTime: Long = 0
 
-    override suspend fun getCurrentExchangeRates(): Result<List<ExchangeRate>> {
+    override suspend fun getCurrentExchangeRates(): Result<Map<String, ExchangeRateItem>> {
         return runCatching {
             // 토큰 확인 (디버깅용)
             val token = userDataManager.getAccessToken()
@@ -58,65 +58,9 @@ class ExchangeRepositoryImpl @Inject constructor(
             if (response.isSuccessful) {
                 val data = response.body() ?: emptyMap()
                 Log.d("ExchangeRepo", "받은 데이터 크기: ${data.size}")
-
-                val currentTime = System.currentTimeMillis()
-
-                val exchangeRates = data.map { (currencyCode, rateItem) ->
-                    val currentRate = rateItem.originalRate
-                    val previousRate = lastRates[currencyCode]
-
-                    // 5분 이상 지난 경우에만 등락 계산
-                    val shouldCalculateChange = currentTime - lastUpdateTime > 5 * 60 * 1000
-
-                    mapToExchangeRate(
-                        currencyCode = currencyCode,
-                        item = rateItem,
-                        previousRate = if (shouldCalculateChange) previousRate else null
-                    )
-                }
-
-                // 현재 환율을 이전 환율로 저장
-                lastRates = data.mapValues { it.value.originalRate }
-                lastUpdateTime = currentTime
-
-                Log.d("ExchangeRepo", "환율 데이터 처리 완료: ${exchangeRates.size}개")
-                exchangeRates
+                data // Map<String, ExchangeRateItem> 직접 반환
             } else {
                 throw Exception("환율 정보를 가져오는데 실패했습니다: ${response.code()}")
-            }
-        }
-    }
-
-    override suspend fun getExchangeRateHistory(
-        currency: String,
-        unit: String?
-    ): Result<ExchangeHistory> {
-        return runCatching {
-            var response = exchangeService.getExchangeRateHistory(unit, currency)
-
-            // 401 에러 시 토큰 재발급 시도
-            if (response.code() == 401) {
-                Log.w("ExchangeRepo", "History API 401 에러 - 토큰 재발급 시도")
-                val refreshResult = refreshTokenAndRetry()
-                if (refreshResult.isSuccess) {
-                    response = exchangeService.getExchangeRateHistory(unit, currency)
-                } else {
-                    throw Exception("인증이 만료되었습니다. 다시 로그인해주세요.")
-                }
-            }
-
-            if (response.isSuccessful) {
-                val data = response.body() ?: throw Exception("환율 기록 데이터가 없습니다")
-                ExchangeHistory(
-                    currencyCode = currency,
-                    buyRate = data.buyRate,
-                    sellRate = data.sellRate,
-                    originalRate = data.originalRate,
-                    period = data.period,
-                    chartData = emptyList()
-                )
-            } else {
-                throw Exception("환율 기록을 가져오는데 실패했습니다: ${response.code()}")
             }
         }
     }
@@ -221,6 +165,87 @@ class ExchangeRepositoryImpl @Inject constructor(
             "SGD" -> "🇸🇬"
             "KRW" -> "🇰🇷"
             else -> "🏳️"
+        }
+    }
+    override suspend fun createExchangeReservation(
+        boxId: Long,
+        fromCurrency: String,
+        toCurrency: String,
+        amount: Long,
+        targetRate: Double,
+        expiresAt: String
+    ): Result<Unit> {
+        return runCatching {
+            // amount 검증
+            if (amount < 100L) {
+                throw IllegalArgumentException("거래 금액은 최소 100 이상이어야 합니다.")
+            }
+
+            val request = CreateReservationRequestDto(
+                boxId = boxId,
+                fromCurrency = fromCurrency,
+                toCurrency = toCurrency,
+                amount = amount,
+                targetRate = targetRate,
+                expiresAt = expiresAt
+            )
+
+            var response = exchangeService.createExchangeReservation(request)
+
+            if (response.code() == 401) {
+                val refreshResult = refreshTokenAndRetry()
+                if (refreshResult.isSuccess) {
+                    response = exchangeService.createExchangeReservation(request)
+                } else {
+                    throw Exception("인증이 만료되었습니다. 다시 로그인해주세요.")
+                }
+            }
+
+            if (response.isSuccessful) {
+                response.body() ?: throw Exception("예약 생성 응답이 없습니다")
+            } else {
+                throw Exception("예약 생성에 실패했습니다: ${response.code()}")
+            }
+        }
+    }
+
+    override suspend fun getExchangeReservations(boxId: Long): Result<List<ExchangeReservationResponseDto>> {
+        return runCatching {
+            var response = exchangeService.getExchangeReservations(boxId)
+
+            if (response.code() == 401) {
+                val refreshResult = refreshTokenAndRetry()
+                if (refreshResult.isSuccess) {
+                    response = exchangeService.getExchangeReservations(boxId)
+                } else {
+                    throw Exception("인증이 만료되었습니다. 다시 로그인해주세요.")
+                }
+            }
+
+            if (response.isSuccessful) {
+                response.body() ?: emptyList()
+            } else {
+                throw Exception("예약 목록을 가져오는데 실패했습니다: ${response.code()}")
+            }
+        }
+    }
+
+    override suspend fun cancelExchangeReservation(reservationId: String): Result<Unit> {
+        return runCatching {
+            var response = exchangeService.cancelExchangeReservation(reservationId)
+
+            if (response.code() == 401) {
+                val refreshResult = refreshTokenAndRetry()
+                if (refreshResult.isSuccess) {
+                    response = exchangeService.cancelExchangeReservation(reservationId)
+                } else {
+                    throw Exception("인증이 만료되었습니다. 다시 로그인해주세요.")
+                }
+            }
+
+            if (!response.isSuccessful) {
+                throw Exception("예약 취소에 실패했습니다: ${response.code()}")
+            }
         }
     }
 }

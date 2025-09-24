@@ -118,6 +118,14 @@ sealed class AppScreen(
     object ExchangeKeypadCharge : AppScreen(route = "exchange_keypad/charge", title = "충전하기", icon= null, iconResId = null)
     object ExchangeKeypadRefund : AppScreen(route = "exchange_keypad/refund", title = "돌려받기", icon= null, iconResId = null)
 
+    object ExchangeHistory: AppScreen(
+        route = "exchange_history/{currencyCode}/{currencyName}/{mode}",
+        title = "환율 히스토리"
+    ) {
+        fun createRoute(currencyCode: String, currencyName: String, mode: String): String {
+            return "exchange_history/$currencyCode/$currencyName/$mode"
+        }
+    }
 
     // QR 스크린 관련
     object QR: AppScreen(route = "qr", title = "QR", iconResId = R.drawable.outline_qr_code_24)
