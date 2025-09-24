@@ -16,11 +16,13 @@ public interface ExchangeVolumeRepository extends JpaRepository<ExchangeVolume, 
                ev.amount AS amount
         FROM exchange_volume ev
         WHERE ev.currency_code = :currencyCode
+          and ev.unit = :unit
           AND ev.type = :type
         ORDER BY ev.recorded_at asc
 """, nativeQuery = true)
     List<ExchangeVolumeProjection> getVolumes(
             @Param("currencyCode") String currencyCode,
+            @Param("unit") String unit,
             @Param("type") String type
     );
 }

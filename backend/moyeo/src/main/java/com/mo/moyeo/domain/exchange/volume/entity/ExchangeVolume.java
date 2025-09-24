@@ -34,13 +34,21 @@ public class ExchangeVolume {
     @Column(name = "amount")
     private BigDecimal amount;
 
+    @Column(name="unit")
+    @Enumerated(EnumType.STRING)
+    private Unit unit;
+
     @Column(name="type")
     @Enumerated(EnumType.STRING)
     private Type type;
 
-    public enum Type{
+    public enum Unit{
         m,
         h,
         d;
+    }
+    public enum Type{
+        sell,
+        buy;
     }
 }

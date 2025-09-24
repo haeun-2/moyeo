@@ -15,9 +15,16 @@ import java.util.List;
 public class ExchangeVolumeService {
     private final ExchangeVolumeRepository exchangeRepository;
 
-    public List<ExchangeVolumeDto> getVolumeStatistics(CurrencyType currencyType, ExchangeVolume.Type unit) {
-        if (unit == null) unit = ExchangeVolume.Type.m;
-        return exchangeRepository.getVolumes(currencyType.name(), unit.name())
+    public List<ExchangeVolumeDto> getBuyVolumeStatistics(CurrencyType currencyType, ExchangeVolume.Unit unit) {
+        if (unit == null) unit = ExchangeVolume.Unit.m;
+        return exchangeRepository.getVolumes(currencyType.name(), unit.name(), ExchangeVolume.Type.sell.name())
+                .stream().map(ev->new ExchangeVolumeDto(ev.getRecordedAt(), ev.getAmount()))
+                .toList();
+    }
+
+    public List<ExchangeVolumeDto> getSellVolumeStatistics(CurrencyType currencyType, ExchangeVolume.Unit unit) {
+        if (unit == null) unit = ExchangeVolume.Unit.m;
+        return exchangeRepository.getVolumes(currencyType.name(), unit.name(), ExchangeVolume.Type.buy.name())
                 .stream().map(ev->new ExchangeVolumeDto(ev.getRecordedAt(), ev.getAmount()))
                 .toList();
     }
