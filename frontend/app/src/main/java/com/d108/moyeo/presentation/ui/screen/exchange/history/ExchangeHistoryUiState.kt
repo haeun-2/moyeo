@@ -1,0 +1,13 @@
+package com.d108.moyeo.presentation.ui.screen.exchange.history
+
+import com.d108.moyeo.domain.model.exchange.history.ExchangeRateHistory
+import com.d108.moyeo.domain.model.exchange.history.ExchangeVolumeHistory
+
+data class ExchangeHistoryUiState(
+    val isLoading: Boolean = true,
+    val currencyCode: String = "",
+    val currencyName: String = "",
+    val exchangeRateHistoryData: List<ExchangeRateHistory> = emptyList(),
+    val exchangeVolumeHistoryData: List<ExchangeVolumeHistory> = emptyList(),
+    val errorMessage: String? = null
+)

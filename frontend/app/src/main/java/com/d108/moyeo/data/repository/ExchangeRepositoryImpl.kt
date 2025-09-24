@@ -4,12 +4,9 @@ import android.util.Log
 import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.data.remote.api.ExchangeService
 import com.d108.moyeo.data.remote.api.AuthService
-import com.d108.moyeo.data.remote.dto.exchange.CreateReservationRequestDto
-import com.d108.moyeo.data.remote.dto.exchange.ExchangeHistoryResponse
 import com.d108.moyeo.data.remote.dto.exchange.ExchangeRateItem
+import com.d108.moyeo.data.remote.dto.exchange.CreateReservationRequestDto
 import com.d108.moyeo.data.remote.dto.exchange.ExchangeReservationResponseDto
-import com.d108.moyeo.data.remote.dto.exchange.UpdateReservationStatusRequestDto
-import com.d108.moyeo.domain.model.exchange.ExchangeHistory
 import com.d108.moyeo.domain.model.exchange.ExchangeRate
 import com.d108.moyeo.domain.repository.ExchangeRepository
 import javax.inject.Inject
@@ -34,8 +31,10 @@ class ExchangeRepositoryImpl @Inject constructor(
 
     override suspend fun getCurrentExchangeRates(): Result<Map<String, ExchangeRateItem>> {
         return runCatching {
+            // 토큰 확인 (디버깅용)
             val token = userDataManager.getAccessToken()
             Log.d("ExchangeRepo", "저장된 토큰: ${token}")
+            Log.d("ExchangeRepo", "토큰 길이: ${token?.length}")
             Log.d("ExchangeRepo", "API 호출 시작")
 
             var response = exchangeService.getCurrentExchangeRates()
@@ -62,32 +61,6 @@ class ExchangeRepositoryImpl @Inject constructor(
                 data // Map<String, ExchangeRateItem> 직접 반환
             } else {
                 throw Exception("환율 정보를 가져오는데 실패했습니다: ${response.code()}")
-            }
-        }
-    }
-
-    override suspend fun getExchangeRateHistory(
-        currency: String,
-        unit: String?
-    ): Result<ExchangeHistoryResponse> {
-        return runCatching {
-            var response = exchangeService.getExchangeRateHistory(unit, currency)
-
-            // 401 에러 시 토큰 재발급 시도
-            if (response.code() == 401) {
-                Log.w("ExchangeRepo", "History API 401 에러 - 토큰 재발급 시도")
-                val refreshResult = refreshTokenAndRetry()
-                if (refreshResult.isSuccess) {
-                    response = exchangeService.getExchangeRateHistory(unit, currency)
-                } else {
-                    throw Exception("인증이 만료되었습니다. 다시 로그인해주세요.")
-                }
-            }
-
-            if (response.isSuccessful) {
-                response.body() ?: throw Exception("환율 기록 데이터가 없습니다")
-            } else {
-                throw Exception("환율 기록을 가져오는데 실패했습니다: ${response.code()}")
             }
         }
     }
