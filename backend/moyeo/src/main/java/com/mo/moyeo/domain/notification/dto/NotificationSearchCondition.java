@@ -25,6 +25,6 @@ public class NotificationSearchCondition {
     private Sort.Direction direction;
 
     public Pageable toPageable() {
-        return PageRequest.of(page, size, Sort.by(direction, "receivedAt"));
+        return PageRequest.of(page, size, Sort.by(direction, "receivedAt").and(Sort.by(direction, "id")));
     }
 }

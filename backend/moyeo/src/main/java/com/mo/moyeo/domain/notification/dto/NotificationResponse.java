@@ -15,6 +15,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class NotificationResponse {
 
+    private Long notificationId;
     private Long transactionId;
     private String title;
     private String body;
@@ -23,6 +24,7 @@ public class NotificationResponse {
 
     public static NotificationResponse from(Notification notification) {
         return NotificationResponse.builder()
+                .notificationId(notification.getId())
                 .transactionId(notification.getTransactionId())
                 .title(notification.getTitle())
                 .body(notification.getBody())
