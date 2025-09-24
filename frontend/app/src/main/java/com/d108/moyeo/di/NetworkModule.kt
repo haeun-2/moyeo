@@ -2,6 +2,7 @@ package com.d108.moyeo.di
 
 import android.content.Context
 import com.d108.moyeo.data.local.UserDataManager
+import com.d108.moyeo.data.remote.api.AccountService
 import com.d108.moyeo.data.remote.api.AuthService
 import com.d108.moyeo.data.remote.api.BankService
 import com.d108.moyeo.data.remote.api.BankingService
@@ -153,4 +154,13 @@ object NetworkModule {  // 여러 부품을 조립해서 새로운 것을 '만�
     fun provideNotificationService(retrofit: Retrofit): NotificationService {
         return retrofit.create(NotificationService::class.java)
     }
+
+
+    /*
+    * 더보기 페이지 관련
+    */
+    @Provides
+    @Singleton
+    fun provideAccountService(retrofit: Retrofit): AccountService =
+        retrofit.create(AccountService::class.java)
 }

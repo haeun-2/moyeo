@@ -1,5 +1,6 @@
 package com.d108.moyeo.di
 
+import com.d108.moyeo.data.repository.AccountRepositoryImpl
 import com.d108.moyeo.data.repository.AuthRepositoryImpl
 import com.d108.moyeo.data.repository.BankRepositoryImpl
 import com.d108.moyeo.data.repository.BoxHistoryRepositoryImpl
@@ -14,6 +15,7 @@ import com.d108.moyeo.data.repository.NotificationRepositoryImpl
 import com.d108.moyeo.data.repository.PaymentRepositoryImpl
 import com.d108.moyeo.data.repository.SignUpRepositoryImpl
 import com.d108.moyeo.data.repository.TransferRepositoryImpl
+import com.d108.moyeo.domain.repository.AccountRepository
 import com.d108.moyeo.domain.repository.AuthRepository
 import com.d108.moyeo.domain.repository.BankRepository
 import com.d108.moyeo.domain.repository.BoxHistoryRepository
@@ -136,4 +138,9 @@ abstract class RepositoryModule {  // @Binds 함수는 함수 본문이 없어�
         notificationRepositoryImpl: NotificationRepositoryImpl
     ): NotificationRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindAccountRepository(
+        accountRepositoryImpl: AccountRepositoryImpl
+    ): AccountRepository
 }
