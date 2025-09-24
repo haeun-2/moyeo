@@ -19,14 +19,21 @@ class NotificationViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(NotificationUiState())
     val uiState = _uiState.asStateFlow()
 
-    init { loadNotifications() }
+    private var currentPage = 0
+    private var pageSize = 10
+    private var loading = false
 
-    private fun loadNotifications() {
+    init { loadInitial() }
+
+    private fun loadInitial() {
+        if (loading) return
+        loading = true
+        currentPage = 0
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            getNotifications()
-                .onSuccess { list ->
-                    val items = list.map { noti ->
+            _uiState.update { it.copy(isLoadingInitial = true, isLoadingMore = false) }
+            getNotifications(currentPage, pageSize)
+                .onSuccess { page ->
+                    val items = page.notifications.map { noti ->
                         NotificationItemUi(
                             id = noti.transactionId,
                             title = noti.title,
@@ -38,13 +45,59 @@ class NotificationViewModel @Inject constructor(
                             boxId = noti.boxId
                         )
                     }
-                    _uiState.update { it.copy(notifications = items, isLoading = false) }
+                    _uiState.update {
+                        it.copy(
+                            notifications = items,
+                            isLoadingInitial = false,
+                            hasNext = page.hasNext
+                        )
+                    }
+                    if (page.hasNext) currentPage = page.page + 1
                 }
                 .onFailure {
-                    _uiState.update { it.copy(notifications = emptyList(), isLoading = false) }
+                    _uiState.update { it.copy(notifications = emptyList(), isLoadingInitial = false, hasNext = false) }
                 }
+            loading = false
         }
     }
 
+    fun loadMore() {
+        if (loading) return
+        val state = _uiState.value
+        if (!state.hasNext) return
 
+        loading = true
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingMore = true) }
+            getNotifications(currentPage, pageSize)
+                .onSuccess { page ->
+                    val more = page.notifications.map { noti ->
+                        NotificationItemUi(
+                            id = noti.transactionId,
+                            title = noti.title,
+                            time = noti.time,
+                            sender = noti.sender,
+                            amount = noti.amount,
+                            balance = noti.balance,
+                            timestamp = noti.receivedAt,
+                            boxId = noti.boxId
+                        )
+                    }
+                    _uiState.update {
+                        it.copy(
+                            notifications = it.notifications + more,
+                            isLoadingMore = false,
+                            hasNext = page.hasNext
+                        )
+                    }
+                    if (page.hasNext) currentPage = page.page + 1
+                }
+                .onFailure {
+                    _uiState.update { it.copy(isLoadingMore = false) }
+                }
+            loading = false
+        }
+    }
+
+    fun refresh() = loadInitial()
 }
