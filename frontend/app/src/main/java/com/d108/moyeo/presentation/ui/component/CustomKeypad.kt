@@ -1,4 +1,3 @@
-// CustomKeypad.kt
 package com.d108.moyeo.presentation.ui.component
 
 import android.content.res.Configuration
@@ -26,7 +25,7 @@ import com.d108.moyeo.presentation.theme.onSurfaceLight
 import com.d108.moyeo.presentation.theme.primaryLight
 
 
-enum class KeyMode { Reset, Zeros }
+enum class KeyMode { Reset, Zeros, Dot }
 
 /**
  * 키패드에서 발생하는 키 타입
@@ -115,17 +114,22 @@ fun CustomKeypad(
     ) {
         items(layout.keys, key = { it.toString() }) { key ->
             val isDigit = key is KeypadKey.Digit
+
             val label = when (key) {
                 is KeypadKey.Digit -> key.value.toString()
-                KeypadKey.Clear -> if (keyMode == KeyMode.Zeros) "00" else "초기화"
+                KeypadKey.Clear -> when (keyMode) {
+                    KeyMode.Zeros -> "00"
+                    KeyMode.Dot   -> "."
+                    else          -> "초기화"
+                }
                 KeypadKey.Backspace -> "←"
                 is KeypadKey.Custom -> key.label
             }
+
             val style = when (key) {
-                KeypadKey.Clear -> if (keyMode == KeyMode.Zeros) {
-                    digitStyle
-                } else {
-                    otherStyle
+                KeypadKey.Clear -> when (keyMode) {
+                    KeyMode.Zeros, KeyMode.Dot -> digitStyle
+                    else -> otherStyle
                 }
                 KeypadKey.Backspace -> otherStyle
                 else -> digitStyle
@@ -133,7 +137,12 @@ fun CustomKeypad(
 
             TextButton(
                 onClick = {
-                    onKeyPress(key)
+                    val emitted = if (key == KeypadKey.Clear && keyMode == KeyMode.Dot) {
+                        KeypadKey.Custom(label = ".", tag = "dot")
+                    } else {
+                        key
+                    }
+                    onKeyPress(emitted)
                 },
                 shape = buttonShape,
                 colors = if (keypadColortype == "normal") {
@@ -153,7 +162,11 @@ fun CustomKeypad(
                     .semantics(mergeDescendants = true) {
                         contentDescription = when (key) {
                             is KeypadKey.Digit -> "숫자 ${key.value}"
-                            KeypadKey.Clear -> if (keyMode == KeyMode.Zeros) "00" else "초기화"
+                            KeypadKey.Clear -> when (keyMode) {
+                                KeyMode.Zeros -> "00"
+                                KeyMode.Dot   -> "소수점"
+                                else          -> "초기화"
+                            }
                             KeypadKey.Backspace -> "삭제"
                             is KeypadKey.Custom -> key.label
                         }
@@ -172,43 +185,38 @@ fun CustomKeypad(
  * Preview
  */
 
+@Preview(showBackground = true, name = "Keypad – Reset")
 @Composable
-fun PinKeypadExample(
-    modifier: Modifier = Modifier,
-    onDigitClick: (String) -> Unit = {},
-    onClearClick: () -> Unit = {},
-    onBackspaceClick: () -> Unit = {}
-) {
-    CustomKeypad(
-        modifier = modifier,
-        onKeyPress = { key ->
-            when (key) {
-                is KeypadKey.Digit -> onDigitClick(key.value.toString())
-                KeypadKey.Clear -> onClearClick()
-                KeypadKey.Backspace -> onBackspaceClick()
-                is KeypadKey.Custom -> { /* 필요 시 처리 */ }
-            }
-        },
-        keypadColortype = "normal"
-    )
-}
-
-@Composable
-@Preview(showBackground = true, name = "Light")
-private fun Preview_Keypad_Light() {
+private fun Preview_Keypad_Reset() {
     MaterialTheme {
-        PinKeypadExample()
+        CustomKeypad(
+            onKeyPress = { /* no-op */ },
+            keypadColortype = "normal",
+            keyMode = KeyMode.Reset
+        )
     }
 }
 
+@Preview(showBackground = true, name = "Keypad – Zeros (00)")
 @Composable
-@Preview(
-    showBackground = true,
-    name = "Dark",
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-private fun Preview_Keypad_Dark() {
+private fun Preview_Keypad_Zeros() {
     MaterialTheme {
-        PinKeypadExample()
+        CustomKeypad(
+            onKeyPress = { /* no-op */ },
+            keypadColortype = "normal",
+            keyMode = KeyMode.Zeros
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Keypad – Dot (.)")
+@Composable
+private fun Preview_Keypad_Dot() {
+    MaterialTheme {
+        CustomKeypad(
+            onKeyPress = { /* no-op */ },
+            keypadColortype = "normal",
+            keyMode = KeyMode.Dot
+        )
     }
 }
