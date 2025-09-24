@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.navigation
 
+import ExchangeHistoryScreen
 import MyConsultationDetail
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,7 +15,6 @@ import com.d108.moyeo.presentation.ui.screen.more.account.change.AccountChangeSc
 import com.d108.moyeo.presentation.ui.screen.exchange.CurrencySelectionScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeAddScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeCompleteScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeHistoryScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeKeypadScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeReservationHomeScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ReservationCompleteScreen
