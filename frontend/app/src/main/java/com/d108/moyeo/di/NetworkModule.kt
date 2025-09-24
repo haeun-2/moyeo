@@ -6,7 +6,9 @@ import com.d108.moyeo.data.remote.api.AuthService
 import com.d108.moyeo.data.remote.api.BankService
 import com.d108.moyeo.data.remote.api.BankingService
 import com.d108.moyeo.data.remote.api.BoxHistoryService
+import com.d108.moyeo.data.remote.api.BoxMemberService
 import com.d108.moyeo.data.remote.api.BoxService
+import com.d108.moyeo.data.remote.api.BoxSettlementService
 import com.d108.moyeo.data.remote.api.BoxStatisticsService
 import com.d108.moyeo.data.remote.api.ExchangeService // 새 import 추가
 import com.d108.moyeo.data.remote.api.NotificationService
@@ -92,6 +94,16 @@ object NetworkModule {  // 여러 부품을 조립해서 새로운 것을 '만�
     @Singleton
     fun provideBoxService(retrofit: Retrofit): BoxService =
         retrofit.create(BoxService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideBoxMemberService(retrofit: Retrofit): BoxMemberService =
+        retrofit.create(BoxMemberService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideBoxSettlementService(retrofit: Retrofit): BoxSettlementService =
+        retrofit.create(BoxSettlementService::class.java)
 
 
     /*

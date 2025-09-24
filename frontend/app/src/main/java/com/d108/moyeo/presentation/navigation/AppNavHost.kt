@@ -26,7 +26,8 @@ import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletDetailScreen
 import com.d108.moyeo.presentation.ui.screen.home.wallet.MyWalletScreen
 import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxDetailScreen
-import com.d108.moyeo.presentation.ui.screen.home.box.calculating.CalculatingScreen
+import com.d108.moyeo.presentation.ui.screen.home.box.calculate.CalculateScreen
+import com.d108.moyeo.presentation.ui.screen.home.box.member.MemberScreen
 //import com.d108.moyeo.presentation.ui.screen.home.box.collect.CollectScreen
 import com.d108.moyeo.presentation.ui.screen.home.charge.ChargeScreen
 import com.d108.moyeo.presentation.ui.screen.home.create.CreateBoxScreen
@@ -122,6 +123,17 @@ fun AppNavHost(
         }
 
         composable(
+            route = AppScreen.Member.route,
+            arguments = listOf(
+                navArgument("boxId") { type = NavType.LongType }
+            )
+        ) {
+            MemberScreen(
+                navController = navController
+            )
+        }
+
+        composable(
             route = AppScreen.MyBoxDetail.route,
             arguments = listOf(
                 navArgument("boxId") { type = NavType.LongType },
@@ -155,20 +167,13 @@ fun AppNavHost(
 
         // 정산하기 화면
         composable(
-            route = AppScreen.Calculating.route,
+            route = AppScreen.Calculate.route,
             arguments = listOf(
-                navArgument("boxId") { type = NavType.StringType },
-                // currencyCode는 null일 수 있는 선택적 인자임을 정의
-                navArgument("currencyCode") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = "KRW"
-                }
+                navArgument("boxId") { type = NavType.LongType},
             )
         ) { backStackEntry ->
             // ViewModel에서 SavedStateHandle을 통해 boxId를 직접 받으므로,
-            //
-            CalculatingScreen(navController = navController)
+            CalculateScreen(navController = navController)
         }
 
         // 환율 화면

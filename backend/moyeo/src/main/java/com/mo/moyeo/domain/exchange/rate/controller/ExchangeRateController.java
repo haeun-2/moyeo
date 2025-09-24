@@ -33,7 +33,7 @@ public class ExchangeRateController {
     }
 
     @GetMapping("/history")
-    @Operation(summary = "환율 단일 조회", description = "하나의 통화에 대한 환율 기록 조회.")
+    @Operation(summary = "환율 단일 조회", description = "unit(1h,1d) 중 하나 입력하면 단위 바뀜 없으면 10분 기준임")
     public ResponseEntity<List<ExchangeRateHistoryDto>> getHistory(
             @RequestParam(required = false) String unit,
             @RequestParam CurrencyType currency) {

@@ -1,7 +1,5 @@
 package com.mo.moyeo.domain.notification.entity;
 
-import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
-import com.mo.moyeo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;

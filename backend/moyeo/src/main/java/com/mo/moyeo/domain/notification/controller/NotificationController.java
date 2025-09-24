@@ -1,18 +1,17 @@
 package com.mo.moyeo.domain.notification.controller;
 
+import com.mo.moyeo.common.paging.PageResponse;
 import com.mo.moyeo.domain.auth.security.dto.CustomUserDetails;
 import com.mo.moyeo.domain.notification.dto.NotificationResponse;
+import com.mo.moyeo.domain.notification.dto.NotificationSearchCondition;
 import com.mo.moyeo.domain.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,9 +23,9 @@ public class NotificationController {
 
     @GetMapping
     @Operation(summary = "유저 알림 목록 조회", description = "유저가 받은 알림을 전체 조회합니다.")
-    public ResponseEntity<List<NotificationResponse>> getAllNotifications(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<PageResponse<NotificationResponse>> getAllNotifications(@AuthenticationPrincipal CustomUserDetails userDetails, @ModelAttribute @Valid NotificationSearchCondition condition) {
 
-        List<NotificationResponse> responses = notificationService.findAllByUserId(userDetails.getUser().getId());
+        PageResponse<NotificationResponse> responses = notificationService.findAllByUserId(userDetails.getUser().getId(), condition.toPageable());
         return ResponseEntity.ok(responses);
     }
 }
