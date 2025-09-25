@@ -60,6 +60,8 @@ public class LockManager {
             // 4. 로직 실행
             try {
                 return transactionExecutor.execute(callback);
+            } catch(CustomException e) {
+                throw e;
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
