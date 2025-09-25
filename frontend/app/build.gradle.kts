@@ -88,4 +88,6 @@ dependencies {
     implementation(libs.zxing.core)
 
     implementation(libs.vico.compose.m3)
+
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

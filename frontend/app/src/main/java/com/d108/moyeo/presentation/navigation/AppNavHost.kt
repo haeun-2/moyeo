@@ -402,22 +402,22 @@ fun AppNavHost(
 
         // 환율 히스토리
         composable(
-            route = "exchange_history/{currencyCode}/{currencyName}/{mode}",
+            route = "exchange_history/{currencyCode}/{currencyName}/{tradeMode}",
             arguments = listOf(
                 navArgument("currencyCode") { type = NavType.StringType },
                 navArgument("currencyName") { type = NavType.StringType },
-                navArgument("mode") { type = NavType.StringType }
+                navArgument("tradeMode") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
             val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
-            val mode = backStackEntry.arguments?.getString("mode") ?: "charge"
+            val tradeMode = backStackEntry.arguments?.getString("tradeMode") ?: "buy"
 
             ExchangeHistoryScreen(
                 navController = navController,
                 currencyCode = currencyCode,
                 currencyName = currencyName,
-                mode = mode
+                tradeMode = tradeMode,
             )
         }
 

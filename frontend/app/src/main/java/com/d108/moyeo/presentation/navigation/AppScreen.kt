@@ -119,11 +119,11 @@ sealed class AppScreen(
     object ExchangeKeypadRefund : AppScreen(route = "exchange_keypad/refund", title = "돌려받기", icon= null, iconResId = null)
 
     object ExchangeHistory: AppScreen(
-        route = "exchange_history/{currencyCode}/{currencyName}/{mode}",
+        route = "exchange_history/{currencyCode}/{currencyName}/{tradeMode}",
         title = "환율 히스토리"
     ) {
-        fun createRoute(currencyCode: String, currencyName: String, mode: String): String {
-            return "exchange_history/$currencyCode/$currencyName/$mode"
+        fun createRoute(currencyCode: String, currencyName: String, tradeMode: String): String {
+            return "exchange_history/$currencyCode/$currencyName/$tradeMode"
         }
     }
 
