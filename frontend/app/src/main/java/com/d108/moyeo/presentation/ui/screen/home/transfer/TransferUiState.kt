@@ -1,5 +1,7 @@
 package com.d108.moyeo.presentation.ui.screen.home.transfer
 
+import com.d108.moyeo.domain.model.box.Balance
+
 /**
  * 이체 화면의 상태(State)를 정의합니다.
  *
@@ -16,6 +18,8 @@ data class TransferUiState(
     val targetBox: Long = -1,
     val howMuch: String = "",
     val pin: String = "",
+    val myBalance: String = "",  // 내 보유 화폐 표시
+
 
     // PIN 검증을 위한 상태
     val pinFailureCount: Int = 0,

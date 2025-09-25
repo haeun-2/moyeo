@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
@@ -59,10 +60,22 @@ fun HowMuchContent(viewModel: TransferViewModel) {
                 .weight(1f),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "$formattedAmount ${uiState.currency}",
-                style = Typography.displayLarge
-            )
+            Column(horizontalAlignment = Alignment.Start) {
+                // 기존 금액 표시
+                Text(
+                    text = "$formattedAmount ${uiState.currency}",
+                    style = Typography.displayLarge
+                )
+
+                Spacer(Modifier.height(8.dp)) // 금액과 잔액 사이 간격
+
+                // 잔액을 표시하는 Text 추가
+                Text(
+                    text = uiState.myBalance,
+                    style = Typography.bodyMedium,
+                    color = Color.Gray // 눈에 덜 띄도록 회색으로 설정
+                )
+            }
         }
 
         Spacer(Modifier.height(Spacing.Large))

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.core.BoxStoreUiState
 import com.d108.moyeo.data.local.UserDataManager
+import com.d108.moyeo.domain.model.box.Balance
 import com.d108.moyeo.domain.usecase.banking.TransferUseCase
 import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.DecimalFormat
 import javax.inject.Inject
 
 sealed class TransferNavEvent {
@@ -63,6 +65,8 @@ class TransferViewModel @Inject constructor(
 
     // 내 통장 ID
     private var myPersonalBoxId: Long? = null
+    private var myPersonalBalances: List<Balance> = emptyList() // 내 개인 박스의 모든 통화 잔액을 저장할 변수
+
     private var isSubmitting: Boolean = false
 
 
@@ -94,7 +98,13 @@ class TransferViewModel @Inject constructor(
 
         viewModelScope.launch {
             getPersonalBox()
-                .onSuccess { box -> myPersonalBoxId = box.id }
+                .onSuccess {
+                    box ->
+                        myPersonalBoxId = box.id
+                        myPersonalBalances = box.balances
+                        onCurrencySelected(initialCurrency)
+
+                    }
                 .onFailure { /* TODO: 에러 처리 */}
 
             // 내 박스가 아닌 박스로만 이체할 수 있도록 필터링
@@ -114,8 +124,18 @@ class TransferViewModel @Inject constructor(
      * 사용자가 보낼 화폐를 선택했을 때 호출됩니다.
      */
     fun onCurrencySelected(currency: String) {
+        // 내 잔액 목록에서 선택된 통화의 잔액을 찾음
+        val balanceAmount = myPersonalBalances.find { it.currency == currency }?.balance ?: 0.0
+
+        // 금액을 천 단위로 포맷팅합니다. (소수점 포함)
+        val decimalFormat = DecimalFormat("#,##0.####")
+        val formattedBalance = decimalFormat.format(balanceAmount)
+        val balanceText = "잔액: $formattedBalance $currency"
         _uiState.update { currentState ->
-            currentState.copy(currency = currency)
+            currentState.copy(
+                currency = currency,
+                myBalance = balanceText
+            )
         }
     }
 
@@ -133,14 +153,33 @@ class TransferViewModel @Inject constructor(
      */
     fun onMoneyDigitInput(digit: String) {
         val currentAmount = _uiState.value.howMuch
-        if (currentAmount == "0" && digit != "00") {
-            _uiState.update { it.copy(howMuch = digit) }
+
+        // 1. 새로 입력될 전체 금액 문자열
+        val newAmountStr = if (currentAmount == "0" && digit != "00") {
+            digit
+        } else {
+            currentAmount + digit
+        }
+
+        // 2. 초기 입력 값 및 길이 제한 등 유효성 검사
+        if (currentAmount.isEmpty() && digit == "00") return
+        if (newAmountStr.length > 10) return // 최대 10자리 제한 << 10억
+
+        // 3. 잔액 정보 로드
+        val balance = myPersonalBalances.find { it.currency == uiState.value.currency }?.balance ?: 0.0
+        val maxAmount = balance.toLong() // 정수 부분만 비교
+
+        // 4. 새로 만들어진 금액(newAmountStr)이 잔액보다 큰지 확인
+        val newAmountLong = newAmountStr.toLongOrNull() ?: 0L
+        if (newAmountLong > maxAmount) {
+
+            // 초과하면 통장 최대금액으로 업데이트
+            _uiState.update { it.copy(howMuch = maxAmount.toString()) }
             return
         }
-        if (currentAmount.isEmpty() && digit == "00") return
-//        if ((currentAmount + digit).length > 10) return // 최대 10자리 제한
 
-        _uiState.update { it.copy(howMuch = currentAmount + digit) }
+        // 모든 검사를 통과한 경우에만 상태를 업데이트합니다.
+        _uiState.update { it.copy(howMuch = newAmountStr) }
     }
 
     fun onMoneyBackspace() {
