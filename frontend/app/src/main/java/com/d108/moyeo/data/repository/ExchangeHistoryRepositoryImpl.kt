@@ -30,12 +30,27 @@ class ExchangeHistoryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getExchangeVolumeHistory(
+    override suspend fun getSellExchangeVolumeHistory(
         unit: String?,
         currencyType: String
     ): Result<List<ExchangeVolumeHistory>> {
         return runCatching {
-            val response = exchangeHistoryService.getExchangeVolumeHistory(unit, currencyType)
+            val response = exchangeHistoryService.getSellExchangeVolumeHistory(unit, currencyType)
+            if (response.isSuccessful) {
+                val dtoList = response.body() ?: emptyList()
+                dtoList.map { it.toDomain() }
+            } else {
+                throw Exception("Failed to fetch exchange volume history. Code: ${response.code()}")
+            }
+        }
+    }
+
+    override suspend fun getBuyExchangeVolumeHistory(
+        unit: String?,
+        currencyType: String
+    ): Result<List<ExchangeVolumeHistory>> {
+        return runCatching {
+            val response = exchangeHistoryService.getBuyExchangeVolumeHistory(unit, currencyType)
             if (response.isSuccessful) {
                 val dtoList = response.body() ?: emptyList()
                 dtoList.map { it.toDomain() }

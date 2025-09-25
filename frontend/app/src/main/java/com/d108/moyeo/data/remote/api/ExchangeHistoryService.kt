@@ -25,9 +25,17 @@ interface ExchangeHistoryService {
      * Available values : m, h, d
      * Available values : CAD, CHF, CNY, EUR, GBP, JPY, KRW, USD
      */
-    @GET("api/exchanges/volumes")
-    suspend fun getExchangeVolumeHistory(
+    @GET("api/exchanges/volumes/sells")
+    suspend fun getSellExchangeVolumeHistory(
         @Query("unit") unit: String? = null,
         @Query("currencyType") currencyType: String
     ): Response<List<ExchangeVolumeHistoryResponseDto>>
+
+    @GET("api/exchanges/volumes/buys")
+    suspend fun getBuyExchangeVolumeHistory(
+        @Query("unit") unit: String? = null,
+        @Query("currencyType") currencyType: String
+    ): Response<List<ExchangeVolumeHistoryResponseDto>>
+
+
 }

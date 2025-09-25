@@ -9,7 +9,12 @@ interface ExchangeHistoryRepository {
         currency: String  // KRW, ..
     ): Result<List<ExchangeRateHistory>>
 
-    suspend fun getExchangeVolumeHistory(
+    suspend fun getSellExchangeVolumeHistory(
+        unit: String?,
+        currencyType: String
+    ): Result<List<ExchangeVolumeHistory>>
+
+    suspend fun getBuyExchangeVolumeHistory(
         unit: String?,
         currencyType: String
     ): Result<List<ExchangeVolumeHistory>>

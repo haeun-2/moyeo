@@ -9,5 +9,9 @@ data class ExchangeHistoryUiState(
     val currencyName: String = "",
     val exchangeRateHistoryData: List<ExchangeRateHistory> = emptyList(),
     val exchangeVolumeHistoryData: List<ExchangeVolumeHistory> = emptyList(),
+
+    val tradeMode: String = "buy",
+    val selectedTimeUnit: String = "10m",
+
     val errorMessage: String? = null
 )

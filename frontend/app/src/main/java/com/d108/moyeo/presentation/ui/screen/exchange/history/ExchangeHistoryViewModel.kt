@@ -1,10 +1,12 @@
 package com.d108.moyeo.presentation.ui.screen.exchange.history
 
 import android.util.Log
+import androidx.compose.ui.util.trace
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.domain.usecase.exchange.history.GetBuyExchangeVolumeHistoryUseCase
 import com.d108.moyeo.domain.usecase.exchange.history.GetExchangeRateHistoryUseCase
-import com.d108.moyeo.domain.usecase.exchange.history.GetExchangeVolumeHistoryUseCase
+import com.d108.moyeo.domain.usecase.exchange.history.GetSellExchangeVolumeHistoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,20 +20,23 @@ private val TAG = "ExchangeHistoryViewModel"
 @HiltViewModel
 class ExchangeHistoryViewModel @Inject constructor(
     private val getExchangeRateHistoryUseCase: GetExchangeRateHistoryUseCase,
-    private val getExchangeVolumeHistoryUseCase: GetExchangeVolumeHistoryUseCase
+    private val getSellExchangeVolumeHistoryUseCase: GetSellExchangeVolumeHistoryUseCase,
+    private val getBuyExchangeVolumeHistoryUseCase: GetBuyExchangeVolumeHistoryUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExchangeHistoryUiState())
     val uiState = _uiState.asStateFlow()
 
-    fun fetchChartData(currencyCode: String, currencyName: String, unit: String?) {
+    fun fetchChartData(currencyCode: String, currencyName: String, tradeMode: String, unit: String?) {
         viewModelScope.launch {
             // API 호출 전에, 전달받은 정보로 UI 상태를 먼저 업데이트하고 로딩을 시작합니다.
             _uiState.update {
                 it.copy(
                     isLoading = true,
                     currencyCode = currencyCode,
-                    currencyName = currencyName
+                    currencyName = currencyName,
+                    tradeMode = tradeMode,
+                    selectedTimeUnit = unit ?: "10m"
                 )
             }
 
@@ -41,8 +46,13 @@ class ExchangeHistoryViewModel @Inject constructor(
                 "1d" -> "d"
                 "10m" -> "m"
                 else -> "m"}
-            val volumeResultDeferred = async { getExchangeVolumeHistoryUseCase(volumeUnit, currencyCode) }
-
+            val volumeResultDeferred = async {
+                if (tradeMode == "buy") {
+                    getBuyExchangeVolumeHistoryUseCase(volumeUnit, currencyCode)
+                } else {
+                    getSellExchangeVolumeHistoryUseCase(volumeUnit, currencyCode)
+                }
+            }
             val rateResult = rateResultDeferred.await()
             val volumeResult = volumeResultDeferred.await()
 
@@ -66,5 +76,26 @@ class ExchangeHistoryViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = false, errorMessage = exception.message) }
             }
         }
+    }
+
+    fun setTradeMode(mode: String) {
+        val currentState = _uiState.value
+        fetchChartData(
+            currencyCode = currentState.currencyCode,
+            currencyName = currentState.currencyName,
+            tradeMode = mode,
+            unit = currentState.selectedTimeUnit,
+
+        )
+    }
+
+    fun setSelectedTimeUnit(unit: String) {
+        val currentState = _uiState.value
+        fetchChartData(
+            currencyCode = currentState.currencyCode,
+            currencyName = currentState.currencyName,
+            tradeMode = currentState.tradeMode,
+            unit = unit
+        )
     }
 }
