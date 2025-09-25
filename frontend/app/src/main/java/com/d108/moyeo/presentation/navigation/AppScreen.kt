@@ -152,4 +152,20 @@ sealed class AppScreen(
 
     // 그룹 박스 추가 관련
     object CreateBox: AppScreen(route = "create_box", title = "그룹 박스 생성")
+
+    object ReservationFinalComplete : AppScreen(
+        route = "reservation_final_complete/{currencyCode}/{currencyName}/{targetRate}/{amount}/{startDate}/{endDate}",
+        title = "예약 완료"
+    ) {
+        fun createRoute(
+            currencyCode: String,
+            currencyName: String,
+            targetRate: String,
+            amount: String,
+            startDate: String,
+            endDate: String
+        ): String {
+            return "reservation_final_complete/$currencyCode/$currencyName/$targetRate/$amount/$startDate/$endDate"
+        }
+    }
 }

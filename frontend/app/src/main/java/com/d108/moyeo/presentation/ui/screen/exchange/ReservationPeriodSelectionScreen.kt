@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.screen.exchange
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Padding
@@ -41,6 +43,11 @@ fun ReservationPeriodSelectionScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    // 디버그 로그 추가
+    LaunchedEffect(Unit) {
+        Log.d("ReservationPeriod", "Screen initialized with params: currencyCode=$currencyCode, currencyName=$currencyName, targetRate=$targetRate, amount=$amount")
+    }
+
     // 에러 메시지 표시
     uiState.errorMessage?.let { message ->
         LaunchedEffect(message) {
@@ -48,13 +55,31 @@ fun ReservationPeriodSelectionScreen(
             viewModel.clearError()
         }
     }
-    // 예약 완료 시 홈으로 이동
+
+    // 예약 완료 시 다음 화면으로 이동 - 수정된 부분
     LaunchedEffect(uiState.isReservationComplete) {
         if (uiState.isReservationComplete) {
-            navController.navigate("reservation_final_complete") {
-                popUpTo("reservation_period_selection") {
-                    inclusive = true
+            Log.d("ReservationPeriod", "Reservation complete, navigating to final screen")
+
+            // 날짜 형식 확인 및 URL 인코딩
+            val startDate = uiState.startDate.ifEmpty { "2024-01-01" }
+            val endDate = uiState.endDate.ifEmpty { "2024-01-02" }
+
+            val route = "reservation_final_complete/$currencyCode/$currencyName/$targetRate/$amount/$startDate/$endDate"
+            Log.d("ReservationPeriod", "Navigation route: $route")
+
+            try {
+                navController.navigate(route) {
+                    // 현재 화면을 스택에서 제거
+                    popUpTo("reservation_period_selection/{currencyCode}/{currencyName}/{targetRate}/{amount}") {
+                        inclusive = true
+                    }
                 }
+                Log.d("ReservationPeriod", "Navigation successful")
+            } catch (e: Exception) {
+                Log.e("ReservationPeriod", "Navigation failed", e)
+                // 에러 발생 시 토스트 메시지 표시
+                Toast.makeText(context, "화면 이동 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
             }
         }
     }
