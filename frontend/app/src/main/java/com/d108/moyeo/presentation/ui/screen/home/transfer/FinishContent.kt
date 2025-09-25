@@ -23,7 +23,7 @@ import java.text.DecimalFormat
 @Composable
 fun FinishContent(viewModel: TransferViewModel) {
     val uiState by viewModel.uiState.collectAsState()
-    val groupBoxes = viewModel.groupBoxesUi.collectAsState(initial = emptyList()).value
+    val groupBoxes = viewModel.selectableBoxes.collectAsState(initial = emptyList()).value
 
     val isDeposit = uiState.mode == TransferMode.DEPOSIT
     val titleText = if (isDeposit) "입금 완료!" else "이체 완료!"

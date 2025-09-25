@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
+import com.d108.moyeo.core.BoxStoreUiState
 import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.domain.usecase.banking.TransferUseCase
 import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
@@ -33,9 +34,12 @@ class TransferViewModel @Inject constructor(
     private val userDataManager: UserDataManager
 ) : ViewModel() {
 
-    // BoxStore 에서 모임 박스 목록, 내 통화 목록을 불러옴
-    val groupBoxesUi = boxStore.boxUiStates
+    // BoxStore 에서 내 통화 목록을 불러옴
     val currencies = boxStore.personalCurrencies
+
+    // init 블록에서 초기화 -> 내 박스가 아닌 박스만 선택 가능하도록 수정
+    private val _selectableBoxes = MutableStateFlow<List<BoxStoreUiState>>(emptyList())
+    val selectableBoxes = _selectableBoxes.asStateFlow()
 
     // TODO: 임시 정답 핀을 찐핀으로 바꾸기
     // 임시 정답 PIN 추가
@@ -92,6 +96,12 @@ class TransferViewModel @Inject constructor(
             getPersonalBox()
                 .onSuccess { box -> myPersonalBoxId = box.id }
                 .onFailure { /* TODO: 에러 처리 */}
+
+            // 내 박스가 아닌 박스로만 이체할 수 있도록 필터링
+            boxStore.boxUiStates.collect { allBoxes ->
+                _selectableBoxes.value = allBoxes.filter { it.id != myPersonalBoxId }
+            }
+
             // 생체인증 여부 반영
             userDataManager.biometricsPreferenceFlow.collect { enabled ->
                 _uiState.update { it.copy(biometricsEnabled = enabled) }
