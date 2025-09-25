@@ -5,11 +5,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.domain.repository.BoxMemberRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+sealed class MemberNavEvent {
+    object NavigateBack : MemberNavEvent()
+}
 
 @HiltViewModel
 class MemberViewModel @Inject constructor(
@@ -19,6 +25,10 @@ class MemberViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(MemberUiState())
     val uiState: StateFlow<MemberUiState> = _uiState
+
+    private val _navigationEvent = MutableSharedFlow<MemberNavEvent>()
+    val navigationEvent: SharedFlow<MemberNavEvent> = _navigationEvent
+
     private val boxId: Long = savedStateHandle.get<Long>("boxId") ?: -1L
 
     init {
@@ -62,7 +72,9 @@ class MemberViewModel @Inject constructor(
         }
     }
 
-    fun onBack() {
-
+    fun onBackClick() {
+        viewModelScope.launch {
+            _navigationEvent.emit(MemberNavEvent.NavigateBack)
+        }
     }
 }

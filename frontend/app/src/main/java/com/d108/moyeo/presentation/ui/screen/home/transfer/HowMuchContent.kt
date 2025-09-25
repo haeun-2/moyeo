@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -11,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.ui.component.CustomKeypad
@@ -52,7 +54,9 @@ fun HowMuchContent(viewModel: TransferViewModel) {
         Spacer(Modifier.height(Spacing.Large))
 
         Box(  // 보낼 금액이 뜰 영역
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .padding(horizontal = 36.dp)
+                .weight(1f),
             contentAlignment = Alignment.Center
         ) {
             Text(

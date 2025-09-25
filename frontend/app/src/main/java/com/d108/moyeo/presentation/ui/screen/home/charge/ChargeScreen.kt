@@ -5,30 +5,34 @@ import androidx.activity.compose.BackHandler
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.util.BiometricAuthManager
+
+// TODO: 충전 시 돈이 모자랄 때 충전 취소 로직 추가
 
 @Composable
 fun ChargeScreen(
@@ -88,53 +92,112 @@ fun ChargeScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = Padding.HorizontalMedium, vertical = Padding.VerticalMedium)
-    ) {
-        IconButton(onClick = { viewModel.onBackClick() }) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = "뒤로가기",
-                modifier = Modifier.size(32.dp)
-            )
-        }
+    val isButtonEnabled = when (uiState.currentStep) {
+        ChargeStep.HOW_MUCH -> uiState.howMuch.isNotBlank() && uiState.howMuch != "0"
+        ChargeStep.BIOMETRIC -> true
+        ChargeStep.PIN -> uiState.pin.length == 6
+        ChargeStep.FINISH -> true
+    }
 
-        Box(
-            modifier = Modifier  // 스텝에 따라서 컴포저블이 보일 영역
-                .weight(1f)
-                .padding(Spacing.Medium)
-        ) {
-            when (uiState.currentStep) {
-                ChargeStep.HOW_MUCH -> HowMuchContent(viewModel = viewModel)
-                ChargeStep.BIOMETRIC -> BiometricContent()
-                ChargeStep.PIN -> PinContent(viewModel = viewModel)
-                ChargeStep.FINISH -> FinishContent(viewModel = viewModel)
+    Scaffold(
+        topBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.Medium)
+            ) {
+                IconButton(
+                    onClick = { viewModel.onBackClick() },
+                    modifier = Modifier.align(Alignment.TopStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "뒤로가기"
+                    )
+                }
             }
-        }
-
-        val isButtonEnabled = when (uiState.currentStep) {
-            ChargeStep.HOW_MUCH -> uiState.howMuch.isNotBlank() && uiState.howMuch != "0"
-            ChargeStep.BIOMETRIC -> true
-            ChargeStep.PIN -> uiState.pin.length == 6
-            ChargeStep.FINISH -> true
-        }
-
-        Button(
-            onClick = { viewModel.onNextClicked() },
+        },
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            enabled = isButtonEnabled
+                .fillMaxSize()
+                .padding(
+                    top = innerPadding.calculateTopPadding(),
+                    start = Spacing.ExtraLarge,
+                    end = Spacing.ExtraLarge
+                )
         ) {
-            val buttonText = when (uiState.currentStep) {
-                ChargeStep.FINISH -> "확인"
-                ChargeStep.HOW_MUCH -> "충전하기"
-                ChargeStep.BIOMETRIC -> "PIN으로 인증하기"
-                ChargeStep.PIN -> "인증하기"
+            Box(modifier = Modifier.weight(1f)) {
+                when (uiState.currentStep) {
+                    ChargeStep.HOW_MUCH   -> HowMuchContent(viewModel = viewModel)
+                    ChargeStep.BIOMETRIC  -> BiometricContent()
+                    ChargeStep.PIN        -> PinContent(viewModel = viewModel)
+                    ChargeStep.FINISH     -> FinishContent(viewModel = viewModel)
+                }
             }
-            Text(buttonText)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 하단 진행 버튼
+            Button(
+                onClick = { viewModel.onNextClicked() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .padding(bottom = Spacing.Medium),
+                enabled = isButtonEnabled
+            ) {
+                val buttonText = when (uiState.currentStep) {
+                    ChargeStep.FINISH    -> "확인"
+                    ChargeStep.HOW_MUCH  -> "충전하기"
+                    ChargeStep.BIOMETRIC -> "PIN으로 인증하기"
+                    ChargeStep.PIN       -> "인증하기"
+                }
+                Text(buttonText)
+            }
         }
     }
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(horizontal = Padding.HorizontalMedium, vertical = Padding.VerticalMedium)
+//    ) {
+//        IconButton(onClick = { viewModel.onBackClick() }) {
+//            Icon(
+//                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+//                contentDescription = "뒤로가기",
+//                modifier = Modifier.size(32.dp)
+//            )
+//        }
+//
+//        Box(
+//            modifier = Modifier  // 스텝에 따라서 컴포저블이 보일 영역
+//                .weight(1f)
+//                .padding(Spacing.Medium)
+//        ) {
+//            when (uiState.currentStep) {
+//                ChargeStep.HOW_MUCH -> HowMuchContent(viewModel = viewModel)
+//                ChargeStep.BIOMETRIC -> BiometricContent()
+//                ChargeStep.PIN -> PinContent(viewModel = viewModel)
+//                ChargeStep.FINISH -> FinishContent(viewModel = viewModel)
+//            }
+//        }
+//
+//        Button(
+//            onClick = { viewModel.onNextClicked() },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(52.dp)
+//                .padding(bottom = Spacing.Medium),
+//            enabled = isButtonEnabled
+//        ) {
+//            val buttonText = when (uiState.currentStep) {
+//                ChargeStep.FINISH -> "확인"
+//                ChargeStep.HOW_MUCH -> "충전하기"
+//                ChargeStep.BIOMETRIC -> "PIN으로 인증하기"
+//                ChargeStep.PIN -> "인증하기"
+//            }
+//            Text(buttonText)
+//        }
+//    }
 }

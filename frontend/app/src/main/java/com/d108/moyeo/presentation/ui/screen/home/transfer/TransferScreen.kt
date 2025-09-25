@@ -5,28 +5,30 @@ import androidx.activity.compose.BackHandler
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.util.BiometricAuthManager
 
@@ -37,59 +39,38 @@ fun TransferScreen(
     navController: NavController,
     viewModel: TransferViewModel = hiltViewModel()
 ) {
-
     // 생체 인증에 필요
     val context = LocalContext.current
     val activity = context as FragmentActivity
     val biometricManager = remember { BiometricAuthManager(activity) }
 
-    BackHandler {
-        viewModel.onBackClick()
-    }
+    BackHandler { viewModel.onBackClick() }
 
-    // ViewModel의 내비게이션 이벤트를 구독하고 처리
-    LaunchedEffect(key1 = true) {
+    // 네비게이션/인증 이벤트 처리
+    LaunchedEffect(Unit) {
         viewModel.navigationEvent.collect { event ->
             when (event) {
-                is TransferNavEvent.NavigateBack -> {
-                    // NavigateBack 이벤트를 받으면 실제 뒤로가기 동작 수행
-                    navController.popBackStack()
-                }
-
+                is TransferNavEvent.NavigateBack -> navController.popBackStack()
                 is TransferNavEvent.ShowBiometricPrompt -> {
-                    // 생체 인증을 사용할 수 있는지 먼저 확인
                     if (biometricManager.canAuthenticate()) {
-                        // ViewModel로부터 생체 인증 창을 띄우라는 이벤트를 받으면 인증 절차 시작
                         biometricManager.authenticate(
                             title = "본인 인증",
                             negativeButtonText = "PIN으로 인증하기",
-                            onSuccess = {
-                                // 인증 성공 시, ViewModel에 성공했음을 알림
-                                viewModel.onBiometricsSucceeded()
-                            },
+                            onSuccess = { viewModel.onBiometricsSucceeded() },
                             onError = { errorCode, errString ->
-                                // 사용자가 'PIN으로 인증하기' 버튼을 눌렀을 때 (취소했을 때)
-                                when(errorCode) {
+                                when (errorCode) {
                                     BiometricPrompt.ERROR_NEGATIVE_BUTTON,
                                     BiometricPrompt.ERROR_LOCKOUT,
-                                    BiometricPrompt.ERROR_LOCKOUT_PERMANENT -> {
-                                        viewModel.skipBiometrics() // ViewModel에 건너뛰었음을 알림
-                                    }
-                                    else -> {
-                                        // 그 외 다른 에러들은 토스트 메시지를 보여줍니다.
-                                        Toast.makeText(context, "인증 오류: $errString", Toast.LENGTH_SHORT).show()
-                                    }
+                                    BiometricPrompt.ERROR_LOCKOUT_PERMANENT -> viewModel.skipBiometrics()
+                                    else -> Toast.makeText(context, "인증 오류: $errString", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             onFailed = {
-                                // 인증 실패 시 (예: 지문 불일치)
                                 Toast.makeText(context, "인증에 실패했습니다.", Toast.LENGTH_SHORT).show()
                             }
                         )
                     } else {
-                        // 기기에서 생체 인식을 사용할 수 없는 경우
                         Toast.makeText(context, "생체 인식을 사용할 수 없습니다.", Toast.LENGTH_SHORT).show()
-                        // 이 경우 바로 PIN 인증으로 넘어가도록 처리
                         viewModel.skipBiometrics()
                     }
                 }
@@ -97,78 +78,93 @@ fun TransferScreen(
         }
     }
 
-    // BoxStore 에서 모임 박스 목록, 내 통화 목록을 받아옴
+    // 상태 구독
     val uiState by viewModel.uiState.collectAsState()
     val boxes by viewModel.groupBoxesUi.collectAsState()
     val currencies by viewModel.currencies.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = Padding.HorizontalMedium, vertical = Padding.VerticalMedium)
-    ) {
-        IconButton(onClick = { viewModel.onBackClick() }) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = "뒤로가기",
-                modifier = Modifier.size(32.dp)
-            )
-        }
+    // 진행 버튼 활성화 여부
+    val isButtonEnabled = when (uiState.currentStep) {
+        TransferStep.TARGET_BOX     -> uiState.targetBox != -1L
+        TransferStep.CHOOSE_CURRENCY-> uiState.currency.isNotBlank()
+        TransferStep.HOW_MUCH       -> uiState.howMuch.isNotBlank()
+        TransferStep.BIOMETRIC      -> true
+        TransferStep.PIN            -> uiState.pin.length == 6
+        TransferStep.FINISH         -> true
+    }
 
-        Box(modifier = Modifier  // 스텝에 따라서 컴포저블이 보일 영역
-            .weight(1f)
-            .padding(Spacing.Medium)) {
-            when (uiState.currentStep) {
-                TransferStep.TARGET_BOX -> TargetBoxContent(
-                    boxes = boxes,
-                    selectedBoxId = uiState.targetBox,
-                    onBoxSelect = viewModel::onTargetBoxSelected
-                )
-                TransferStep.CHOOSE_CURRENCY -> ChooseCurrencyContent(
-                    selectedCurrency = uiState.currency,
-                    onCurrencySelect = viewModel::onCurrencySelected,
-                    currencies = currencies,
-                    title = if (uiState.mode == TransferMode.DEPOSIT) {
-                        "어떤 통화로 입금할까요?"
-                    } else {
-                        "어떤 통화로 이체할까요?"
-                    }
-                )
-                //  TODO: 뷰모델 이렇게 하는 거 맞아?
-                TransferStep.HOW_MUCH -> HowMuchContent(viewModel = viewModel)
-                TransferStep.BIOMETRIC -> BiometricContent()
-                TransferStep.PIN -> PinContent(viewModel = viewModel)
-                TransferStep.FINISH -> FinishContent(viewModel = viewModel)
+    Scaffold(
+        topBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.Medium)
+            ) {
+                IconButton(
+                    onClick = { viewModel.onBackClick() },
+                    modifier = Modifier.align(Alignment.TopStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "뒤로가기"
+                    )
+                }
             }
-
-        }
-
-        val isButtonEnabled = when(uiState.currentStep) {
-            TransferStep.TARGET_BOX -> uiState.targetBox != -1L
-            TransferStep.CHOOSE_CURRENCY -> uiState.currency.isNotBlank()
-            TransferStep.HOW_MUCH -> uiState.howMuch.isNotBlank()
-            TransferStep.BIOMETRIC -> true // 이 단계는 자동 진행되므로 버튼 비활성화도 가능
-            TransferStep.PIN -> uiState.pin.length == 6 // 6자리로 완료
-            TransferStep.FINISH -> true
-        }
-
-        Button(
-            onClick = { viewModel.onNextClicked() },
+        },
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            enabled = isButtonEnabled
+                .fillMaxSize()
+                .padding(
+                    top = innerPadding.calculateTopPadding(),
+                    start = Spacing.ExtraLarge,
+                    end = Spacing.ExtraLarge,
+                )
         ) {
-            // 2. 버튼 텍스트 로직 수정 (TransferStep에 맞게 수정)
-            val buttonText = when(uiState.currentStep) {
-                TransferStep.FINISH -> "확인"
-                TransferStep.HOW_MUCH -> "보내기"
-                TransferStep.BIOMETRIC -> "PIN으로 인증하기"  // 어차피 가려지니까 이렇게 하면 될듯
-                TransferStep.PIN -> "인증하기"
-                else -> "다음"
+            // 스텝별 콘텐츠 영역
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                when (uiState.currentStep) {
+                    TransferStep.TARGET_BOX -> TargetBoxContent(
+                        boxes = boxes,
+                        selectedBoxId = uiState.targetBox,
+                        onBoxSelect = viewModel::onTargetBoxSelected
+                    )
+                    TransferStep.CHOOSE_CURRENCY -> ChooseCurrencyContent(
+                        selectedCurrency = uiState.currency,
+                        onCurrencySelect = viewModel::onCurrencySelected,
+                        currencies = currencies,
+                        title = if (uiState.mode == TransferMode.DEPOSIT) "어떤 통화로 입금할까요?" else "어떤 통화로 이체할까요?"
+                    )
+                    TransferStep.HOW_MUCH   -> HowMuchContent(viewModel = viewModel)
+                    TransferStep.BIOMETRIC  -> BiometricContent()
+                    TransferStep.PIN        -> PinContent(viewModel = viewModel)
+                    TransferStep.FINISH     -> FinishContent(viewModel = viewModel)
+                }
             }
-            Text(buttonText)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 하단 진행 버튼
+            Button(
+                onClick = { viewModel.onNextClicked() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .padding(bottom = Spacing.Medium),
+                enabled = isButtonEnabled
+            ) {
+                val buttonText = when (uiState.currentStep) {
+                    TransferStep.FINISH    -> "확인"
+                    TransferStep.HOW_MUCH  -> "보내기"
+                    TransferStep.BIOMETRIC -> "PIN으로 인증하기"
+                    TransferStep.PIN       -> "인증하기"
+                    else                   -> "다음"
+                }
+                Text(buttonText)
+            }
         }
     }
 }
-

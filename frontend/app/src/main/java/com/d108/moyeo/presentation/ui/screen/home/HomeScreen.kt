@@ -104,7 +104,12 @@ fun HomeScreen(
     }
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0),
+        topBar = {
+            HomeHeader(
+                title = uiState.userName,
+                onBellClick = { navController.navigate(AppScreen.Notification.route) }
+            )
+        },
         bottomBar = {
             Column(
                 modifier = Modifier
@@ -120,21 +125,21 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)   // ✅ MainActivity의 bottomBar 높이 반영
+                .padding(innerPadding)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = Spacing.Medium)
             ) {
-                Spacer(Modifier.height(Spacing.SmallMedium))
+//                Spacer(Modifier.height(Spacing.SmallMedium))
 
-                HomeHeader(
-                    title = uiState.userName,
-                    onBellClick = { navController.navigate(AppScreen.Notification.route) }
-                )
+//                HomeHeader(
+//                    title = uiState.userName,
+//                    onBellClick = { navController.navigate(AppScreen.Notification.route) }
+//                )
 
-                Spacer(Modifier.height(Spacing.Medium))
+//                Spacer(Modifier.height(Spacing.Medium))
 
                 WalletSummaryCard(
                     data = uiState.wallet,
@@ -169,9 +174,6 @@ fun HomeScreen(
                         }
                     }
                 }
-
-                // ✅ 기존에는 하단 AddBar를 여기 두었는데, 이제 Scaffold.bottomBar로 옮겼으므로
-                // 아래의 Spacer/Bar는 제거했습니다.
             }
 
             // 바텀시트는 그대로 유지
@@ -210,20 +212,22 @@ fun HomeHeader(
     Column (
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = Spacing.Small)
+            .padding(horizontal = Spacing.Medium, vertical = Spacing.Medium)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = Spacing.SmallMedium),
+            contentAlignment = Alignment.CenterStart,
         ) {
             Text(
                 text = title,
-                style = Typography.headlineSmall,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = Spacing.Small)
+                style = Typography.titleLarge,
             )
-            IconButton(onClick = onBellClick) {
+            IconButton(
+                onClick = onBellClick,
+                modifier = Modifier.align(Alignment.CenterEnd),
+            ) {
                 Icon(
                     imageVector = Icons.Outlined.Notifications,
                     contentDescription = "알림"
@@ -251,6 +255,7 @@ private fun WalletSummaryCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clickable { onTitleClick() }
                     .padding(
                         start = Spacing.Large,
                         top = Spacing.SmallMedium,
@@ -262,7 +267,6 @@ private fun WalletSummaryCard(
                 Row(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { onTitleClick() }
                         .padding(end = Spacing.Medium), // '>'와 '이체' 버튼 사이의 간격
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -271,12 +275,8 @@ private fun WalletSummaryCard(
                         style = Typography.titleMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = textColorUtil(data.bg)
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "back",
-                        tint = textColorUtil(data.bg)
+                        color = textColorUtil(data.bg),
+                        modifier = Modifier.weight(1f)
                     )
                 }
                 AssistChip(
@@ -298,10 +298,13 @@ private fun WalletSummaryCard(
                 }
             }
 
-            Spacer(Modifier.height(Spacing.ExtraSmall))
+            HorizontalDivider(
+                thickness = 0.5.dp,
+                color = textColorUtil(data.bg).copy(alpha = 0.5f)
+            )
 
             LazyColumn(
-                modifier = Modifier.height(180.dp) // 스크롤 영역의 최대 높이 지정
+                modifier = Modifier.height(168.dp) // 스크롤 영역의 최대 높이 지정
             ) {
                 itemsIndexed(data.balances) { index, row ->
                     WalletRow(
@@ -318,7 +321,6 @@ private fun WalletSummaryCard(
                     }
                 }
             }
-            Spacer(Modifier.height(Spacing.Small))
         }
     }
 }
@@ -388,7 +390,10 @@ private fun GroupBoxCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = textColorUtil(data.bg),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(end = 132.dp)
                 )
                 Spacer(Modifier.height(Spacing.Small))
 

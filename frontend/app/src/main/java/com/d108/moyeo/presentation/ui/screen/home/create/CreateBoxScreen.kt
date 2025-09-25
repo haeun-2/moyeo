@@ -11,8 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.d108.moyeo.presentation.theme.Spacing
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -40,29 +40,36 @@ fun CreateBoxScreen(
 
     Scaffold(
         topBar = {
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(Spacing.Medium)
             ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "back")
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.align(Alignment.TopStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "뒤로가기"
+                    )
                 }
             }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { inner ->
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner)
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(
+                    top = innerPadding.calculateTopPadding(),
+                    start = Spacing.ExtraLarge,
+                    end = Spacing.ExtraLarge
+                )
         ) {
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(vertical = 16.dp)
             ) {
                 when (ui.currentStep) {
                     CreateBoxStep.NAME -> {
