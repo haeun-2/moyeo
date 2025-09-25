@@ -27,8 +27,8 @@ public class ExchangeVolumeCronService {
     private final ExchangeVolumeRepository exchangeVolumeRepository;
     private final CurrencyService currencyService;
 
-//    @Scheduled(cron = "0 */10 * * * *") // 초, 분, 시, 일, 월, 요일
-    @Scheduled(fixedDelay = 1000*60*10)
+    @Scheduled(cron = "0 */10 * * * *") // 초, 분, 시, 일, 월, 요일
+//    @Scheduled(fixedDelay = 1000*60*10)
     @Transactional
     public void collectRecentVolume() {
         //현재 시간을 yyyy-mm-dd hh:mm으로 가져옴
