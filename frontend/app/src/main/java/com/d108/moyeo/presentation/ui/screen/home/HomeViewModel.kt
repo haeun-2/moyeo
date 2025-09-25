@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.DecimalFormat
 import javax.inject.Inject
 import kotlin.math.abs
 
@@ -342,8 +343,11 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun formatAmount(code: String, amount: Double): String {
-        val rounded = if (amount % 1.0 == 0.0) amount.toLong().toString() else String.format("%.2f", amount)
-        return "$rounded $code"
+        // "#,###.##" 패턴은 천 단위 콤마와 소수점 둘째 자리까지 표현
+        // 소수점이 없는 정수는 정수로만 표시
+        val formatter = DecimalFormat("#,###.##")
+        val formattedNumber = formatter.format(amount)
+        return "$formattedNumber $code"
     }
 
     private fun colorFromId(id: Long): Color {
