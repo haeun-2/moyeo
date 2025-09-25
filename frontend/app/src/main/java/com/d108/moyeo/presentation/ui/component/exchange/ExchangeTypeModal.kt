@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -21,13 +23,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.theme.primaryLight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExchangeTypeModal(
     onDismiss: () -> Unit,
     onChargeSelected: () -> Unit,
-    onRefundSelected: () -> Unit
+    onRefundSelected: () -> Unit,
+    onHistorySelected: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -57,8 +61,11 @@ fun ExchangeTypeModal(
                 onClick = onChargeSelected,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp),
-//                shape = RoundedCornerShape(8.dp)
+                    .height(48.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = primaryLight
+                )
             ) {
                 Text(
                     text = "충전하기",
@@ -75,11 +82,35 @@ fun ExchangeTypeModal(
                 onClick = onRefundSelected,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp),
-//                shape = RoundedCornerShape(8.dp)
+                    .height(48.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = primaryLight
+                )
             ) {
                 Text(
                     text = "돌려받기",
+                    color = Color.White,
+                    style = Typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 히스토리 버튼
+            OutlinedButton(
+                onClick = onHistorySelected,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = primaryLight
+                )
+            ) {
+                Text(
+                    text = "히스토리",
                     style = Typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )

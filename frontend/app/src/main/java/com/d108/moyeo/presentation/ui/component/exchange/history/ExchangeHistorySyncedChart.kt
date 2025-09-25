@@ -110,7 +110,7 @@ fun ExchangeHistorySyncedCharts(
                     val mappedData = rateVolumeMapping.getOrNull(index)
                     if (highlight?.dataSetIndex == 0 && mappedData != null) {
                         val (rateInfo, volumeInfo) = mappedData
-                        val rate = if (tradeMode == "buy") rateInfo.buyRate else rateInfo.sellRate
+                        val rate = if (tradeMode == "charge") rateInfo.buyRate else rateInfo.sellRate
                         val volume = volumeInfo?.totalAmount ?: 0.0
                         Log.d(TAG, "Marker Rate touched -> Time: ${rateInfo.period}, Rate: ${rate}" +
                                 ", Volume Time: ${volumeInfo?.recordedAt ?: "N/A"}, Volume: $volume")
@@ -189,7 +189,7 @@ fun ExchangeHistorySyncedCharts(
         rateVolumeMapping = newMapping
 
         val rateEntries = rateVolumeMapping.mapIndexed { index, (rate, _) ->
-            val rateValue = if (tradeMode == "buy") rate.buyRate else rate.sellRate
+            val rateValue = if (tradeMode == "charge") rate.buyRate else rate.sellRate
             Entry(index.toFloat(), rateValue.toFloat())
         }
 
@@ -197,8 +197,8 @@ fun ExchangeHistorySyncedCharts(
             BarEntry(index.toFloat(), volume?.totalAmount?.toFloat() ?: 0f)
         }
 
-        val lineDataSet = LineDataSet(rateEntries, if (tradeMode == "buy") "매수율" else "매도율").apply {
-            color = if (tradeMode == "buy") 0xFF4CAF50.toInt() else 0xFFF44336.toInt()
+        val lineDataSet = LineDataSet(rateEntries, if (tradeMode == "charge") "매수율" else "매도율").apply {
+            color = if (tradeMode == "charge") 0xFF4CAF50.toInt() else 0xFFF44336.toInt()
             setDrawValues(false)
             setDrawCircles(true)
             circleRadius = 3f
@@ -249,7 +249,7 @@ fun ExchangeHistorySyncedCharts(
                     val index = e.x.toInt()
                     if (index in rateVolumeMapping.indices) {
                         val (rateInfo, volumeInfo) = rateVolumeMapping[index]
-                        val rate = if (tradeMode == "buy") rateInfo.buyRate else rateInfo.sellRate
+                        val rate = if (tradeMode == "charge") rateInfo.buyRate else rateInfo.sellRate
                         val volume = volumeInfo?.totalAmount ?: 0.0
                         Log.d(TAG, "🎯 Selected -> Index: $index, Rate Time: ${rateInfo.period}, Rate: $rate, Volume Time: ${volumeInfo?.recordedAt ?: "N/A"}, Volume: $volume")
                     }

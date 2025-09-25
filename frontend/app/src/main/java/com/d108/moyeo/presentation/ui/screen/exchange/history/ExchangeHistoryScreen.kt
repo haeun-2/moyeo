@@ -35,7 +35,7 @@ fun ExchangeHistoryScreen(  // TODO: 이거 tradeMode 받아오도록
     navController: NavController,
     currencyCode: String, // NavHost에서 넘겨준 파라미터
     currencyName: String, // NavHost에서 넘겨준 파라미터
-    tradeMode: String = "buy",         // NavHost에서 넘겨준 파라미터
+    tradeMode: String = "charge",         // NavHost에서 넘겨준 파라미터
     viewModel: ExchangeHistoryViewModel = hiltViewModel()
 ) {
     // ViewModel의 UI 상태를 관찰합니다.

@@ -19,7 +19,7 @@ import com.d108.moyeo.presentation.theme.surfaceVariantLight
 
 /**
  * 환율 히스토리 화면의 컨트롤 패널 UI
- * @param tradeMode 현재 선택된 거래 모드 ("buy" or "sell")
+ * @param tradeMode 현재 선택된 거래 모드 ("charge" or "refund")
  * @param selectedTimeUnit 현재 선택된 시간 단위 ("10m", "1h", "1d")
  * @param onTradeModeChange 거래 모드 변경 시 호출될 콜백
  * @param onTimeUnitChange 시간 단위 변경 시 호출될 콜백
@@ -39,13 +39,13 @@ fun ExchangeHistoryControlPanel(
         ) {
             ToggleButton(
                 text = "사실 때",
-                isSelected = tradeMode == "buy",
-                onClick = { onTradeModeChange("buy") }
+                isSelected = tradeMode == "charge",
+                onClick = { onTradeModeChange("charge") }
             )
             ToggleButton(
                 text = "파실 때",
-                isSelected = tradeMode == "sell",
-                onClick = { onTradeModeChange("sell") }
+                isSelected = tradeMode == "refund",
+                onClick = { onTradeModeChange("refund") }
             )
         }
 

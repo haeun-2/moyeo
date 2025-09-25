@@ -2,8 +2,8 @@ package com.d108.moyeo.presentation.ui.screen.exchange
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.data.remote.dto.exchange.ExchangeRateItem
 import com.d108.moyeo.domain.repository.ExchangeRepository
-import com.d108.moyeo.presentation.ui.component.exchange.ExchangeRateData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,12 +33,12 @@ class ExchangeViewModel @Inject constructor(
             exchangeRepository.getCurrentExchangeRates()
                 .onSuccess { ratesMap ->
                     val exchangeRateDataList = ratesMap.map { (currencyCode, rateItem) ->
-                        ExchangeRateData(
-                            countryFlag = getCurrencyFlag(currencyCode),
-                            bankName = getCurrencyName(currencyCode),
-                            rate = "${rateItem.originalRate.toInt()} ${currencyCode} = 1,000 KRW",
-                            change = calculateRandomChange(), // API에 변화율 정보가 없으므로 랜덤 생성
-                            isIncreased = kotlin.random.Random.nextBoolean()
+                        ExchangeRateItem(
+                            countryFlag = rateItem.countryFlag,
+                            currencyCode = rateItem.currencyCode,
+                            buyRate = rateItem.buyRate,
+                            sellRate = rateItem.sellRate,
+                            originalRate = rateItem.originalRate,
                         )
                     }
                     _uiState.update {
@@ -56,54 +56,10 @@ class ExchangeViewModel @Inject constructor(
                             errorMessage = exception.message
                         )
                     }
-                    // 에러 발생 시 샘플 데이터 로드
-                    loadSampleData()
                 }
         }
     }
 
-    private fun getCurrencyName(currencyCode: String): String {
-        return when (currencyCode) {
-            "USD" -> "미국 달러"
-            "EUR" -> "유럽 유로"
-            "JPY" -> "일본 엔"
-            "GBP" -> "영국 파운드"
-            "CNY" -> "중국 위안"
-            "CAD" -> "캐나다 달러"
-            "AUD" -> "호주 달러"
-            "CHF" -> "스위스 프랑"
-            "HKD" -> "홍콩 달러"
-            "SGD" -> "싱가포르 달러"
-            "KRW" -> "한국 원"
-            else -> "${currencyCode} 통화"
-        }
-    }
-
-    private fun getCurrencyFlag(currencyCode: String): String {
-        return when (currencyCode) {
-            "USD" -> "🇺🇸"
-            "EUR" -> "🇪🇺"
-            "JPY" -> "🇯🇵"
-            "GBP" -> "🇬🇧"
-            "CNY" -> "🇨🇳"
-            "CAD" -> "🇨🇦"
-            "AUD" -> "🇦🇺"
-            "CHF" -> "🇨🇭"
-            "HKD" -> "🇭🇰"
-            "SGD" -> "🇸🇬"
-            "KRW" -> "🇰🇷"
-            else -> "🏳️"
-        }
-    }
-
-    private fun calculateRandomChange(): String {
-        val randomChange = (-200..200).random() / 100.0
-        return if (randomChange >= 0) {
-            "+${String.format("%.2f", randomChange)}%"
-        } else {
-            "${String.format("%.2f", randomChange)}%"
-        }
-    }
 
     /**
      * 환율 정보 새로고침
@@ -115,28 +71,26 @@ class ExchangeViewModel @Inject constructor(
     /**
      * 에러 발생 시 기본 샘플 데이터 로드
      */
-    private fun loadSampleData() {
-        val sampleRates = listOf(
-            ExchangeRateData("🇯🇵", "일본 엔", "927 JPY = 1,000 KRW", "6.15 (+0.59%)", true),
-            ExchangeRateData("🇺🇸", "미국 달러", "1,340 USD = 1,000 KRW", "15.20 (+1.15%)", true),
-            ExchangeRateData("🇪🇺", "유럽 유로", "1,450 EUR = 1,000 KRW", "8.30 (-0.58%)", false),
-            ExchangeRateData("🇨🇳", "중국 위안", "185 CNY = 1,000 KRW", "2.10 (+0.23%)", true),
-            ExchangeRateData("🇬🇧", "영국 파운드", "1,650 GBP = 1,000 KRW", "12.80 (-0.78%)", false)
-        )
-
-        _uiState.update { it.copy(ratesList = sampleRates) }
-    }
-
     fun toggleEditMode() {
         _uiState.update { it.copy(isEditMode = !it.isEditMode) }
     }
 
-    fun showModal() {
-        _uiState.update { it.copy(showModal = true) }
+    fun showModal(rate: ExchangeRateItem) {
+        _uiState.update {
+            it.copy(
+                showModal = true,
+                selectedItem = rate
+            )
+        }
     }
 
     fun hideModal() {
-        _uiState.update { it.copy(showModal = false) }
+        _uiState.update {
+            it.copy(
+                showModal = false,
+                selectedItem = null
+            )
+        }
     }
 
     fun deleteRate(index: Int) {
@@ -169,7 +123,7 @@ class ExchangeViewModel @Inject constructor(
         }
     }
 
-    fun addExchangeRate(newRate: ExchangeRateData) {
+    fun addExchangeRate(newRate: ExchangeRateItem) {
         val currentList = _uiState.value.ratesList.toMutableList()
         currentList.add(newRate)
         _uiState.update { it.copy(ratesList = currentList) }

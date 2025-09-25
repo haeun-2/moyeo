@@ -13,4 +13,37 @@ object CurrencyUtils {
             "CAD" -> "캐나다 달러"
             else -> code
         }
+
+
+    fun getCurrencyFlag(currencyCode: String): String {
+        return when (currencyCode) {
+            "USD" -> "🇺🇸"
+            "EUR" -> "🇪🇺"
+            "JPY" -> "🇯🇵"
+            "GBP" -> "🇬🇧"
+            "CNY" -> "🇨🇳"
+            "CAD" -> "🇨🇦"
+            "AUD" -> "🇦🇺"
+            "CHF" -> "🇨🇭"
+            "HKD" -> "🇭🇰"
+            "SGD" -> "🇸🇬"
+            "SEK" -> "🇸🇪"
+            "NOK" -> "🇳🇴"
+            "NZD" -> "🇳🇿"
+            "THB" -> "🇹🇭"
+            "VND" -> "🇻🇳"
+            "IDR" -> "🇮🇩"
+            "MYR" -> "🇲🇾"
+            "PHP" -> "🇵🇭"
+            "INR" -> "🇮🇳"
+            "KRW" -> "🇰🇷"
+            "TWD" -> "🇹🇼"
+            "BRL" -> "🇧🇷"
+            "MXN" -> "🇲🇽"
+            "ZAR" -> "🇿🇦"
+            "TRY" -> "🇹🇷"
+            "RUB" -> "🇷🇺"
+            else -> "🏳️"
+        }
+    }
 }
