@@ -12,7 +12,7 @@ data class CreateReservationRequestDto(
     @SerializedName("amount")
     val amount: Long,
     @SerializedName("targetRate")
-    val targetRate: Double,
+    val targetRate: Long,
     @SerializedName("expiresAt")
     val expiresAt: String,
 ){

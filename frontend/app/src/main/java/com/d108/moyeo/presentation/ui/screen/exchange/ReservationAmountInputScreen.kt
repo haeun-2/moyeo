@@ -188,12 +188,12 @@ fun ReservationAmountInputScreen(
         // 다음 버튼
         Button(
             onClick = {
-                val amountToPass = if (uiState.selectedTab == "KRW") {
-                    uiState.foreignValue.toString()
+                val finalAmount = if (uiState.selectedTab == "KRW") {
+                    uiState.krwValue.toLong().toString()
                 } else {
                     uiState.inputAmount
                 }
-                navController.navigate("reservation_period_selection/$currencyCode/$currencyName/$targetRate/$amountToPass")
+                navController.navigate("reservation_period_selection/$currencyCode/$currencyName/$targetRate/$finalAmount")
             },
             enabled = uiState.inputAmount != "0",
             modifier = Modifier

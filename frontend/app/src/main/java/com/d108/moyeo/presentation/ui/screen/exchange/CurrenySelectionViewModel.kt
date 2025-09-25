@@ -29,32 +29,13 @@ class CurrencySelectionViewModel : ViewModel() {
 
     private fun loadCurrencies() {
         val currencies = listOf(
-            Currency("USD", "미국 USD", "🇺🇸"),
-            Currency("EUR", "유럽 EUR", "🇪🇺"),
-            Currency("JPY", "일본 JPY", "🇯🇵"),
-            Currency("GBP", "영국 GBP", "🇬🇧"),
-            Currency("CNY", "중국 CNY", "🇨🇳"),
-            Currency("CAD", "캐나다 CAD", "🇨🇦"),
-            Currency("AUD", "호주 AUD", "🇦🇺"),
             Currency("CHF", "스위스 CHF", "🇨🇭"),
-            Currency("HKD", "홍콩 HKD", "🇭🇰"),
-            Currency("SGD", "싱가포르 SGD", "🇸🇬"),
-            Currency("SEK", "스웨덴 SEK", "🇸🇪"),
-            Currency("NOK", "노르웨이 NOK", "🇳🇴"),
-            Currency("NZD", "뉴질랜드 NZD", "🇳🇿"),
-            Currency("THB", "태국 THB", "🇹🇭"),
-            Currency("VND", "베트남 VND", "🇻🇳"),
-            Currency("IDR", "인도네시아 IDR", "🇮🇩"),
-            Currency("MYR", "말레이시아 MYR", "🇲🇾"),
-            Currency("PHP", "필리핀 PHP", "🇵🇭"),
-            Currency("INR", "인도 INR", "🇮🇳"),
-            Currency("KRW", "한국 KRW", "🇰🇷"),
-            Currency("TWD", "대만 TWD", "🇹🇼"),
-            Currency("BRL", "브라질 BRL", "🇧🇷"),
-            Currency("MXN", "멕시코 MXN", "🇲🇽"),
-            Currency("ZAR", "남아프리카 ZAR", "🇿🇦"),
-            Currency("TRY", "터키 TRY", "🇹🇷"),
-            Currency("RUB", "러시아 RUB", "🇷🇺")
+            Currency("JPY", "일본 JPY", "🇯🇵"),
+            Currency("EUR", "유럽 EUR", "🇪🇺"),
+            Currency("GBP", "영국 GBP", "🇬🇧"),
+            Currency("CAD", "캐나다 CAD", "🇨🇦"),
+            Currency("USD", "미국 USD", "🇺🇸"),
+            Currency("CNY", "중국 CNY", "🇨🇳")
         )
 
         _uiState.update { it.copy(currencies = currencies) }

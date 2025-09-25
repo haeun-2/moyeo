@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Typography
@@ -45,7 +46,7 @@ fun ExchangeReservationScreen(
     navController: NavController,
     currencyCode: String,
     currencyName: String,
-    viewModel: ExchangeReservationViewModel = viewModel()
+    viewModel: ExchangeReservationViewModel =  hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 

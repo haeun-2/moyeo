@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class ExchangeReservationResponseDto(
     @SerializedName("id")
-    val id: Int,
+    val id: Long,
     @SerializedName("fromCurrency")
     val fromCurrency: String,
     @SerializedName("toCurrency")
@@ -12,7 +12,7 @@ data class ExchangeReservationResponseDto(
     @SerializedName("targetRate")
     val targetRate: Double,
     @SerializedName("amount")
-    val amount: Double,
+    val amount: Long,
     @SerializedName("expiresAt")
     val expiresAt: String,
     @SerializedName("createdAt")

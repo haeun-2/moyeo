@@ -172,11 +172,20 @@ class ExchangeRepositoryImpl @Inject constructor(
         fromCurrency: String,
         toCurrency: String,
         amount: Long,
-        targetRate: Double,
+        targetRate: Long,
         expiresAt: String
     ): Result<Unit> {
         return runCatching {
             // amount 검증
+            // 요청 파라미터 로깅
+            Log.d("ExchangeRepo", "=== 예약 생성 요청 ===")
+            Log.d("ExchangeRepo", "boxId: $boxId")
+            Log.d("ExchangeRepo", "fromCurrency: $fromCurrency")
+            Log.d("ExchangeRepo", "toCurrency: $toCurrency")
+            Log.d("ExchangeRepo", "amount: $amount")
+            Log.d("ExchangeRepo", "targetRate: $targetRate")
+            Log.d("ExchangeRepo", "expiresAt: $expiresAt")
+
             if (amount < 100L) {
                 throw IllegalArgumentException("거래 금액은 최소 100 이상이어야 합니다.")
             }
@@ -189,8 +198,16 @@ class ExchangeRepositoryImpl @Inject constructor(
                 targetRate = targetRate,
                 expiresAt = expiresAt
             )
+            Log.d("ExchangeRepo", "요청 DTO 생성 완료: $request")
 
             var response = exchangeService.createExchangeReservation(request)
+
+            Log.d("ExchangeRepo", "첫 번째 API 호출 응답: ${response.code()}")
+            if (response.errorBody() != null) {
+                val errorBody = response.errorBody()!!.string()
+                Log.e("ExchangeRepo", "에러 응답 본문: $errorBody")
+            }
+
 
             if (response.code() == 401) {
                 val refreshResult = refreshTokenAndRetry()

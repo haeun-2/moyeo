@@ -3,6 +3,7 @@ package com.d108.moyeo.presentation.navigation
 import ExchangeHistoryScreen
 import MyConsultationDetail
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.toString
 import androidx.compose.ui.Modifier
 import com.d108.moyeo.presentation.ui.screen.*
 import androidx.navigation.NavHostController
@@ -216,12 +217,25 @@ fun AppNavHost(
             )
         }
 
-        // 예약환전 홈
+        composable(
+            route = "exchange_reservation_home?refresh={refresh}",
+            arguments = listOf(
+                navArgument("refresh") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) {
+            ExchangeReservationHomeScreen(navController = navController)
+        }
+
+        // 기본 라우트도 유지 (refresh 없는 경우)
         composable("exchange_reservation_home") {
             ExchangeReservationHomeScreen(navController = navController)
         }
 
-// 희망환율 입력
+        // 희망환율 입력
         composable(
             route = "reservation_rate_input/{currencyCode}/{currencyName}",
             arguments = listOf(
@@ -245,12 +259,12 @@ fun AppNavHost(
             arguments = listOf(
                 navArgument("currencyCode") { type = NavType.StringType },
                 navArgument("currencyName") { type = NavType.StringType },
-                navArgument("targetRate") { type = NavType.LongType }
+                navArgument("targetRate") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
             val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
-            val targetRate = backStackEntry.arguments?.getLong("targetRate") ?: 0L
+            val targetRate = backStackEntry.arguments?.getString("targetRate")?.toLongOrNull() ?: 0L
 
             ReservationAmountInputScreen(
                 navController = navController,
@@ -266,13 +280,13 @@ fun AppNavHost(
             arguments = listOf(
                 navArgument("currencyCode") { type = NavType.StringType },
                 navArgument("currencyName") { type = NavType.StringType },
-                navArgument("targetRate") { type = NavType.LongType },
+                navArgument("targetRate") { type = NavType.StringType },
                 navArgument("amount") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
             val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
-            val targetRate = backStackEntry.arguments?.getLong ("targetRate") ?: 0L
+            val targetRate = backStackEntry.arguments?.getString("targetRate")?.toLongOrNull() ?: 0L
             val amount = backStackEntry.arguments?.getString("amount") ?: ""
 
             ReservationPeriodSelectionScreen(
@@ -290,7 +304,7 @@ fun AppNavHost(
             arguments = listOf(
                 navArgument("currencyCode") { type = NavType.StringType },
                 navArgument("currencyName") { type = NavType.StringType },
-                navArgument("targetRate") { type = NavType.StringType },
+                navArgument("targetRate") { type = NavType.LongType },
                 navArgument("amount") { type = NavType.StringType },
                 navArgument("startDate") { type = NavType.StringType },
                 navArgument("endDate") { type = NavType.StringType }
@@ -298,7 +312,7 @@ fun AppNavHost(
         ) { backStackEntry ->
             val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
             val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
-            val targetRate = backStackEntry.arguments?.getString("targetRate") ?: ""
+            val targetRate = backStackEntry.arguments?.getLong("targetRate") ?: 0L
             val amount = backStackEntry.arguments?.getString("amount") ?: ""
             val startDate = backStackEntry.arguments?.getString("startDate") ?: ""
             val endDate = backStackEntry.arguments?.getString("endDate") ?: ""
@@ -307,7 +321,7 @@ fun AppNavHost(
                 navController = navController,
                 currencyCode = currencyCode,
                 currencyName = currencyName,
-                targetRate = targetRate,
+                targetRate = targetRate.toString(),
                 amount = amount,
                 startDate = startDate,
                 endDate = endDate
