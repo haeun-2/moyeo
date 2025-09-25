@@ -12,6 +12,7 @@ data class Currency(
 )
 
 data class CurrencySelectionUiState(
+    val boxId: Long = 1L,
     val currencies: List<Currency> = emptyList(),
     val selectedCurrency: Currency? = null,
     val isLoading: Boolean = false,
@@ -59,5 +60,8 @@ class CurrencySelectionViewModel : ViewModel() {
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+    fun setBoxId(boxId: Long) {
+        _uiState.update { it.copy(boxId = boxId) }
     }
 }

@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -43,9 +44,15 @@ import com.d108.moyeo.presentation.theme.primaryLight
 @Composable
 fun CurrencySelectionScreen(
     navController: NavController,
+    boxId: Long = 1L, // 파라미터 추가
     viewModel: CurrencySelectionViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // boxId를 ViewModel에 전달
+    LaunchedEffect(boxId) {
+        viewModel.setBoxId(boxId)
+    }
 
     Column(
         modifier = Modifier
@@ -101,7 +108,7 @@ fun CurrencySelectionScreen(
             onClick = {
                 // 해당 국가에 맞게 네비게이션 이동
                 viewModel.getSelectedCurrency()?.let {currency->
-                    navController.navigate("reservation_rate_input/${currency.code}/${currency.name}")
+                    navController.navigate("reservation_rate_input/${currency.code}/${currency.name}?boxId=${uiState.boxId}")
                 }
             },
             enabled = uiState.selectedCurrency != null,

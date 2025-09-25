@@ -1,8 +1,11 @@
 package com.d108.moyeo.presentation.ui.screen.exchange
 
+import android.R.attr.mode
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.domain.repository.ExchangeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,6 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class ReservationPeriodUiState(
+    val boxId: Long = 1L,
     val currencyCode: String = "",
     val currencyName: String = "",
     val targetRate: String = "",
@@ -22,12 +26,14 @@ data class ReservationPeriodUiState(
     val calendarMode: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val isReservationComplete: Boolean = false
+    val isReservationComplete: Boolean = false,
+    val hasInsufficientFunds: Boolean = false
 )
 
 @HiltViewModel
 class ReservationPeriodViewModel @Inject constructor(
     private val exchangeRepository: ExchangeRepository,
+    private val boxStore: BoxStore,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -40,9 +46,11 @@ class ReservationPeriodViewModel @Inject constructor(
         val currencyName = savedStateHandle.get<String>("currencyName") ?: ""
         val targetRate = savedStateHandle.get<String>("targetRate") ?: ""
         val amount = savedStateHandle.get<String>("amount") ?: ""
+        val boxId = savedStateHandle.get<Long>("boxId") ?: 1L
 
         _uiState.update {
             it.copy(
+                boxId = boxId,
                 currencyCode = currencyCode,
                 currencyName = currencyName,
                 targetRate = targetRate,
@@ -50,6 +58,51 @@ class ReservationPeriodViewModel @Inject constructor(
             )
         }
     }
+
+    // initialize 함수 추가
+    fun initialize(
+        currencyCode: String,
+        currencyName: String,
+        targetRate: Long,
+        amount: String,
+        boxId: Long
+    ) {
+        _uiState.update {
+            it.copy(
+                boxId = boxId,
+                currencyCode = currencyCode,
+                currencyName = currencyName,
+                targetRate = targetRate.toString(),
+                amount = amount
+            )
+        }
+
+        // 잔액 체크
+        checkBalance(boxId, amount.toLongOrNull() ?: 0L)
+    }
+
+    // 잔액 체크 함수 추가
+    private fun checkBalance(boxId: Long, requiredAmount: Long) {
+        viewModelScope.launch {
+            val allBoxes = boxStore.boxUiStates.value
+            val selectedBox = allBoxes.find { it.id == boxId }
+
+            if (selectedBox != null) {
+                val krwBalance = selectedBox.balances.find { it.currency == "KRW" }?.balance ?: 0.0
+                val hasEnoughFunds = krwBalance >= requiredAmount
+
+                _uiState.update {
+                    it.copy(hasInsufficientFunds = !hasEnoughFunds)
+                }
+
+                Log.d(
+                    "ReservationPeriod",
+                    "BoxId: $boxId, 필요금액: $requiredAmount, 잔액: $krwBalance, 충분한지: $hasEnoughFunds"
+                )
+            }
+        }
+    }
+
 
     fun showCalendar(mode: String) {
         _uiState.update {
@@ -83,12 +136,26 @@ class ReservationPeriodViewModel @Inject constructor(
             return
         }
 
+        // 잔액 체크
+        if (state.hasInsufficientFunds) {
+            _uiState.update {
+                it.copy(errorMessage = "통장에 돈을 충전해주세요")
+            }
+            return
+        }
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
+            Log.d("ReservationPeriod", "=== API 호출 시작 ===")
+            Log.d("ReservationPeriod", "선택된 boxId: ${state.boxId}")
+            Log.d("ReservationPeriod", "통화: ${state.currencyCode}")
+            Log.d("ReservationPeriod", "금액: ${state.amount}")
+            Log.d("ReservationPeriod", "목표환율: ${state.targetRate}")
+
             try {
                 exchangeRepository.createExchangeReservation(
-                    boxId = 1L, // 기본값으로 설정 (필요시 사용자 정보에서 가져오기)
+                    boxId = state.boxId, // 선택한 boxId 사용
                     fromCurrency = "KRW",
                     toCurrency = state.currencyCode,
                     amount = state.amount.toLong(),
