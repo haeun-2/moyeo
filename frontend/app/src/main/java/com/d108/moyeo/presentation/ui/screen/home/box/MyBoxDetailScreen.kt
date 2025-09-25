@@ -125,11 +125,16 @@ private fun GeneralTransactionDetailContent(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(text = transaction.category, style = Typography.bodyLarge)
                         Spacer(modifier = Modifier.width(Spacing.Medium))
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "카테고리 수정",
-                            modifier = Modifier.size(20.dp).clickable { viewModel.onCategoryEditClick() }
-                        )
+
+                        // 입출금이 아닐 때만 아이콘 보이도록
+                        if (!(transaction.category == "입금" || transaction.category == "출금")) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "카테고리 수정",
+                                modifier = Modifier.size(20.dp)
+                                    .clickable { viewModel.onCategoryEditClick() }
+                            )
+                        }
                     }
                 }
             )
