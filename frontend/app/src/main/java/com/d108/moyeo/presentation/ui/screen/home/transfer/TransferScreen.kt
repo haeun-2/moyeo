@@ -80,7 +80,7 @@ fun TransferScreen(
 
     // 상태 구독
     val uiState by viewModel.uiState.collectAsState()
-    val boxes by viewModel.groupBoxesUi.collectAsState()
+    val boxes by viewModel.selectableBoxes.collectAsState()
     val currencies by viewModel.currencies.collectAsState()
 
     // 진행 버튼 활성화 여부
