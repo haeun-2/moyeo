@@ -56,16 +56,62 @@ class ReservationAmountInputViewModel @Inject constructor() : ViewModel() {
             newAmount = currentAmount + digit
         }
 
-        _uiState.update { it.copy(inputAmount = newAmount) }
+        updateConversion(newAmount)
     }
 
     fun onBackspace() {
         val currentAmount = _uiState.value.inputAmount
         val newAmount = if (currentAmount.length <= 1) "0" else currentAmount.dropLast(1)
-        _uiState.update { it.copy(inputAmount = newAmount) }
+        updateConversion(newAmount)
     }
 
     fun selectTab(tab: String) {
-        _uiState.update { it.copy(selectedTab = tab) }
+        val state = _uiState.value
+        var newInput = state.inputAmount
+
+        if (tab == "KRW" && state.selectedTab != "KRW") {
+            // 외화 → 원화
+            val foreignAmount = state.inputAmount.toDoubleOrNull() ?: 0.0
+            val krwValue = foreignAmount * state.targetRate
+            newInput = krwValue.toLong().toString()
+        } else if (tab == state.currencyCode && state.selectedTab == "KRW") {
+            // 원화 → 외화
+            val krwAmount = state.inputAmount.toDoubleOrNull() ?: 0.0
+            val foreignValue = krwAmount / state.targetRate
+            newInput = foreignValue.toLong().toString()
+        }
+
+        _uiState.update {
+            it.copy(
+                selectedTab = tab,
+                inputAmount = newInput
+            )
+        }
+        updateConversion(newInput)
+    }
+
+    private fun updateConversion(newAmount: String) {
+        val state = _uiState.value
+        val amount = newAmount.toDoubleOrNull() ?: 0.0
+        val krwValue: Double
+        val foreignValue: Double
+
+        if (state.selectedTab == state.currencyCode) {
+            // 외화 입력
+            foreignValue = amount
+            krwValue = foreignValue * state.targetRate
+        } else {
+            // 원화 입력
+            krwValue = amount
+            foreignValue = if (state.targetRate != 0L) krwValue / state.targetRate else 0.0
+        }
+
+        _uiState.update {
+            it.copy(
+                inputAmount = newAmount,
+                krwValue = krwValue,
+                foreignValue = foreignValue
+            )
+        }
     }
 }

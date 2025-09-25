@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.screen.exchange
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,6 +39,25 @@ fun ReservationPeriodSelectionScreen(
     viewModel: ReservationPeriodViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // 에러 메시지 표시
+    uiState.errorMessage?.let { message ->
+        LaunchedEffect(message) {
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            viewModel.clearError()
+        }
+    }
+    // 예약 완료 시 홈으로 이동
+    LaunchedEffect(uiState.isReservationComplete) {
+        if (uiState.isReservationComplete) {
+            navController.navigate("reservation_final_complete") {
+                popUpTo("reservation_period_selection") {
+                    inclusive = true
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -58,7 +79,7 @@ fun ReservationPeriodSelectionScreen(
             }
             Text(
                 text = "예약하기",
-                style = MaterialTheme.typography.titleMedium,
+                style = Typography.titleMedium,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f),
                 color = Color.Black
@@ -70,7 +91,7 @@ fun ReservationPeriodSelectionScreen(
         // 제목
         Text(
             text = "예약 기간을 선택해 주세요.",
-            style = MaterialTheme.typography.titleLarge,
+            style = Typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = Color.Black
         )
@@ -79,11 +100,34 @@ fun ReservationPeriodSelectionScreen(
 
         Text(
             text = "최소 1일에서 최대 6개월까지 설정 가능합니다.",
-            style = MaterialTheme.typography.bodyMedium,
+            style = Typography.bodyMedium,
             color = Color.Gray
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 현재 설정된 값들 표시 (디버깅용)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.Gray.copy(alpha = 0.1f))
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "현재 설정 정보:",
+                    style = Typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text("통화: ${uiState.currencyCode} (${uiState.currencyName})")
+                Text("목표환율: ${uiState.targetRate}")
+                Text("금액: ${uiState.amount}")
+                Text("시작일: ${uiState.startDate}")
+                Text("종료일: ${uiState.endDate}")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // 기간 선택 버튼들
         Row(
@@ -125,14 +169,12 @@ fun ReservationPeriodSelectionScreen(
             )
         }
 
-        // 확인 버튼
+        // 확인 버튼 - API 호출
         Button(
             onClick = {
-                if (uiState.startDate.isNotEmpty() && uiState.endDate.isNotEmpty()) {
-                    navController.navigate("reservation_complete/$currencyCode/$currencyName/$targetRate/$amount/${uiState.startDate}/${uiState.endDate}")
-                }
+                viewModel.createReservation()
             },
-            enabled = uiState.startDate.isNotEmpty() && uiState.endDate.isNotEmpty(),
+            enabled = uiState.startDate.isNotEmpty() && uiState.endDate.isNotEmpty() && !uiState.isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -141,12 +183,19 @@ fun ReservationPeriodSelectionScreen(
                 disabledContainerColor = Color.Gray.copy(alpha = 0.3f)
             )
         ) {
-            Text(
-                text = "확인",
-                color = Color.White,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = Color.White
+                )
+            } else {
+                Text(
+                    text = "예약하기",
+                    color = Color.White,
+                    style = Typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -165,17 +214,17 @@ private fun DynamicCalendarBottomSheet(
     val today = LocalDate.now()
     val maxDate = today.plusMonths(6)
 
-    Box(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.7f)
-            .background(
-                Color.White,
-                RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-            )
-            .padding(16.dp)
+            .fillMaxHeight(0.7f),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
-        Column {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
             // 캘린더 헤더
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -184,7 +233,7 @@ private fun DynamicCalendarBottomSheet(
             ) {
                 Text(
                     text = "${currentMonth.year}년 ${currentMonth.monthValue}월",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = Typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
@@ -232,7 +281,7 @@ private fun DynamicCalendarBottomSheet(
                 listOf("일", "월", "화", "수", "목", "금", "토").forEach { day ->
                     Text(
                         text = day,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = Typography.bodySmall,
                         color = Color.Gray,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.weight(1f)
@@ -288,7 +337,6 @@ private fun DynamicCalendarGrid(
     onDateSelected: (String) -> Unit
 ) {
     val firstDayOfMonth = currentMonth.atDay(1)
-    val lastDayOfMonth = currentMonth.atEndOfMonth()
     val firstDayOfWeek = firstDayOfMonth.dayOfWeek.value % 7
     val daysInMonth = currentMonth.lengthOfMonth()
 
@@ -343,6 +391,7 @@ private fun DynamicCalendarGrid(
                                 }
                                 .background(
                                     when {
+                                        isSelected -> MaterialTheme.colorScheme.primary
                                         !isSelectable -> Color.Transparent
                                         else -> Color.Transparent
                                     },
@@ -357,7 +406,7 @@ private fun DynamicCalendarGrid(
                                     !isSelectable -> Color.Gray.copy(alpha = 0.3f)
                                     else -> Color.Black
                                 },
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = Typography.bodyMedium,
                                 fontWeight = if (isSelected || date == today) FontWeight.Bold else FontWeight.Normal
                             )
                         }
@@ -388,7 +437,7 @@ private fun PeriodButton(
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyMedium
+            style = Typography.bodyMedium
         )
     }
 }

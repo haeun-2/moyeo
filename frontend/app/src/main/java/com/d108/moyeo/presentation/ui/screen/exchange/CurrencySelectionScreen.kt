@@ -138,10 +138,10 @@ private fun CurrencyCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .height(140.dp)
             .background(
                 color = if (isSelected) primaryLight else surfaceVariantLight,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(15.dp)
             )
             .clickable { onClick() }
             .padding(Spacing.Medium),
@@ -152,12 +152,12 @@ private fun CurrencyCard(
         ) {
             Text(
                 text = currency.flag,
-                style = Typography.headlineMedium
+                style = Typography.headlineLarge
             )
             Spacer(modifier = Modifier.height(Spacing.Small))
             Text(
                 text = currency.name,
-                style = Typography.bodyMedium,
+                style = Typography.bodyLarge,
                 color = if (isSelected) Color.White else Color.Black,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                 textAlign = TextAlign.Center

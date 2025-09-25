@@ -1,9 +1,14 @@
 package com.d108.moyeo.presentation.ui.screen.exchange
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.domain.repository.ExchangeRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class ExchangeReservationUiState(
     val currencyCode: String = "",
@@ -11,10 +16,25 @@ data class ExchangeReservationUiState(
     val inputAmount: String = "0",
     val exchangeRate: String = "",
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val reservations: List<ReservationItem> = emptyList(),
 )
 
-class ExchangeReservationViewModel : ViewModel() {
+data class ReservationItem(
+    val id: Long,
+    val fromCurrency: String,
+    val toCurrency: String,
+    val targetRate: Double,
+    val amount: Long,
+    val expiresAt: String,
+    val createdAt: String,
+    val status: String
+)
+
+@HiltViewModel
+class ExchangeReservationViewModel @Inject constructor(
+    private val exchangeRepository: ExchangeRepository// Repository 주입
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExchangeReservationUiState())
     val uiState = _uiState.asStateFlow()
@@ -31,17 +51,13 @@ class ExchangeReservationViewModel : ViewModel() {
 
     fun onDigitInput(digit: String) {
         val currentAmount = _uiState.value.inputAmount
-
         if (currentAmount == "0" && digit != "00") {
             _uiState.update { it.copy(inputAmount = digit) }
             return
         }
-
         if (currentAmount.isEmpty() && digit == "00") return
         if (currentAmount == "0" && digit == "00") return
-
         if ((currentAmount + digit).length > 10) return
-
         _uiState.update { it.copy(inputAmount = currentAmount + digit) }
     }
 
@@ -84,7 +100,6 @@ class ExchangeReservationViewModel : ViewModel() {
     }
 
     private fun getExchangeRateText(currencyCode: String): String {
-        // TODO: 실제 환율 API에서 가져오기
         return when (currencyCode) {
             "USD" -> "1340 USD"
             "EUR" -> "1450 EUR"
@@ -119,4 +134,40 @@ class ExchangeReservationViewModel : ViewModel() {
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }
+
+    // 예약 완료 목록만 로딩
+    fun loadReservations(boxId: Long) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                val result = exchangeRepository.getExchangeReservations(boxId)
+                result.onSuccess { dtoList ->
+                    val reservations = dtoList.map { dto ->
+                        ReservationItem(
+                            id = dto.id,
+                            fromCurrency = dto.fromCurrency,
+                            toCurrency = dto.toCurrency,
+                            targetRate = dto.targetRate.toDouble(),
+                            amount = dto.amount,
+                            expiresAt = dto.expiresAt,
+                            createdAt = dto.createdAt,
+                            status = dto.status
+                        )
+                    }
+                    _uiState.update { currentState ->
+                        currentState.copy(reservations = reservations, isLoading = false)
+                    }
+                }.onFailure { e ->
+                    _uiState.update { currentState ->
+                        currentState.copy(errorMessage = e.message, isLoading = false)
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { currentState ->
+                    currentState.copy(errorMessage = e.message, isLoading = false)
+                }
+            }
+        }
+    }
 }
+

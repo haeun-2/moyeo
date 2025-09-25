@@ -12,7 +12,7 @@ interface ExchangeRepository {
         fromCurrency: String,
         toCurrency: String,
         amount: Long,
-        targetRate: Double,
+        targetRate: Long,
         expiresAt: String
     ): Result<Unit>
 
