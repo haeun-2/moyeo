@@ -245,7 +245,7 @@ class HomeViewModel @Inject constructor(
         val walletId = _uiState.value.wallet.id
         if (walletId == -1L) return
         viewModelScope.launch {
-            _navigationEvent.emit(HomeNavigationEvent.NavigateToMyWallet(walletId, "KRW"))
+            _navigationEvent.emit(HomeNavigationEvent.NavigateToMyWallet(walletId, ""))
         }
     }
 

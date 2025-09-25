@@ -52,7 +52,7 @@ class MyWalletViewModel @Inject constructor(
     init {
 //        Log.d(TAG, "${savedStateHandle.keys()}")
 //        Log.d(TAG, "boxId: $boxId ")
-        val currencyCode = savedStateHandle.get<String>("currencyCode") ?: "KRW"
+        val currencyCode = savedStateHandle.get<String>("currencyCode") ?: ""
 
         viewModelScope.launch {
             val allBoxes = boxStore.boxUiStates.firstOrNull() ?: emptyList()
