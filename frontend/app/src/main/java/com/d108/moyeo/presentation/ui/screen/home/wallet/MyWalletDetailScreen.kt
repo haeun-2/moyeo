@@ -39,10 +39,12 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
 
     // --- 카테고리 선택 바텀시트 호출 로직 ---
     if (uiState.showCategorySheet) {
-        val spendingCategories = FilterOptionData.allScopeOptions.drop(1)  // 전체 드랍
+        val unselectableCategories = setOf("전체", "입금", "출금", "환전")
+        val selectableCategories = FilterOptionData.allScopeOptions.filter { it !in unselectableCategories }
+
 
         CategorySelectionBottomSheet(
-            categories = spendingCategories,
+            categories = selectableCategories,
             onCategorySelected = viewModel::onCategorySelected,
             onDismiss = viewModel::onCategorySheetDismiss
         )
