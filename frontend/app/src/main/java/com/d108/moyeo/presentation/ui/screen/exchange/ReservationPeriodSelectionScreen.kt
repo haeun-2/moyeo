@@ -38,6 +38,7 @@ fun ReservationPeriodSelectionScreen(
     currencyName: String,
     targetRate: Long,
     amount: String,
+    boxId: Long = 1L,
     viewModel: ReservationPeriodViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -46,6 +47,10 @@ fun ReservationPeriodSelectionScreen(
     // 디버그 로그 추가
     LaunchedEffect(Unit) {
         Log.d("ReservationPeriod", "Screen initialized with params: currencyCode=$currencyCode, currencyName=$currencyName, targetRate=$targetRate, amount=$amount")
+    }
+
+    LaunchedEffect(currencyCode, currencyName, targetRate, amount, boxId) {
+        viewModel.initialize(currencyCode, currencyName, targetRate, amount, boxId)
     }
 
     // 에러 메시지 표시
@@ -65,7 +70,7 @@ fun ReservationPeriodSelectionScreen(
             val startDate = uiState.startDate.ifEmpty { "2024-01-01" }
             val endDate = uiState.endDate.ifEmpty { "2024-01-02" }
 
-            val route = "reservation_final_complete/$currencyCode/$currencyName/$targetRate/$amount/$startDate/$endDate"
+            val route = "reservation_final_complete/$currencyCode/$currencyName/$targetRate/$amount/$startDate/$endDate?boxId=$boxId"
             Log.d("ReservationPeriod", "Navigation route: $route")
 
             try {

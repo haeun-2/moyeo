@@ -97,7 +97,7 @@ fun ExchangeReservationHomeScreen(
         // 환전 예약하기 버튼
         Button(
             onClick = {
-                navController.navigate("currency_selection")
+                navController.navigate("box_selection") // 통장 선택 화면으로 먼저이동
             },
             modifier = Modifier
                 .fillMaxWidth()

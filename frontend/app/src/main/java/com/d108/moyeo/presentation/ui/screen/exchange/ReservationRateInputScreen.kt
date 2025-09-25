@@ -24,12 +24,14 @@ fun ReservationRateInputScreen(
     navController: NavController,
     currencyCode: String,
     currencyName: String,
+    boxId: Long = 1L,
     viewModel: ReservationRateInputViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(currencyCode, currencyName) {
         viewModel.setCurrency(currencyCode, currencyName)
+        viewModel.setBoxId(boxId)
     }
 
     Column(
@@ -134,7 +136,7 @@ fun ReservationRateInputScreen(
         // 다음으로 버튼
         Button(
             onClick = {
-                navController.navigate("reservation_amount_input/$currencyCode/$currencyName/${uiState.inputRate}")
+                navController.navigate("reservation_amount_input/$currencyCode/$currencyName/${uiState.inputRate}?boxId=$boxId")
             },
             enabled = uiState.inputRate != "0",
             modifier = Modifier

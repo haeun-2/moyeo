@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class ReservationRateInputUiState(
+    val boxId: Long = 1L,
     val currencyCode: String = "",
     val currencyName: String = "",
     val inputRate: String = "0",
@@ -83,5 +84,8 @@ class ReservationRateInputViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+    fun setBoxId(boxId: Long) {
+        _uiState.update { it.copy(boxId = boxId) }
     }
 }

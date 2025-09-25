@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.*
 
@@ -22,8 +23,17 @@ fun ReservationFinalCompleteScreen(
     targetRate: String,
     amount: String,
     startDate: String,
-    endDate: String
+    endDate: String,
+    boxId: Long,
+    viewModel: ReservationFinalCompleteViewModel = hiltViewModel()
 ) {
+    // boxId를 ViewModel에 전달
+    LaunchedEffect(boxId, currencyCode, targetRate, amount, endDate) {
+        viewModel.initialize(boxId, currencyCode, targetRate, amount, endDate)
+    }
+
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -58,8 +68,6 @@ fun ReservationFinalCompleteScreen(
         InfoCard(label = "지정 환율", value = "KRW $targetRate 이하일 때")
         Spacer(modifier = Modifier.height(12.dp))
         InfoCard(label = "예약 금액", value = "$currencyCode $amount")
-        Spacer(modifier = Modifier.height(12.dp))
-        InfoCard(label = "부족 금액", value = "KRW 8,000")
 
         Spacer(modifier = Modifier.height(32.dp))
 

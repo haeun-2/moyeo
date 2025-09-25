@@ -26,6 +26,7 @@ fun ReservationAmountInputScreen(
     currencyCode: String,
     currencyName: String,
     targetRate: Long,
+    boxId: Long = 1L,
     viewModel: ReservationAmountInputViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -193,7 +194,7 @@ fun ReservationAmountInputScreen(
                 } else {
                     uiState.inputAmount
                 }
-                navController.navigate("reservation_period_selection/$currencyCode/$currencyName/$targetRate/$finalAmount")
+                navController.navigate("reservation_period_selection/$currencyCode/$currencyName/$targetRate/$finalAmount?boxId=$boxId")
             },
             enabled = uiState.inputAmount != "0",
             modifier = Modifier
