@@ -47,7 +47,7 @@ class ExchangeHistoryViewModel @Inject constructor(
                 "10m" -> "m"
                 else -> "m"}
             val volumeResultDeferred = async {
-                if (tradeMode == "buy") {
+                if (tradeMode == "charge") {
                     getBuyExchangeVolumeHistoryUseCase(volumeUnit, currencyCode)
                 } else {
                     getSellExchangeVolumeHistoryUseCase(volumeUnit, currencyCode)

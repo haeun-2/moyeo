@@ -44,11 +44,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import android.widget.Toast
+import com.d108.moyeo.data.remote.dto.exchange.ExchangeRateItem
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.ui.component.exchange.ExchangeRateData
 import com.d108.moyeo.presentation.ui.component.exchange.ExchangeTypeModal
+import com.d108.moyeo.util.CurrencyUtils.getCurrencyFlag
+import com.d108.moyeo.util.CurrencyUtils.getCurrencyName
 
 @Composable
 fun ExchangeScreen(
@@ -186,7 +188,7 @@ fun ExchangeScreen(
                             } else {
                                 NormalRateItem(
                                     rate = rate,
-                                    onClick = { viewModel.showModal() }
+                                    onClick = { viewModel.showModal(rate) }
                                 )
                             }
                         }
@@ -249,12 +251,37 @@ fun ExchangeScreen(
         ExchangeTypeModal(
             onDismiss = { viewModel.hideModal() },
             onChargeSelected = {
-                viewModel.hideModal()
-                navController.navigate("exchange_keypad/charge")
+                // ViewModel에 저장된 선택 아이템(selectedRate)을 가져옵니다.
+                uiState.selectedItem?.let { rate ->
+                    val currencyName = getCurrencyName(rate.currencyCode)
+                    // 저장된 정보로 내비게이션 경로를 동적으로 생성합니다.
+                    navController.navigate(
+                        "exchange_keypad/charge?currencyCode=${rate.currencyCode}&currencyName=${currencyName}"
+                    )
+                }
+                viewModel.hideModal() // 모달을 닫습니다.
             },
             onRefundSelected = {
-                viewModel.hideModal()
-                navController.navigate("exchange_keypad/refund")
+                // ViewModel에 저장된 선택 아이템(selectedRate)을 가져옵니다.
+                uiState.selectedItem?.let { rate ->
+                    val currencyName = getCurrencyName(rate.currencyCode)
+                    // 저장된 정보로 내비게이션 경로를 동적으로 생성합니다.
+                    navController.navigate(
+                        "exchange_keypad/refund?currencyCode=${rate.currencyCode}&currencyName=${currencyName}"
+                    )
+                }
+                viewModel.hideModal() // 모달을 닫습니다.
+            },
+
+            onHistorySelected = {
+                // ViewModel에 저장된 선택 아이템(selectedItem)을 가져옵니다.
+                uiState.selectedItem?.let { rate ->
+                    val currencyName = getCurrencyName(rate.currencyCode)
+                    // 'charge'(매수) 모드를 기준으로 히스토리 화면으로 이동하는 경로를 생성합니다.
+                    navController.navigate(
+                        "exchange_history/${rate.currencyCode}/$currencyName/charge"              )
+                }
+                viewModel.hideModal() // 모달을 닫습니다.
             }
         )
     }
@@ -263,7 +290,7 @@ fun ExchangeScreen(
 // 일반 모드 아이템
 @Composable
 private fun NormalRateItem(
-    rate: ExchangeRateData,
+    rate: ExchangeRateItem,
     onClick: () -> Unit
 ) {
     Row(
@@ -282,34 +309,21 @@ private fun NormalRateItem(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = rate.countryFlag)
+            Text(text = getCurrencyFlag(rate.currencyCode))
         }
 
         Spacer(modifier = Modifier.width(Spacing.SmallMedium))
 
-        // 은행명과 환율
+        //과 환율
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = rate.bankName,
+            Text(  // 화폐명
+                text = getCurrencyName(rate.currencyCode),
                 style = Typography.bodyMedium,
                 fontWeight = FontWeight.Medium
             )
-            Text(
-                text = rate.rate,
+            Text(  // 원래 환율 TODO: 매수환율을 보여줄지?
+                text = rate.originalRate.toString(),  // TODO: 자리 수 확인
                 style = Typography.bodySmall,
-                color = Color.Gray
-            )
-        }
-
-        // 변동률
-        Column(horizontalAlignment = Alignment.End) {
-            val isPositive = rate.isIncreased
-            val changeColor = if (isPositive) Color.Red else Color.Blue
-            val changeSymbol = if (isPositive) "▲" else "▼"
-            Text(
-                text = "$changeSymbol ${rate.change}",
-                style = Typography.bodySmall,
-                color = changeColor
             )
         }
 
@@ -328,7 +342,7 @@ private fun NormalRateItem(
 // 편집 모드 아이템
 @Composable
 private fun EditModeRateItem(
-    rate: ExchangeRateData,
+    rate: ExchangeRateItem,
     onDelete: () -> Unit,
     onDragStart: () -> Unit,
     onDragEnd: (Int) -> Unit,
@@ -377,35 +391,20 @@ private fun EditModeRateItem(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = rate.countryFlag)
+            Text(text = getCurrencyFlag(rate.currencyCode))
         }
 
         Spacer(modifier = Modifier.width(Spacing.SmallMedium))
 
-        // 은행명과 환율
-        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = rate.bankName,
+                text = getCurrencyName(rate.currencyCode),
                 style = Typography.bodyMedium,
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = rate.rate,
+                text = rate.originalRate.toString(), // TODO: 글자수 확인
                 style = Typography.bodySmall,
                 color = Color.Gray
-            )
-        }
-
-        // 변동률 (상승/하락 따라 색상 변경)
-        Column(horizontalAlignment = Alignment.End) {
-            val isPositive = rate.isIncreased
-            val changeColor = if (isPositive) Color.Red else Color.Blue
-            val changeSymbol = if (isPositive) "▲" else "▼"
-
-            Text(
-                text = "$changeSymbol ${rate.change}",
-                style = Typography.bodySmall,
-                color = changeColor
             )
         }
 
@@ -424,4 +423,3 @@ private fun EditModeRateItem(
             )
         }
     }
-}

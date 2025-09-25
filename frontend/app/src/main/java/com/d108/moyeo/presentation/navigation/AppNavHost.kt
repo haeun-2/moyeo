@@ -411,7 +411,7 @@ fun AppNavHost(
         ) { backStackEntry ->
             val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
             val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
-            val tradeMode = backStackEntry.arguments?.getString("tradeMode") ?: "buy"
+            val tradeMode = backStackEntry.arguments?.getString("tradeMode") ?: "charge"
 
             ExchangeHistoryScreen(
                 navController = navController,
