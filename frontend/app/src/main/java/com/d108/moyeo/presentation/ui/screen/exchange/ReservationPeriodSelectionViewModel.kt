@@ -93,7 +93,7 @@ class ReservationPeriodViewModel @Inject constructor(
                     toCurrency = state.currencyCode,
                     amount = state.amount.toLong(),
                     targetRate = state.targetRate.toLong(),
-                    expiresAt = "${state.endDate}T23:59:59"
+                    expiresAt = state.endDate
                 ).onSuccess {
                     _uiState.update {
                         it.copy(

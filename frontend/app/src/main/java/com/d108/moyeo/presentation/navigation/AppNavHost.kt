@@ -18,8 +18,6 @@ import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeAddScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeCompleteScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeKeypadScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeReservationHomeScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ReservationCompleteScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeReservationScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ReservationAmountInputScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ReservationFinalCompleteScreen
@@ -298,35 +296,6 @@ fun AppNavHost(
             )
         }
 
-// 예약환전 완료
-        composable(
-            route = "reservation_complete/{currencyCode}/{currencyName}/{targetRate}/{amount}/{startDate}/{endDate}",
-            arguments = listOf(
-                navArgument("currencyCode") { type = NavType.StringType },
-                navArgument("currencyName") { type = NavType.StringType },
-                navArgument("targetRate") { type = NavType.LongType },
-                navArgument("amount") { type = NavType.StringType },
-                navArgument("startDate") { type = NavType.StringType },
-                navArgument("endDate") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
-            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
-            val targetRate = backStackEntry.arguments?.getLong("targetRate") ?: 0L
-            val amount = backStackEntry.arguments?.getString("amount") ?: ""
-            val startDate = backStackEntry.arguments?.getString("startDate") ?: ""
-            val endDate = backStackEntry.arguments?.getString("endDate") ?: ""
-
-            ReservationFinalCompleteScreen(
-                navController = navController,
-                currencyCode = currencyCode,
-                currencyName = currencyName,
-                targetRate = targetRate.toString(),
-                amount = amount,
-                startDate = startDate,
-                endDate = endDate
-            )
-        }
 
         // 환율의 추가 버튼을 누르면 이동
         composable("exchange_add") {
@@ -338,44 +307,33 @@ fun AppNavHost(
             CurrencySelectionScreen(navController)
         }
 
-        // 국가별 환전
-        composable(
-            route = "exchange_reservation/{currencyCode}/{currencyName}",
-            arguments = listOf(
-                navArgument("currencyCode") { type = NavType.StringType },
-                navArgument("currencyName") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
-            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
-            ExchangeReservationScreen(
-                navController = navController,
-                currencyCode = currencyCode,
-                currencyName = currencyName
-            )
-        }
         // 예약환전 완료
-        // Navigation에 추가
         composable(
-            route = "reservation_complete/{currencyCode}/{currencyName}/{foreignAmount}/{krwAmount}",
+            route = "reservation_final_complete/{currencyCode}/{currencyName}/{targetRate}/{amount}/{startDate}/{endDate}",
             arguments = listOf(
                 navArgument("currencyCode") { type = NavType.StringType },
                 navArgument("currencyName") { type = NavType.StringType },
-                navArgument("foreignAmount") { type = NavType.StringType },
-                navArgument("krwAmount") { type = NavType.StringType }
+                navArgument("targetRate") { type = NavType.StringType }, // Long에서 String으로 변경
+                navArgument("amount") { type = NavType.StringType },
+                navArgument("startDate") { type = NavType.StringType },
+                navArgument("endDate") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
             val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
-            val foreignAmount = backStackEntry.arguments?.getString("foreignAmount") ?: ""
-            val krwAmount = backStackEntry.arguments?.getString("krwAmount") ?: ""
+            val targetRate = backStackEntry.arguments?.getString("targetRate") ?: ""
+            val amount = backStackEntry.arguments?.getString("amount") ?: ""
+            val startDate = backStackEntry.arguments?.getString("startDate") ?: ""
+            val endDate = backStackEntry.arguments?.getString("endDate") ?: ""
 
-            ReservationCompleteScreen(
+            ReservationFinalCompleteScreen(
                 navController = navController,
                 currencyCode = currencyCode,
                 currencyName = currencyName,
-                foreignAmount = foreignAmount,
-                krwAmount = krwAmount
+                targetRate = targetRate,
+                amount = amount,
+                startDate = startDate,
+                endDate = endDate
             )
         }
 
