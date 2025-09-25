@@ -1,6 +1,5 @@
 package com.d108.moyeo.presentation.ui.screen.home.wallet
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,7 +9,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -19,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -27,8 +26,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.d108.moyeo.R
 import com.d108.moyeo.domain.model.history.HistoryTransaction
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Spacing
@@ -36,15 +35,12 @@ import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.button
 import com.d108.moyeo.presentation.theme.errorLight
 import com.d108.moyeo.presentation.theme.onPrimaryLight
-import com.d108.moyeo.presentation.ui.component.history.toDate
+import com.d108.moyeo.presentation.theme.onSurfaceVariantLight
 import com.d108.moyeo.presentation.ui.component.home.CommonFilterBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.CurrencyBottomSheet
-import com.d108.moyeo.presentation.ui.component.home.FilterOptions
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 private val TAG = "MyWalletScreen"
 
@@ -147,8 +143,15 @@ fun MyWalletScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = viewModel::onChargeClick,  // 여기에서 충전하기 화면으로 이동
-                icon = { Icon(Icons.Default.Add, "충전 아이콘") },
-                text = { Text(text = "충전") }
+                icon = {
+                    Icon(
+                        painter = painterResource(R.drawable.savings_24dp),
+                        contentDescription = "충전 아이콘",
+                    )
+                },
+                text = { Text(text = "충전") },
+                containerColor = onSurfaceVariantLight,
+                contentColor = onPrimaryLight
             )
         },
         floatingActionButtonPosition = FabPosition.End
@@ -161,8 +164,7 @@ fun MyWalletScreen(
                 .padding(
                     start = innerPadding.calculateLeftPadding(layoutDir),
                     end = innerPadding.calculateRightPadding(layoutDir),
-                    bottom = innerPadding.calculateBottomPadding()
-                ), // FAB에 가려지지 않도록 패딩 적용
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 상단 정보 카드
@@ -254,7 +256,7 @@ private fun TopWalletInfoSurface(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(300.dp), // 높이를 200dp로 조정
+            .height(300.dp),
         tonalElevation = 0.dp,
         color = bg,
         contentColor = textColor
@@ -263,7 +265,6 @@ private fun TopWalletInfoSurface(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(Spacing.Medium),
-//            horizontalAlignment = Alignment.CenterHorizontally,  // 이 속성으로 수평 중앙 정렬
             verticalArrangement = Arrangement.SpaceBetween  // 이 속성으로 영역 구분
         ) {
             Box(
@@ -428,12 +429,13 @@ private fun TransactionRowItem(
                 Text(
                     text = "$formattedAmount ${transaction.currency}",
                     style = Typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (transaction.amount < 0) errorLight else Color.Blue
+                    fontWeight = FontWeight.Medium,
+                    color = if (transaction.amount < 0) errorLight else Color.Black
                 )
+                Spacer(modifier = Modifier.height(Spacing.Small))
                 Text(
                     text = "${DecimalFormat("#,###.##").format(transaction.balance)} ${transaction.currency}",
-                    style = Typography.bodySmall,
+                    style = Typography.bodyMedium,
                     color = Color.Gray
                 )
             }

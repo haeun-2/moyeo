@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,15 +48,6 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         )
     }
 
-
-    // 데이터가 아직 로드되지 않았으면 로딩 화면.
-    if (transaction == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-        return
-    }
-
     LaunchedEffect(key1 = Unit) {
         viewModel.navigationEvent.collect { event ->
             when (event) {
@@ -75,22 +67,40 @@ fun MyWalletDetailScreen(  // 각 아이템을 클릭했을 때 전환되는 화
         }
     }
 
-    if (transaction.category == "환전") {
-        ExchangeDetailContent(
-            transaction = transaction,
-            uiState = uiState,
-            viewModel = viewModel,
-            navController = navController
-        )
-    } else {
-        GeneralTransactionDetailContent(
-            transaction = transaction,
-            uiState = uiState,
-            viewModel = viewModel,
-            navController = navController
-        )
+    Scaffold { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    start = innerPadding.calculateLeftPadding(LocalLayoutDirection.current),
+                    end = innerPadding.calculateRightPadding(LocalLayoutDirection.current),
+                )
+        ) {
+            if (transaction == null) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                if (transaction.category == "환전") {
+                    ExchangeDetailContent(
+                        transaction = transaction,
+                        uiState = uiState,
+                        viewModel = viewModel,
+                        navController = navController
+                    )
+                } else {
+                    GeneralTransactionDetailContent(
+                        transaction = transaction,
+                        uiState = uiState,
+                        viewModel = viewModel,
+                        navController = navController
+                    )
+                }
+            }
+        }
     }
 }
+
 @Composable
 private fun GeneralTransactionDetailContent(
     transaction: HistoryTransaction,
@@ -116,7 +126,7 @@ private fun GeneralTransactionDetailContent(
             Text(text = transaction.title, style = Typography.titleLarge)
             Spacer(modifier = Modifier.height(Spacing.Medium))
             HorizontalDivider()
-            Spacer(modifier = Modifier.height(Spacing.Large))
+            Spacer(modifier = Modifier.height(Spacing.Medium))
 
             DetailInfoRow(
                 label = "카테고리",
@@ -192,13 +202,15 @@ private fun ExchangeDetailContent(
             Text(text = transaction.title, style = Typography.titleLarge)
             Spacer(modifier = Modifier.height(Spacing.Medium))
             HorizontalDivider()
-            Spacer(modifier = Modifier.height(Spacing.Large))
+            Spacer(modifier = Modifier.height(Spacing.Medium))
 
             // 기본 정보 (API 호출과 무관하게 즉시 표시)
             DetailInfoRow(label = "거래 시각", content = { Text(transaction.datetime, style = Typography.bodyLarge) })
             DetailInfoRow(label = "거래 금액", content = { Text("$formattedAmount ${transaction.currency}", style = Typography.bodyLarge, color = amountColor) })
             DetailInfoRow(label = "거래 후 잔액", content = { Text("$formattedBalance ${transaction.currency}", style = Typography.bodyLarge) })
 
+            Spacer(modifier = Modifier.height(Spacing.Medium))
+            HorizontalDivider()
 
             // 추가 정보 (API 호출 상태에 따라 표시)
             Box(
@@ -213,80 +225,95 @@ private fun ExchangeDetailContent(
                         exchangeDetail.forEachIndexed { index, detail ->
                             if (index > 0) {
                                 Spacer(modifier = Modifier.height(Spacing.Medium))
-                                HorizontalDivider()
-                                Spacer(modifier = Modifier.height(Spacing.Medium))
                             }
-                            Text(
-                                text = "${index + 1}차 환전",
-                                style = Typography.titleMedium,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            Spacer(modifier = Modifier.height(Spacing.Small))
-
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceAround,
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = Spacing.Medium),
+                                horizontalArrangement = Arrangement.SpaceBetween,
                             ) {
-                                CurrencyAmount(
-                                    label = "From",
-                                    amount = "- ${DecimalFormat("#,###.##").format(detail.fromAmount)}",
-                                    currency = detail.fromCurrency,
-                                    color = Color.Red
-                                )
-                                Text(text = "→", style = Typography.headlineMedium)
-                                CurrencyAmount(
-                                    label = "To",
-                                    amount = "+ ${DecimalFormat("#,###.##").format(detail.toAmount)}",
-                                    currency = detail.toCurrency,
-                                    color = Color.Blue
-                                )
-                            }
+                                Column(
+                                    horizontalAlignment = Alignment.Start
+                                ) {
+                                    Text(
+                                        text = "${index + 1}차 환전",
+                                        style = Typography.bodyLarge,
+                                        color = Color.Gray
+                                    )
 
-                            // 적용 환율에 표시될 숫자
-                            val leftCurrency: String
-                            val leftUnit: String
-                            val rightCurrency: String
-                            val rightUnit: String
+                                    Spacer(modifier = Modifier.height(Spacing.Medium))
 
-                            if (detail.fromCurrency == "KRW") {  // 한화에서 외화로 가는 경우
-                                if (detail.toCurrency == "JPY") {  // 한 -> 일화
-                                    leftCurrency = "KRW"
-                                    leftUnit = detail.exchangeRate.toString()
-                                    rightCurrency = detail.toCurrency
-                                    rightUnit = "100"
-                                } else {
-                                    leftCurrency = "KRW"
-                                    leftUnit = detail.exchangeRate.toString()
-                                    rightCurrency = detail.toCurrency
-                                    rightUnit = "1"
+                                    // 적용 환율에 표시될 숫자
+                                    val leftCurrency: String
+                                    val leftUnit: String
+                                    val rightCurrency: String
+                                    val rightUnit: String
+
+                                    if (detail.fromCurrency == "KRW") {  // 한화에서 외화로 가는 경우
+                                        if (detail.toCurrency == "JPY") {  // 한 -> 일화
+                                            leftCurrency = "KRW"
+                                            leftUnit = detail.exchangeRate.toString()
+                                            rightCurrency = detail.toCurrency
+                                            rightUnit = "100"
+                                        } else {
+                                            leftCurrency = "KRW"
+                                            leftUnit = detail.exchangeRate.toString()
+                                            rightCurrency = detail.toCurrency
+                                            rightUnit = "1"
+                                        }
+                                    } else {  // 외화에서 한화로 가는 경우
+                                        if (detail.fromCurrency == "JPY") {
+                                            leftCurrency = "KRW"
+                                            leftUnit = detail.exchangeRate.toString()
+                                            rightCurrency = detail.fromCurrency
+                                            rightUnit = "100"
+                                        } else {
+                                            leftCurrency = "KRW"
+                                            leftUnit = detail.exchangeRate.toString()
+                                            rightCurrency = detail.fromCurrency
+                                            rightUnit = "1"
+                                        }
+                                    }
+
+                                    Text(
+                                        text = "$leftUnit $leftCurrency ≈ $rightUnit $rightCurrency",
+                                        style = Typography.bodyLarge
+                                    )
                                 }
-                            } else {  // 외화에서 한화로 가는 경우
-                                if (detail.fromCurrency == "JPY") {
-                                    leftCurrency = "KRW"
-                                    leftUnit = detail.exchangeRate.toString()
-                                    rightCurrency = detail.fromCurrency
-                                    rightUnit = "100"
-                                } else {
-                                    leftCurrency = "KRW"
-                                    leftUnit = detail.exchangeRate.toString()
-                                    rightCurrency = detail.fromCurrency
-                                    rightUnit = "1"
+
+                                Column(
+                                    horizontalAlignment = Alignment.End
+                                ) {
+                                    Text(
+                                        text = "- ${DecimalFormat("#,###.##").format(detail.fromAmount)} ${detail.fromCurrency}",
+                                        style = Typography.bodyLarge,
+                                        color = Color.Red,
+                                        fontWeight = FontWeight.Medium
+                                    )
+
+                                    Spacer(modifier = Modifier.height(Spacing.Small))
+
+                                    Text("↓", style = Typography.bodyLarge)
+
+                                    Spacer(modifier = Modifier.height(Spacing.Medium))
+
+                                    Text(
+                                        text = "+ ${DecimalFormat("#,###.##").format(detail.toAmount)} ${detail.toCurrency}",
+                                        style = Typography.bodyLarge,
+                                        color = Color.Blue,
+                                        fontWeight = FontWeight.Medium
+                                    )
                                 }
                             }
-
-                            DetailInfoRow(label = "적용 환율", content = {
-                                Text("$leftUnit $leftCurrency = $rightUnit $rightCurrency", style = Typography.bodyLarge)
-                            })
                         }
-
-
                     }
                     // 3. API 호출 실패
                     uiState.errorMessage != null -> Text(uiState.errorMessage, color = Color.Red)
                 }
             }
+
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(Spacing.Medium))
 
             // 메모 편집 기능
             InlineEditMemoRow(
@@ -298,7 +325,7 @@ private fun ExchangeDetailContent(
                 onCancelClick = viewModel::cancelMemoEdit
             )
 
-            Spacer(modifier = Modifier.height(Spacing.Large))
+            Spacer(modifier = Modifier.height(Spacing.Medium))
             HorizontalDivider()
             SearchActionRow(text = "\"${transaction.title}\" 검색하기", onClick = viewModel::onSearchTitleClick)
             HorizontalDivider()
@@ -385,8 +412,7 @@ fun InlineEditMemoRow(
 ) {
     Row(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isEditing) {
@@ -420,7 +446,6 @@ fun InlineEditMemoRow(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = "저장",
-                    tint = Color.Green,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -428,7 +453,6 @@ fun InlineEditMemoRow(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "취소",
-                    tint = Color.Red,
                     modifier = Modifier.size(20.dp)
                 )
             }

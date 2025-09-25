@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
-import com.d108.moyeo.domain.usecase.box.GetBookmarkedBoxesUseCase
+import com.d108.moyeo.domain.model.box.BoxType
 import com.d108.moyeo.domain.usecase.payment.GenerateQRTokenUseCase
 import com.d108.moyeo.util.generateQRCodeBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,7 +30,7 @@ class QRScreenViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     val bookmarkedBoxes = boxStore.boxUiStates.map { allBoxes ->
-        allBoxes.filter { it.isBookmarked }
+        allBoxes.filter { it.type == BoxType.PERSONAL || it.isBookmarked }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

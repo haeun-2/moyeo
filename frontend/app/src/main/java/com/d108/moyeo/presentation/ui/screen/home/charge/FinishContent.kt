@@ -2,9 +2,7 @@ package com.d108.moyeo.presentation.ui.screen.home.charge
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,7 +14,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
-import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.primaryLight
 import java.text.DecimalFormat
 
@@ -32,33 +29,42 @@ fun FinishContent(viewModel: ChargeViewModel) {
     }
 
     Column(
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
     ) {
+        Column(
+            modifier = Modifier
+                .weight(1f),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                "충전 완료!",
+                style = typography.titleLarge,
+                fontWeight = FontWeight.Medium
+            )
+        }
 
-        Text(
-            "충전 완료!",
-            style = typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(Spacing.Medium))
-
-        // buildAnnotatedString을 사용하여 텍스트의 특정 부분만 강조합니다.
-
-        Text(
-            text = buildAnnotatedString {
-                withStyle(style = SpanStyle(
-                    fontWeight = FontWeight.Bold,
-                    color = primaryLight
-                )
-                ) {
-                    append("$formattedAmount")
-                }
-                append("원이 충전되었어요")
-            },
-            style = typography.bodyLarge
-        )
+        Column(
+            modifier = Modifier
+                .weight(1f),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(
+                        SpanStyle(
+                            fontWeight = FontWeight.Medium,
+                            color = primaryLight
+                        )
+                    ) {
+                        append("$formattedAmount")
+                    }
+                    append(" 원이 충전되었어요")
+                },
+                style = typography.bodyMedium
+            )
+        }
     }
 }

@@ -24,7 +24,11 @@ fun NotificationItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = Spacing.SmallMedium, vertical = Spacing.Small)
+            .padding(
+                start = Spacing.SmallMedium,
+                end = Spacing.SmallMedium,
+                top = Spacing.SmallMedium
+            )
     ) {
         // 상단: 제목 - 수신시각
         Row(
@@ -34,23 +38,25 @@ fun NotificationItem(
         ) {
             Text(
                 text = notification.title,
-                style = Typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                style = Typography.headlineMedium,
+                fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = notification.time ?: "",
-                style = Typography.bodySmall,
+                style = Typography.bodyMedium,
             )
         }
 
-        Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
+        Spacer(modifier = Modifier.height(Spacing.Small))
 
         // 본문: 보낸 사람 / 거래량 / 잔액 (존재하는 항목만)
         notification.sender?.let {
             Text(text = it, style = Typography.bodyMedium, color = onSurfaceVariantLight)
+            Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
         }
         notification.amount?.let {
             Text(text = it, style = Typography.bodyMedium, color = onSurfaceVariantLight)
+            Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
         }
         notification.balance?.let {
             Text(text = it, style = Typography.bodyMedium, color = onSurfaceVariantLight)
@@ -58,7 +64,7 @@ fun NotificationItem(
 
         // 마지막 항목일 경우 HorizontalDivider 를 만들지 않음
         if (showDivider) {
-            Spacer(modifier = Modifier.height(Spacing.Small))
+            Spacer(modifier = Modifier.height(Spacing.SmallMedium))
             HorizontalDivider()
         }
     }

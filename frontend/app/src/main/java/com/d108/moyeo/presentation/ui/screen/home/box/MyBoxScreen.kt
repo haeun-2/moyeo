@@ -13,8 +13,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,16 +21,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
+import com.d108.moyeo.R
 import com.d108.moyeo.domain.model.history.HistoryTransaction
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Spacing
@@ -40,6 +42,7 @@ import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.theme.button
 import com.d108.moyeo.presentation.theme.errorLight
 import com.d108.moyeo.presentation.theme.onPrimaryLight
+import com.d108.moyeo.presentation.theme.onSurfaceVariantLight
 import com.d108.moyeo.presentation.ui.component.home.CommonFilterBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.CurrencyBottomSheet
 import com.d108.moyeo.presentation.ui.component.home.FilterOptions
@@ -161,8 +164,16 @@ fun MyBoxScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = viewModel::onCalculateClick,  // 여기에서 정산하기 화면으로 이동
-                icon = { Icon(Icons.Default.ThumbUp, "정산 아이콘") },
-                text = { Text(text = "정산하기") }
+                icon = {
+                    Icon(
+                        painter = painterResource(R.drawable.balance_sheet),
+                        contentDescription = "정산 아이콘",
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                text = { Text(text = "정산하기") },
+                containerColor = onSurfaceVariantLight,
+                contentColor = onPrimaryLight
             )
         },
         floatingActionButtonPosition = FabPosition.End
@@ -176,7 +187,6 @@ fun MyBoxScreen(
                 .padding(
                     start = innerPadding.calculateLeftPadding(layoutDir),
                     end = innerPadding.calculateRightPadding(layoutDir),
-                    bottom = innerPadding.calculateBottomPadding()
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -194,7 +204,7 @@ fun MyBoxScreen(
                 onCollectClick = viewModel::onCollectClick,
                 onExchangeClick = viewModel::onExchangeClick,
                 onMemberClick = viewModel::onMemberClick,
-                bg = uiState.boxInfo?.bg ?: Color.Blue,
+                bg = uiState.boxInfo?.bg ?: Color.Transparent,
                 textColor = uiState.boxInfo?.textColor ?: Color.Black,
             )
 
@@ -286,90 +296,97 @@ private fun TopBoxInfoSurface(
         color = bg,
         contentColor = textColor
     ) {
-        Column(
+        Box (
             modifier = Modifier
                 .fillMaxSize()
-                .padding(Spacing.Medium),
-            horizontalAlignment = Alignment.CenterHorizontally, // 모든 자식들을 수평 중앙 정렬
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(Spacing.Medium)
         ) {
-            // --- 1. 최상단 영역 (뒤로가기, 박스이름, 초대하기) ---
-            Box(
-                modifier = Modifier.fillMaxWidth()
+            // --- 1. 최상단 영역 (뒤로가기, 박스이름, 인원 수) ---
+            Column (
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                IconButton(
-                    onClick = onBackClick,
-                    modifier = Modifier.align(Alignment.CenterStart)
+                Box(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "뒤로가기"
-                    )
-                }
-
-                Text(
-                    text = boxName,
-                    style = Typography.titleLarge,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-
-                IconButton(
-                    onClick = onInviteClick,
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = "초대하기"
-                    )
-                }
-            }
-
-            // --- 2. 중간 영역 (멤버 수, 잔액) ---
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // 멤버 수 표시
-                AssistChip(
-                    onClick = onMemberClick,
-                    label = { Text("${members.size}명") },
-                    leadingIcon = {
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "멤버 목록",
-                            modifier = Modifier.size(AssistChipDefaults.IconSize)
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                            contentDescription = "뒤로가기"
                         )
                     }
-                )
 
-                Spacer(Modifier.height(Spacing.Small))
-
-                // 잔액 표시
-                Row (
-                    modifier = Modifier
-                        .clickable(
-                            role = Role.Button,
-                            onClick = onBalanceClick,
-                        )
-                        .padding(Spacing.Small),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
                     Text(
-                        text = totalBalance,
-                        style = Typography.displayLarge,
+                        text = boxName,
+                        style = Typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .fillMaxWidth()
+                            .padding(horizontal = 56.dp)
                     )
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = "화폐 선택"
-                    )
+
+                    Box(
+                        modifier = Modifier
+                            .height(32.dp)
+                            .clickable(onClick = onMemberClick)
+                            .padding(horizontal = 12.dp)
+                            .align(Alignment.CenterEnd),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "멤버 목록",
+                                modifier = Modifier.size(20.dp),
+                                tint = textColor
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = "${members.size}",
+                                style = Typography.bodyMedium,
+                                color = textColor
+                            )
+                        }
+                    }
                 }
             }
 
-            // --- 3. 최하단 버튼 영역 (모으기, 환전하기) ---
+            // --- 2. 중간 영역 (잔액) ---
             Row(
                 modifier = Modifier
+                    .align(Alignment.Center)
+                    .clickable(role = Role.Button, onClick = onBalanceClick)
+                    .padding(Spacing.Small),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 잔액 표시
+                Text(
+                    text = totalBalance,
+                    style = Typography.displayLarge,
+                )
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "화폐 선택"
+                )
+            }
+
+            // --- 3. 최하단 버튼 영역 (모으기, 환전하기, 초대하기) ---
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
                     .fillMaxWidth(0.85f),
-                horizontalArrangement = Arrangement.spacedBy(32.dp)
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.Medium)
             ) {
                 Button(
                     onClick = onCollectClick,
@@ -391,6 +408,22 @@ private fun TopBoxInfoSurface(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("환전하기")
+                }
+
+                Button(
+                    onClick = onInviteClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = button,
+                        contentColor = onPrimaryLight
+                    ),
+                    contentPadding = PaddingValues(8.dp),
+                    modifier = Modifier.sizeIn(48.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.baseline_open_in_new_24),
+                        contentDescription = "초대하기",
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
@@ -473,12 +506,13 @@ private fun BoxTransactionRowItem(
                 Text(
                     text = "$formattedAmount ${transaction.currency}",
                     style = Typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (transaction.amount < 0) errorLight else Color.Blue
+                    fontWeight = FontWeight.Medium,
+                    color = if (transaction.amount < 0) errorLight else Color.Black
                 )
+                Spacer(modifier = Modifier.height(Spacing.Small))
                 Text(
                     text = "${DecimalFormat("#,###.##").format(transaction.balance)} ${transaction.currency}",
-                    style = Typography.bodySmall,
+                    style = Typography.bodyMedium,
                     color = Color.Gray
                 )
             }
