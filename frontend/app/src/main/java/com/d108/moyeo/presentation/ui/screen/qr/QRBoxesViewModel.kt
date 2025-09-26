@@ -17,6 +17,7 @@ import javax.inject.Inject
 
 sealed class QRBoxesNavEvent {
     data class NavigateBackWithResult(val selectedBoxId: Long) : QRBoxesNavEvent()
+    object NavigateBack: QRBoxesNavEvent()
 }
 
 @HiltViewModel
@@ -25,13 +26,13 @@ class QRBoxesViewModel @Inject constructor(
     private val boxStore: BoxStore,  // 새롭게 박스 스토어를 주입받음
     private val userDataManager: UserDataManager // 로컬 저장을 위해 추가
 ) : ViewModel() {
+
     private val _uiState = MutableStateFlow(QRBoxesUiState())
     val uiState = _uiState.asStateFlow()
     val groupBoxesUi = boxStore.boxUiStates  // 이미 스테이트플로우 처리가 되어서 들어옴
 
     private val _navigationEvent = MutableSharedFlow<QRBoxesNavEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
-
 
     fun onBoxClick(box: BoxStoreUiState) {
         _uiState.update { currentState ->
@@ -72,6 +73,12 @@ class QRBoxesViewModel @Inject constructor(
                         it.copy(isLoading = false, errorMessage = "즐겨찾기 추가에 실패했습니다.")
                     }
                 }
+        }
+    }
+
+    fun onBackClick() {
+        viewModelScope.launch {
+            _navigationEvent.emit(QRBoxesNavEvent.NavigateBack)
         }
     }
 }

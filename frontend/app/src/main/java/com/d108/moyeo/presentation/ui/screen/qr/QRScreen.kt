@@ -18,18 +18,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.d108.moyeo.R // QR 코드 이미지 예제를 위해 R을 import합니다.
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Padding
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-import com.d108.moyeo.presentation.theme.onPrimaryLight
 import com.d108.moyeo.presentation.theme.primaryLight
 import com.d108.moyeo.presentation.ui.component.qr.SquareMoyeoBoxItem
 import kotlinx.coroutines.launch
@@ -69,105 +67,123 @@ fun QRScreen(
         bookmarkedBoxes.find { it.id == uiState.selectedBoxId }?.title ?: "결제할 모여 박스를 선택해주세요"
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                start = Spacing.Medium, end = Spacing.Medium,
-                top = Padding.ScreenTop, bottom = Padding.ScreenBottom
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
 
-        Spacer(modifier = Modifier.height(Spacing.Large))
-
-        // 200 200 dp의 QR 코드가 들어올 영역
-        Box(
+    Scaffold { innerPadding ->
+        Column(
             modifier = Modifier
-                .size(200.dp)
-                .background(Color.White), // QR 코드의 흰색 배경
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(
+                    top = innerPadding.calculateTopPadding(),
+                    start = Spacing.Medium,
+                    end = Spacing.Medium
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (uiState.isLoadingQR) {
-                CircularProgressIndicator()
-            } else if (uiState.qrImageBitmap != null) {
-                Image(
-                    bitmap = uiState.qrImageBitmap!!,
-                    contentDescription = "QR Code",
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Text("박스를 선택하여 QR코드를 생성하세요.", textAlign = TextAlign.Center)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
-
-        if (uiState.isTimerRunning) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            // QR 영역 + 타이머 + 선택된 박스명 + 박스 그리드
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = Padding.ScreenTop), // 기존 상단 패딩도 유지
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // ViewModel의 timerText 상태를 표시
-                Text(
-                    text = uiState.timerText,
-                    style = Typography.bodyMedium,
-                    color = primaryLight
-                )
-                // 새로고침 아이콘 버튼
-                IconButton(onClick = viewModel::onRefreshQRClick) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "새로고침"
-                    )
+                Spacer(modifier = Modifier.height(Spacing.Large))
+
+                // QR 200dp 영역
+                Box(
+                    modifier = Modifier
+                        .size(200.dp)
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center
+                ) {
+                    when {
+                        uiState.isLoadingQR -> CircularProgressIndicator()
+                        uiState.qrImageBitmap != null -> {
+                            Image(
+                                bitmap = uiState.qrImageBitmap!!,
+                                contentDescription = "QR Code",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+
+                        else -> {
+                            Text("박스를 선택하여 QR코드를 생성하세요.", textAlign = TextAlign.Center)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
+
+                if (uiState.isTimerRunning) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = uiState.timerText,
+                            style = Typography.bodyMedium,
+                            color = primaryLight
+                        )
+                        IconButton(onClick = viewModel::onRefreshQRClick) {
+                            Icon(
+                                imageVector = Icons.Filled.Refresh,
+                                contentDescription = "새로고침"
+                            )
+                        }
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(Spacing.ExtraLarge))
+            Spacer(modifier = Modifier.height(Spacing.ExtraLarge))
 
-        // 내 모여 박스
-        Text(
-            text = selectedBoxName,  // 이거 글자가 지금 선택된 통장 글자로 바뀌도록 함
-            style = Typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        Spacer(modifier = Modifier.height(Spacing.ExtraLarge))
-
-        // 레이지로우가 남은 모든 공간 확보하도록 수정
-        LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f), // 남은 모든 세로 공간 확보
-            horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
-            verticalAlignment = Alignment.CenterVertically, // 아이템들을 세로 중앙에 정렬,
-            state = lazyListState
-        ) {
-            // 레이지로우 아이템은 ViewModel의 리스트를 사용
-            items(
-                items = bookmarkedBoxes,
-                key = { it.id } // 각 아이템의 고유 키를 지정
-            ) { box ->
-                SquareMoyeoBoxItem(
-                    box = box,
-                    isSelected = (uiState.selectedBoxId == box.id),
-                    onClick = { viewModel.selectBox(box.id) }
+            Column (
+                modifier = Modifier
+                    .weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // 현재 선택된 박스명
+                Text(
+                    text = selectedBoxName,
+                    style = Typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+
+                Spacer(modifier = Modifier.height(Spacing.ExtraLarge))
+
+                // 북마크된 박스 목록
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
+                    verticalAlignment = Alignment.CenterVertically,
+                    state = lazyListState
+                ) {
+                    items(
+                        items = bookmarkedBoxes,
+                        key = { it.id }
+                    ) { box ->
+                        SquareMoyeoBoxItem(
+                            box = box,
+                            isSelected = (uiState.selectedBoxId == box.id),
+                            onClick = { viewModel.selectBox(box.id) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(Spacing.ExtraLarge))
             }
-        }
 
-        Spacer(modifier = Modifier.height(Spacing.Medium))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // 제일 아래쪽에 내 모여 박스 더 보기 버튼
-        OutlinedButton(
-            onClick = { navController.navigate(AppScreen.QRBoxes.route) },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = primaryLight,
-                contentColor = onPrimaryLight
-            )
-        ) {
-            Text("내 모여 박스 더 보기")
+            // 하단 고정 버튼 (TransferScreen과 동일한 위치/사이즈 가이드)
+            Button(
+                onClick = { navController.navigate(AppScreen.QRBoxes.route) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .padding(bottom = Spacing.Medium),
+            ) {
+                Text("모여 박스 추가하기")
+            }
         }
     }
 }

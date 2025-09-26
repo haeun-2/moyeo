@@ -24,7 +24,7 @@ fun CurrencyItem(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(balance.currency, style = Typography.labelSmall, color = textColor)
-        Text(formattedAmount, style = Typography.labelMedium, color = textColor)
+        Text(balance.currency, style = Typography.labelLarge, color = textColor)
+        Text(formattedAmount, style = Typography.labelLarge, color = textColor)
     }
 }
