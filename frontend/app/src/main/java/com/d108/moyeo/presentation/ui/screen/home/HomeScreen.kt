@@ -132,15 +132,6 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(horizontal = Spacing.Medium)
             ) {
-//                Spacer(Modifier.height(Spacing.SmallMedium))
-
-//                HomeHeader(
-//                    title = uiState.userName,
-//                    onBellClick = { navController.navigate(AppScreen.Notification.route) }
-//                )
-
-//                Spacer(Modifier.height(Spacing.Medium))
-
                 WalletSummaryCard(
                     data = uiState.wallet,
                     onTitleClick = { viewModel.onWalletTitleClick() },
