@@ -15,7 +15,7 @@ FROM bellsoft/liberica-openjdk-alpine:17
 WORKDIR /app
 
 COPY --from=builder /app/build/libs/*.jar app.jar
-COPY ./pinpoint-agent-2.2.2 /app/pinpoint
+#COPY ./pinpoint-agent-2.2.2 /app/pinpoint
 
 EXPOSE 8080
 

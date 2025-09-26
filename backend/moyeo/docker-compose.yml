@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
-  app:
+  app1:
     build: .
-    container_name: moyeo-app
+    container_name: moyeo-app1
     ports:
-      - "8080:8080"
+      - "8081:8080"
     env_file:
       - .env
     depends_on:
@@ -13,6 +11,33 @@ services:
       - mysql
     networks:
       - monitoring
+
+  app2:
+    build: .
+    container_name: moyeo-app2
+    ports:
+      - "8082:8080"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - mysql
+    networks:
+      - monitoring
+
+  nginx:
+    image: nginx:latest
+    container_name: moyeo-nginx
+    ports:
+      - "8080:80"   # 외부에서 접근할 포트
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app1
+      - app2
+    networks:
+      - monitoring
+
 
   redis:
     image: redis:latest
@@ -26,7 +51,7 @@ services:
     image: mysql:latest
     container_name: moyeo-mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
