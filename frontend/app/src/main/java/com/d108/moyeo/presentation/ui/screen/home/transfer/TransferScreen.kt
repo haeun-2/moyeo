@@ -30,6 +30,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Spacing
+import com.d108.moyeo.presentation.ui.screen.exchange.reservation.TargetBoxContent
 import com.d108.moyeo.util.BiometricAuthManager
 
 // TODO: 이체 시 돈이 모자랄 때 이체 취소 로직 추가

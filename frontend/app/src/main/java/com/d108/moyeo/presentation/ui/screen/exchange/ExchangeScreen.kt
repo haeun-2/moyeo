@@ -93,7 +93,7 @@ fun ExchangeScreen(
         // 예약환전하기 버튼
         Button(
             onClick = {
-                navController.navigate("exchange_reservation_home")
+                navController.navigate("exchange_reservation")
             },
             modifier = Modifier
                 .fillMaxWidth()
