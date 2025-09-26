@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -154,11 +155,19 @@ class UserDataManager @Inject constructor(
         }
     }
 
-//    private fun groupNameKey(id: Long) = stringPreferencesKey("group_name_$id")
-//    suspend fun saveGroupName(id: Long, name: String) {
-//        context.dataStore.edit { it[groupNameKey(id)] = name }
-//    }
-//    suspend fun getGroupName(id: Long): String? =
-//        context.dataStore.data.map { it[groupNameKey(id)] }.firstOrNull()
 
+    /*
+    마지막으로 본 히스토리 박스 관련
+     */
+    private val LAST_VIEWED_HISTORY_BOX_ID = longPreferencesKey("last_viewed_history_box_id")
+
+    suspend fun saveLastViewedHistoryBoxId(id: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[LAST_VIEWED_HISTORY_BOX_ID] = id
+        }
+    }
+
+    val lastViewedHistoryBoxIdFlow: Flow<Long?> = context.dataStore.data.map { preferences ->
+        preferences[LAST_VIEWED_HISTORY_BOX_ID]
+    }
 }
