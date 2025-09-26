@@ -13,6 +13,7 @@ import com.d108.moyeo.data.remote.api.BoxSettlementService
 import com.d108.moyeo.data.remote.api.BoxStatisticsService
 import com.d108.moyeo.data.remote.api.ExchangeHistoryService
 import com.d108.moyeo.data.remote.api.ExchangeService // 새 import 추가
+import com.d108.moyeo.data.remote.api.FcmTokenService
 import com.d108.moyeo.data.remote.api.NotificationService
 import com.d108.moyeo.data.remote.api.PaymentService
 import com.d108.moyeo.data.remote.api.SignUpService
@@ -169,4 +170,13 @@ object NetworkModule {  // 여러 부품을 조립해서 새로운 것을 '만�
     @Singleton
     fun provideAccountService(retrofit: Retrofit): AccountService =
         retrofit.create(AccountService::class.java)
+
+    /*
+    FCM 관련
+     */
+    @Provides
+    @Singleton
+    fun provideFcmTokenService(retrofit: Retrofit): FcmTokenService {
+        return retrofit.create(FcmTokenService::class.java)
+    }
 }
