@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.screen.home.box.member
 
+import android.R.attr.onClick
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -100,7 +101,8 @@ fun MemberScreen(
                         items(ui.members, key = { it.member.id }) { uiModel ->
                             MemberCard(
                                 memberUi = uiModel,
-                                onToggle = { viewModel.toggleExpand(uiModel.member.id) }
+                                isOwnerView = ui.isCurrentUserOwner,
+                                onPermissionChange = viewModel::onPermissionChange
                             )
                         }
                     }
@@ -125,13 +127,13 @@ fun MemberScreen(
 @Composable
 private fun MemberCard(
     memberUi: BoxMemberUi,
-    onToggle: () -> Unit
+    isOwnerView: Boolean,
+    onPermissionChange: (memberId: Long, type: PermissionType) -> Unit
 ) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = Color(0xFFF0F0F0),
         tonalElevation = 0.dp,
-        onClick = onToggle
     ) {
         Column(
             modifier = Modifier
@@ -165,12 +167,6 @@ private fun MemberCard(
                             .size(18.dp)
                     )
                 }
-
-                Icon(
-                    imageVector = if (memberUi.expanded) Icons.Filled.KeyboardArrowUp
-                    else Icons.Filled.KeyboardArrowDown,
-                    contentDescription = if (memberUi.expanded) "닫기" else "열기"
-                )
             }
 
             if (memberUi.expanded) {
@@ -182,19 +178,26 @@ private fun MemberCard(
                     CapabilityChip(
                         labelWhenTrue = "정산 가능",
                         labelWhenFalse = "정산 불가",
-                        enabled = memberUi.member.permission.canTransfer
+                        enabled = memberUi.member.permission.canTransfer,
+                        isClickable = isOwnerView,
+                        onClick = { onPermissionChange(memberUi.member.id, PermissionType.TRANSFER) }
+
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     CapabilityChip(
                         labelWhenTrue = "결제 가능",
                         labelWhenFalse = "결제 불가",
-                        enabled = memberUi.member.permission.canPayment
+                        enabled = memberUi.member.permission.canPayment,
+                        isClickable = isOwnerView,
+                        onClick = { onPermissionChange(memberUi.member.id, PermissionType.PAYMENT) }
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     CapabilityChip(
                         labelWhenTrue = "환전 가능",
                         labelWhenFalse = "환전 불가",
-                        enabled = memberUi.member.permission.canExchange
+                        enabled = memberUi.member.permission.canExchange,
+                        isClickable = isOwnerView,
+                        onClick = { onPermissionChange(memberUi.member.id, PermissionType.EXCHANGE) }
                     )
                 }
             }
@@ -206,7 +209,9 @@ private fun MemberCard(
 private fun CapabilityChip(
     labelWhenTrue: String,
     labelWhenFalse: String,
-    enabled: Boolean
+    enabled: Boolean,
+    isClickable: Boolean,
+    onClick: () -> Unit
 ) {
     val purple = Color(0xFF9864FF)
     val bg = if (enabled) purple else MaterialTheme.colorScheme.surfaceVariant
@@ -217,7 +222,7 @@ private fun CapabilityChip(
             .clip(CircleShape)
             .background(bg)
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .clickable( onClick = { /* TODO */ } ),
+            .clickable(enabled = isClickable, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(

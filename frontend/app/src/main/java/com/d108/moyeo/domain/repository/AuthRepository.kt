@@ -1,5 +1,6 @@
 package com.d108.moyeo.domain.repository
 
+import com.d108.moyeo.data.remote.dto.auth.MeDto
 import com.d108.moyeo.domain.model.Token
 import kotlinx.coroutines.flow.Flow
 
@@ -32,5 +33,8 @@ interface AuthRepository {
      */
     suspend fun login(phoneNumber: String, fid: String): Result<Token>
 
+    suspend fun getMe(): Result<MeDto>
+
     // TODO: 나중에 로그아웃, 토큰 재발급 등의 함수를 여기에 추가해야 합니다.
+
 }

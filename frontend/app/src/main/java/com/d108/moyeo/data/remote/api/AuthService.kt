@@ -2,8 +2,10 @@ package com.d108.moyeo.data.remote.api
 
 import com.d108.moyeo.data.remote.dto.auth.LoginRequestDto
 import com.d108.moyeo.data.remote.dto.auth.LoginResponseDto
+import com.d108.moyeo.data.remote.dto.auth.MeDto
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
 
 /**
@@ -36,4 +38,7 @@ interface AuthService {
     suspend fun login(@Body loginRequest: LoginRequestDto): Response<LoginResponseDto>
 
     // TODO: 나중에 로그아웃, 토큰 재발급 등 다른 API들을 여기에 추가해야 합니다
+
+    @GET("/api/v1/users/me")
+    suspend fun getMe(): Response<MeDto>
 }
