@@ -99,6 +99,9 @@ fun MyWalletScreen(
                 is WalletNavigationEvent.NavigateToCharge -> {
                     navController.navigate(AppScreen.Charge.route)
                 }
+                is WalletNavigationEvent.NavigateToExchange -> {
+                    navController.navigate(AppScreen.Exchange.route)
+                }
             }
         }
     }
@@ -333,7 +336,7 @@ private fun TopWalletInfoSurface(
                 }
 
                 Button(
-                    onClick = { onExchangeClick },
+                    onClick = onExchangeClick,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = button,
                         contentColor = onPrimaryLight

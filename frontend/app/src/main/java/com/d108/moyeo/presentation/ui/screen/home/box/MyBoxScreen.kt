@@ -112,6 +112,9 @@ fun MyBoxScreen(
                 is MyBoxNavigationEvent.NavigateToCalculate -> {
                     navController.navigate(AppScreen.Calculate.createRoute(event.boxId)) // 복수의 화폐 정산 가능
                 }
+                is MyBoxNavigationEvent.NavigateToExchange -> {
+                    navController.navigate(AppScreen.Exchange.route)
+                }
                 is MyBoxNavigationEvent.InviteLinkReady -> {
                     clipboard.setText(AnnotatedString(event.link))
                     Toast.makeText(context, "초대 링크를 클립보드에 복사했어요.", Toast.LENGTH_SHORT).show()

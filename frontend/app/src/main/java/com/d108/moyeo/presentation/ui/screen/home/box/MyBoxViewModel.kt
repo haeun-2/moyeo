@@ -36,6 +36,9 @@ sealed class MyBoxNavigationEvent {
     // 정산하기
     data class NavigateToCalculate(val boxId: Long) : MyBoxNavigationEvent()
 
+    // 환전하기
+    object NavigateToExchange : MyBoxNavigationEvent()
+
     // 초대 링크
     data class InviteLinkReady(val link: String): MyBoxNavigationEvent()
 
@@ -282,7 +285,7 @@ class MyBoxViewModel @Inject constructor(
 
     fun onExchangeClick() {
         viewModelScope.launch {
-
+            _navigationEvent.emit(MyBoxNavigationEvent.NavigateToExchange)
         }
     }
 
