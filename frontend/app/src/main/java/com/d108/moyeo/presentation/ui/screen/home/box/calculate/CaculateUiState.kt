@@ -18,7 +18,7 @@ data class CalculateUiState(
     val currentSettlementIndex: Int = 0,             // 현재 정산 중인 통화의 인덱스
 
     // 현재에 대한 정산 정보
-    val totalSettlementAmount: Double = 0.0, // 정산할 총 금액
+    val totalSettlementAmount: Long = 0L,  // 정수형으로 변환
     val settlementParticipants: List<SettlementParticipant> = emptyList(), // 정산 받을 멤버
     val selectedMemberIds: Set<Long> = emptySet(),    // 선택된 멤버 ID
 
@@ -41,7 +41,7 @@ data class CalculateUiState(
 
 data class SettlementParticipant(
     val member: BoxMember,
-    val amount: Double = 0.0,
+    val amount: Long = 0L,
     val amountStr: String = "0",       // UI TextField에 표시될 문자열
     val isManuallyEdited: Boolean = false,  // 사용자가 직접 수정했는지 여부
     val isEnabled: Boolean = true,  // 체크박스에서 체크 여부
