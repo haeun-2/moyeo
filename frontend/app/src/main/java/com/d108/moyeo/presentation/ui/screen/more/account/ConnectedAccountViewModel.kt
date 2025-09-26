@@ -3,6 +3,7 @@ package com.d108.moyeo.presentation.ui.screen.more.account
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.domain.usecase.account.GetConnectedAccountUseCase
+import com.d108.moyeo.domain.usecase.signup.GetAllBankListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +12,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ConnectedAccountViewModel @Inject constructor(
-    private val getConnectedAccountUseCase: GetConnectedAccountUseCase
+    private val getConnectedAccountUseCase: GetConnectedAccountUseCase,
+    private val getAllBankListUseCase: GetAllBankListUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ConnectedAccountUiState())
@@ -24,11 +26,32 @@ class ConnectedAccountViewModel @Inject constructor(
     fun loadAccount() {
         viewModelScope.launch {
             _uiState.value = ConnectedAccountUiState(isLoading = true)
+
             val result = getConnectedAccountUseCase()
-            _uiState.value = result.fold(
-                onSuccess = { ConnectedAccountUiState(account = it) },
-                onFailure = { ConnectedAccountUiState(error = it.message) }
+            val bankListResult = getAllBankListUseCase()
+
+            val nextState = result.fold(
+                onSuccess = { account ->
+                    val banks = bankListResult.getOrNull().orEmpty()
+                    val matchedBank = banks.firstOrNull { it.name == account.bankName }
+                    ConnectedAccountUiState(
+                        isLoading = false,
+                        account = account,
+                        selectedBank = matchedBank,
+                        error = null
+                    )
+                },
+                onFailure = { error ->
+                    ConnectedAccountUiState(
+                        isLoading = false,
+                        account = null,
+                        selectedBank = null,
+                        error = error.message
+                    )
+                }
             )
+
+            _uiState.value = nextState
         }
     }
 }

@@ -1,28 +1,35 @@
 package com.d108.moyeo.presentation.ui.screen.more.account
 
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.presentation.theme.Spacing
 import com.d108.moyeo.presentation.theme.Typography
-
-
-// TODO: 변경 완료 시 새로고침 로직 추가
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,20 +40,43 @@ fun ConnectedAccountSettingsScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
+    val currentEntry = remember { navController.currentBackStackEntry }
+    val refreshFlow = currentEntry
+        ?.savedStateHandle
+        ?.getStateFlow("refresh", false)
+
+    val shouldRefresh by refreshFlow?.collectAsState() ?: remember { mutableStateOf(false) }
+
+    LaunchedEffect(shouldRefresh) {
+        if (shouldRefresh) {
+            viewModel.loadAccount()
+            // 소진
+            currentEntry?.savedStateHandle?.set("refresh", false)
+        }
+    }
+
+    BackHandler { navController.popBackStack() }
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("연결 계좌 관리", style = Typography.titleLarge) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
-                            contentDescription = "뒤로가기"
-                        )
-                    }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.Medium),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "뒤로가기"
+                    )
                 }
-            )
-        }
+
+                Text("연결 계좌 관리", style = Typography.titleLarge)
+            }
+        },
     ) { innerPadding ->
         when {
             uiState.isLoading -> {
@@ -72,18 +102,36 @@ fun ConnectedAccountSettingsScreen(
             }
 
             uiState.account != null -> {
+                val account = uiState.account!!
+
+                // 1) 단일 응답의 Base64 로고 → ImageBitmap 변환(1회 캐시)
+                val logoFromAccount: ImageBitmap? = remember(account.bankLogoImg) {
+                    if (account.bankLogoImg.isBlank()) null
+                    else try {
+                        val bytes = Base64.decode(account.bankLogoImg, Base64.DEFAULT)
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
+                    } catch (_: Throwable) {
+                        null
+                    }
+                }
+
+                // 2) 은행 리스트에서 매칭된 로고(있으면) 폴백
+                val logoFromBank: ImageBitmap? = uiState.selectedBank?.logoBitmap
+
+                // 최종 사용 로고
+                val finalLogo = logoFromAccount ?: logoFromBank
+
                 Column(
                     modifier = Modifier
                         .padding(innerPadding)
                         .padding(Spacing.Medium)
                 ) {
-                    uiState.account?.let { account ->
-                        AccountCard(
-                            bankName = account.bankName,
-                            accountNumber = account.bankAccount,
-                            onChangeClick = { navController.navigate("account/change") }
-                        )
-                    }
+                    AccountCard(
+                        bankName = account.bankName,
+                        accountNumber = account.bankAccount,
+                        bankLogoBitmap = finalLogo,
+                        onChangeClick = { navController.navigate("account/change") }
+                    )
                 }
             }
         }
@@ -94,6 +142,7 @@ fun ConnectedAccountSettingsScreen(
 private fun AccountCard(
     bankName: String,
     accountNumber: String,
+    bankLogoBitmap: ImageBitmap?,
     onChangeClick: () -> Unit
 ) {
     Card(
@@ -104,25 +153,36 @@ private fun AccountCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                .background(Color(0xFFF0F0F0))
                 .padding(Spacing.Medium),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 상단: 은행 로고 자리 + 은행명
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // 실제 로고 리소스가 정해지기 전까지 플레이스홀더
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFFD54F)), // KB 느낌의 임시 색상
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("KB", style = Typography.labelSmall, color = Color(0xFF5D4037))
+                // 은행 로고
+                if (bankLogoBitmap != null) {
+                    Image(
+                        bitmap = bankLogoBitmap,
+                        contentDescription = "$bankName 로고",
+                        modifier = Modifier.size(28.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    // 로고가 없을 때의 플레이스홀더
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFFD54F)), // 임시
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("", style = Typography.labelSmall, color = Color(0xFF5D4037))
+                    }
                 }
+
+                // 은행 이름
                 Text(
                     text = bankName,
                     style = Typography.titleMedium,
@@ -131,13 +191,13 @@ private fun AccountCard(
                 )
             }
 
-            // 가운데: 계좌번호
+            // 계좌 번호
             Text(
                 text = accountNumber,
-                style = Typography.titleLarge
+                style = Typography.headlineLarge
             )
 
-            // 하단: 변경하기 버튼 (현재는 동작 미연결)
+            // 변경하기
             Button(
                 onClick = onChangeClick,
                 modifier = Modifier
