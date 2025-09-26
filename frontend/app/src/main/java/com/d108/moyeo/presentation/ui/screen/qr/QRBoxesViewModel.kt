@@ -5,8 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.core.BoxStoreUiState
 import com.d108.moyeo.data.local.UserDataManager
+import com.d108.moyeo.data.mapper.toBoxStoreUiState
 import com.d108.moyeo.domain.usecase.box.AddBookmarkUseCase
+import com.d108.moyeo.domain.usecase.box.GetPaymentBoxesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -23,16 +28,44 @@ sealed class QRBoxesNavEvent {
 @HiltViewModel
 class QRBoxesViewModel @Inject constructor(
     private val addBookmarkUseCase: AddBookmarkUseCase,
+    private val getPaymentBoxesUseCase: GetPaymentBoxesUseCase,
     private val boxStore: BoxStore,  // 새롭게 박스 스토어를 주입받음
     private val userDataManager: UserDataManager // 로컬 저장을 위해 추가
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(QRBoxesUiState())
     val uiState = _uiState.asStateFlow()
-    val groupBoxesUi = boxStore.boxUiStates  // 이미 스테이트플로우 처리가 되어서 들어옴
+
+    private val _paymentBoxes = MutableStateFlow<List<BoxStoreUiState>>(emptyList())
+    val paymentBoxes = _paymentBoxes.asStateFlow()
 
     private val _navigationEvent = MutableSharedFlow<QRBoxesNavEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
+
+    init {
+        loadPaymentBoxes()
+    }
+
+    private fun loadPaymentBoxes() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+
+            getPaymentBoxesUseCase()
+                .onSuccess { boxes ->
+                    // API로 받은 List<Box>를 UI에 필요한 List<BoxStoreUiState>로 변환
+                    val uiStateList = coroutineScope {
+                        boxes.map { box ->
+                            async { box.toBoxStoreUiState(userDataManager) }
+                        }
+                    }.awaitAll()
+                    _paymentBoxes.value = uiStateList
+                    _uiState.update { it.copy(isLoading = false) }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "박스 목록을 불러오는데 실패했습니다.") }
+                }
+        }
+    }
 
     fun onBoxClick(box: BoxStoreUiState) {
         _uiState.update { currentState ->

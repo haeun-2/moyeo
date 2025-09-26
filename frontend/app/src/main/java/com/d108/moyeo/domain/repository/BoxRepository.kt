@@ -12,6 +12,8 @@ interface BoxRepository {
     suspend fun joinBox(code: String): Result<Long>
 
     suspend fun getPersonalBox(): Result<Box>
+
+    suspend fun getPaymentBoxes(): Result<List<Box>>
     
     suspend fun getGroupBoxes(size: Int): Result<List<Box>>
 

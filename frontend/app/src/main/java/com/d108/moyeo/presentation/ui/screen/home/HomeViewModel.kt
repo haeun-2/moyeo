@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.core.BoxStoreUiState
 import com.d108.moyeo.data.local.UserDataManager
+import com.d108.moyeo.data.mapper.toBoxStoreUiState
 import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.domain.model.box.BoxType
 import com.d108.moyeo.domain.usecase.box.AddBookmarkUseCase
@@ -119,7 +120,7 @@ class HomeViewModel @Inject constructor(
         val finalUiStateList = coroutineScope {
             allServerBoxes.map { serverBox ->
                 async {
-                    serverBox.toBoxStoreUiState()
+                    serverBox.toBoxStoreUiState(userDataManager)
                 }
             }.awaitAll()
         }
@@ -277,32 +278,6 @@ class HomeViewModel @Inject constructor(
 
     // ---------- 헬퍼 함수 ----------
 
-    private suspend fun Box.toBoxStoreUiState(): BoxStoreUiState {
-        val localColor = if (this.type == BoxType.PERSONAL) {
-            userDataManager.walletColorFlow.first()
-        } else {
-            userDataManager.getGroupColor(this.id)
-        }
-        val finalColor = localColor?.let { Color(it) } ?: colorFromId(this.id)
-
-        val serverIsBookmarked = this.isBookmarked
-        val localIsBookmarked = userDataManager.isBookmarked(this.id)
-        val finalIsBookmarked = serverIsBookmarked || localIsBookmarked
-
-        val repr = this.balances.maxByOrNull { it.balance }
-        val amountText = if (repr == null) "잔액 없음" else formatAmount(repr.currency, repr.balance)
-
-        return BoxStoreUiState(
-            id = this.id,
-            title = this.name,
-            bg = finalColor,
-            textColor = textColorUtil(finalColor),
-            isBookmarked = finalIsBookmarked,
-            amount = amountText,
-            balances = this.balances,
-            type = this.type
-        )
-    }
 
     private fun BoxStoreUiState.toGroupBox(): GroupBox = GroupBox(
         id = this.id,
@@ -350,8 +325,4 @@ class HomeViewModel @Inject constructor(
         return "$formattedNumber $code"
     }
 
-    private fun colorFromId(id: Long): Color {
-        val base = abs(id.hashCode())
-        return boxAvailableColors[base % boxAvailableColors.size]
-    }
 }

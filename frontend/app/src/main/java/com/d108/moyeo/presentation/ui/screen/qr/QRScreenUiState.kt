@@ -9,6 +9,8 @@ data class QRScreenUiState(
     val selectedBoxId: Long? = null,
     val isLoadingBoxes: Boolean = false,
 
+    val scrollToBoxId: Long? = null,
+
     val isLoadingQR: Boolean = false,    // QR 코드 로딩 상태
     val qrImageBitmap: ImageBitmap? = null, // QR 비트맵 이미지
 

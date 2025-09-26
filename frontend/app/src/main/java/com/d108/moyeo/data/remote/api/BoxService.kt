@@ -33,6 +33,11 @@ interface BoxService {
     @GET("api/boxes/{boxId}")
     suspend fun getBoxDetail(@Path("boxId") boxId: Long): Response<BoxDetailResponseDto>
 
+    // 결제용 모여 박스 호출
+    @GET("api/boxes/payments")
+    suspend fun getPaymentBoxes(): Response<List<GroupBoxResponseDto>>
+
+
     // 모임 박스 생성
     @POST("api/boxes")
     suspend fun createBox(@Body request: CreateBoxRequestDto) : Response<CreateBoxResponseDto>
