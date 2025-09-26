@@ -9,12 +9,14 @@ import com.d108.moyeo.data.remote.dto.box.BoxMemberDto
 import com.d108.moyeo.data.remote.dto.box.GroupBoxResponseDto
 import com.d108.moyeo.data.remote.dto.box.PermissionDto
 import com.d108.moyeo.data.remote.dto.box.PersonalBoxResponseDto
+import com.d108.moyeo.data.remote.dto.box.UpdatePermissionRequestDto
 import com.d108.moyeo.domain.model.box.Balance
 import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.domain.model.box.BoxDetail
 import com.d108.moyeo.domain.model.box.BoxMember
 import com.d108.moyeo.domain.model.box.BoxType
 import com.d108.moyeo.domain.model.box.Permission
+import com.d108.moyeo.domain.model.box.UpdatePermissionRequest
 import com.d108.moyeo.presentation.theme.boxAvailableColors
 import com.d108.moyeo.util.textColorUtil
 import kotlinx.coroutines.flow.first
@@ -64,6 +66,26 @@ fun PermissionDto.toDomain(): Permission {
         isOwner = this.isOwner
     )
 }
+
+fun UpdatePermissionRequestDto.toDomain(): UpdatePermissionRequest {
+    return UpdatePermissionRequest(
+        boxMemberId = this.boxMemberId,
+        canTransfer = this.canTransfer,
+        canPayment = this.canPayment,
+        canExchange = this.canExchange
+    )
+}
+
+fun UpdatePermissionRequest.toDto(): UpdatePermissionRequestDto {
+    return UpdatePermissionRequestDto(
+        boxMemberId = this.boxMemberId,
+        canTransfer = this.canTransfer,
+        canPayment = this.canPayment,
+        canExchange = this.canExchange
+    )
+}
+
+
 
 fun BoxMemberDto.toDomain(): BoxMember {
     val permission = Permission(
