@@ -25,9 +25,9 @@ public class ReservedExchangeCronService {
     private final ReservedExchangeRepository reservedExchangeRepository;
     private final ReservedExchangeService reservedExchangeService;
 
-    @Scheduled(initialDelay = 1000*10, fixedDelay = 1000*60*10)
-    @SchedulerLock(name = "checkReservation", lockAtMostFor = "5m", lockAtLeastFor = "1m")
-    @Transactional
+    //    @Scheduled(cron = "0 */10 * * * *") // 초, 분, 시, 일, 월, 요일
+//    @SchedulerLock(name = "checkReservation", lockAtMostFor = "5m", lockAtLeastFor = "1m")
+//    @Transactional
     public void checkReservation() {
         Map<String, CurrentExchangeRateDto> currentExchangeRate = exchangeRateCacheService.getCurrentExchangeRate();
         log.debug("예약 환전 체크");
@@ -38,7 +38,7 @@ public class ReservedExchangeCronService {
             BigDecimal targetRate = reservedExchange.getTargetRate();
 
             CurrencyType currencyType;
-            if(reservedExchange.getFromCurrency().getCode()==CurrencyType.KRW) {
+            if (reservedExchange.getFromCurrency().getCode() == CurrencyType.KRW) {
                 currencyType = reservedExchange.getToCurrency().getCode();
             } else {
                 currencyType = reservedExchange.getFromCurrency().getCode();
@@ -75,7 +75,7 @@ public class ReservedExchangeCronService {
         LocalDate now = LocalDate.now();
         List<ReservedExchange> reservations = getWaitingReservation();
         for (ReservedExchange reservedExchange : reservations) {
-            if(now.isAfter(reservedExchange.getExpiresAt())){
+            if (now.isAfter(reservedExchange.getExpiresAt())) {
                 reservedExchange.expire();
             }
         }

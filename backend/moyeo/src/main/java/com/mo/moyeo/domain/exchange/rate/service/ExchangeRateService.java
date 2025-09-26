@@ -8,18 +8,14 @@ import com.mo.moyeo.common.util.finance_api.ApiUtil;
 import com.mo.moyeo.domain.currency.entity.Currency;
 import com.mo.moyeo.domain.currency.entity.CurrencyType;
 import com.mo.moyeo.domain.currency.repository.CurrencyRepository;
-import com.mo.moyeo.domain.exchange.rate.dto.CurrentExchangeRateDto;
 import com.mo.moyeo.domain.exchange.rate.dto.ExchangeRateHistoryDto;
-import com.mo.moyeo.domain.exchange.rate.repository.ExchangeRateProjection;
-import com.mo.moyeo.domain.exchange.rate.repository.ExchangeRateRepository;
 import com.mo.moyeo.domain.exchange.rate.dto.ExchangeRateResponse;
 import com.mo.moyeo.domain.exchange.rate.entity.ExchangeRate;
-import com.mo.moyeo.domain.exchange.reservation.service.ReservedExchangeService;
+import com.mo.moyeo.domain.exchange.rate.repository.ExchangeRateRepository;
+import com.mo.moyeo.domain.exchange.reservation.service.ReservedExchangeCronService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -30,13 +26,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -50,8 +44,7 @@ public class ExchangeRateService {
     private String exchangeRateUrl;
     private final ExchangeRateRepository exchangeRateRepository;
     private final ExchangeRateCacheService exchangeRateCacheService;
-    private final ReservedExchangeService reservedExchangeService;
-    private final RedissonClient redissonClient;
+    private final ReservedExchangeCronService reservedExchangeCronService;
 
     // 매일 0시 5분에 실행
     @Scheduled(cron = "0 5 0 * * *")
@@ -65,7 +58,7 @@ public class ExchangeRateService {
         exchangeRateRepository.deleteByRecordedAtBefore(oneWeekAgo);
     }
 
-    @Scheduled(fixedDelay = 1000 * 60 * 10)
+    @Scheduled(cron = "0 */10 * * * *") // 초, 분, 시, 일, 월, 요일
     @SchedulerLock(name = "getExchangeRate", lockAtMostFor = "5m", lockAtLeastFor = "1m")
     @Transactional
     public void getExchangeRate() {
@@ -106,7 +99,7 @@ public class ExchangeRateService {
         exchangeRateCacheService.cacheCurrentExchangeRate(exchangeRates);
 
         //예약환전 체크
-//        reservedExchangeService.checkReservation();
+        reservedExchangeCronService.checkReservation();
     }
 
 
