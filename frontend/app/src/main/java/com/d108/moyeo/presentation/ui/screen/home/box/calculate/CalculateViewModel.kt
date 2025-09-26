@@ -66,7 +66,7 @@ class CalculateViewModel @Inject constructor(
                 val settlementParticipants = members.map { boxMember ->
                     SettlementParticipant(
                         member = boxMember,
-                        amount = 0.0,
+                        amount = 0,
                         amountStr = "0",
                         isManuallyEdited = false,
                         isEnabled = true
@@ -137,7 +137,7 @@ class CalculateViewModel @Inject constructor(
         }
 
         val participantCount = selectedParticipants.size.takeIf { it > 0 } ?: 1
-        val owner = selectedParticipants.find { it.member.permission.isOwner }
+        val firstParticipant = selectedParticipants.firstOrNull()  // 첫 번째 사람을 찾음
         val baseAmount = currentState.totalSettlementAmount / participantCount
         val remainder = currentState.totalSettlementAmount - (baseAmount * participantCount)
 
@@ -146,15 +146,15 @@ class CalculateViewModel @Inject constructor(
                 // 선택되지 않은 멤버: 0원, 편집 불가, 수동편집 상태 초기화
                 !currentState.selectedMemberIds.contains(participant.member.id) -> {
                     participant.copy(
-                        amount = 0.0,
+                        amount = 0L,
                         amountStr = "0",
                         isManuallyEdited = false, // 수동편집 상태 초기화
                         isEnabled = false
                     )
                 }
                 // 선택된 멤버: 처음부터 재분배, 수동편집 상태 초기화
-                else -> {
-                    val finalAmount = if (participant.member.id == owner?.member?.id) {
+                else -> {  // 1번 유저에게 나머지 지급
+                    val finalAmount = if (participant.member.id == firstParticipant?.member?.id) {
                         baseAmount + remainder
                     } else {
                         baseAmount
@@ -172,12 +172,7 @@ class CalculateViewModel @Inject constructor(
         }
 
         val updatedTotal = updatedParticipants.sumOf { it.amount }
-        if (abs(updatedTotal - uiState.value.totalSettlementAmount) < 0.001) {
-            _uiState.update { it.copy(isSettlementSumValid = true) }
-        } else {
-            _uiState.update { it.copy(isSettlementSumValid = false) }
-        }
-
+        _uiState.update { it.copy(isSettlementSumValid = (updatedTotal == currentState.totalSettlementAmount)) }
         _uiState.update { it.copy(settlementParticipants = updatedParticipants) }
     }
 
@@ -188,7 +183,7 @@ class CalculateViewModel @Inject constructor(
         // 선택되지 않은 멤버는 편집 불가
         if (!currentState.selectedMemberIds.contains(participantId)) return
 
-        val newAmount = newAmountStr.replace(",", "").toDoubleOrNull()?.takeIf { it >= 0.0 } ?: 0.0
+        val newAmount = newAmountStr.replace(",", "").toLongOrNull()?.takeIf { it >= 0 } ?: 0L
 
 
         // **핵심: 선택된 멤버들만 대상으로 계산**
@@ -256,11 +251,11 @@ class CalculateViewModel @Inject constructor(
         if (nonEditedSelected.isNotEmpty()) {
             val baseAmount = remainingAmount / nonEditedSelected.size
             val remainder = remainingAmount - (baseAmount * nonEditedSelected.size)
-            val ownerInNonEdited = nonEditedSelected.find { it.member.permission.isOwner }
+            val firstInNonEdited = nonEditedSelected.firstOrNull()
 
             updatedParticipants = updatedParticipants.map { participant ->
                 if (nonEditedSelected.any { it.member.id == participant.member.id }) {
-                    val finalAmount = if (participant.member.id == ownerInNonEdited?.member?.id) {
+                    val finalAmount = if (participant.member.id == firstInNonEdited?.member?.id) {
                         baseAmount + remainder
                     } else {
                         baseAmount
@@ -278,7 +273,7 @@ class CalculateViewModel @Inject constructor(
         // 4. 선택되지 않은 멤버들은 0원으로 설정
         updatedParticipants = updatedParticipants.map { participant ->
             if (!currentState.selectedMemberIds.contains(participant.member.id)) {
-                participant.copy(amount = 0.0, amountStr = "0")
+                participant.copy(amount = 0, amountStr = "0")
             } else {
                 participant
             }
@@ -398,7 +393,7 @@ class CalculateViewModel @Inject constructor(
         if (currentState.settlementQueue.isEmpty()) return
 
         val currentCurrency = currentState.settlementQueue[currentState.currentSettlementIndex]
-        val totalAmount = boxInfo.balances.find { it.currency == currentCurrency }?.balance ?: 0.0
+        val totalAmount = boxInfo.balances.find { it.currency == currentCurrency }?.balance?.toLong() ?: 0L
 
         // **핵심 수정: 원본 participants를 기준으로 전체 멤버 리스트를 유지**
         val selectedParticipants = currentState.participants.filter {
@@ -407,7 +402,7 @@ class CalculateViewModel @Inject constructor(
 
         // --- 이 부분이 빠져있었습니다 ---
         val participantCount = selectedParticipants.size.takeIf { it > 0 } ?: 1
-        val owner = selectedParticipants.find { it.permission.isOwner }
+        val firstParticipant = selectedParticipants.firstOrNull()
         val baseAmount = totalAmount / participantCount
         val remainder = totalAmount - (baseAmount * participantCount)
 
@@ -415,7 +410,7 @@ class CalculateViewModel @Inject constructor(
         val settlementParticipants = currentState.participants.map { member ->
             if (currentState.selectedMemberIds.contains(member.id)) {
                 // 선택된 멤버: 금액 계산
-                val finalAmount = if (member.id == owner?.id) {
+                val finalAmount = if (member.id == firstParticipant?.id) {
                     baseAmount + remainder
                 } else {
                     baseAmount
@@ -431,7 +426,7 @@ class CalculateViewModel @Inject constructor(
                 // 선택되지 않은 멤버: 0원, 편집 불가
                 SettlementParticipant(
                     member = member,
-                    amount = 0.0,
+                    amount = 0L,
                     amountStr = "0",
                     isManuallyEdited = false,
                     isEnabled = false
@@ -439,10 +434,13 @@ class CalculateViewModel @Inject constructor(
             }
         }
 
+        val updatedTotal = settlementParticipants.sumOf { it.amount }
+
         _uiState.update {
             it.copy(
                 totalSettlementAmount = totalAmount,
-                settlementParticipants = settlementParticipants
+                settlementParticipants = settlementParticipants,
+                isSettlementSumValid = (updatedTotal == totalAmount)
             )
         }
     }
@@ -460,7 +458,7 @@ class CalculateViewModel @Inject constructor(
                     .map { participant ->
                         SettlementRequestDto(
                             boxMemberId = participant.member.id, // BoxMember의 id가 boxMemberId라고 가정
-                            amount = participant.amount,
+                            amount = participant.amount.toDouble(),
                             currencyType = currency
                         )
                     }
@@ -480,7 +478,7 @@ class CalculateViewModel @Inject constructor(
     }
 
 
-    private fun Double.toFormattedString(): String {
+    private fun Long.toFormattedString(): String {
         // #,##0.#### 패턴: 천 단위 콤마, 소수점은 있을 때만 최대 4자리까지 표시
         return DecimalFormat("#,##0.####").format(this)
     }

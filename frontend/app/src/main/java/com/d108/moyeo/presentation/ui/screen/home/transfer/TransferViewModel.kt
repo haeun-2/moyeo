@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
@@ -304,18 +305,14 @@ class TransferViewModel @Inject constructor(
                 _uiState.update { it.copy(currentStep = TransferStep.HOW_MUCH) }
             }
             TransferStep.HOW_MUCH -> {
-                // 금액 입력 후 다음 버튼을 누르면 인증을 시작합니다.
-                // 사용자가 생체 인식을 설정했는지 확인합니다.
-                if (_uiState.value.biometricsEnabled) {
-                    // 설정했다면, BIOMETRIC 단계로 상태를 바꾸고
-                    _uiState.update { it.copy(currentStep = TransferStep.BIOMETRIC) }
-                    // 화면에 생체 인증 창을 띄우라는 이벤트를 보냅니다.
-                    viewModelScope.launch {
+                viewModelScope.launch {
+                    val isEnabled = userDataManager.biometricsPreferenceFlow.first()
+                    if (isEnabled) {
+                        _uiState.update { it.copy(currentStep = TransferStep.BIOMETRIC) }
                         _navigationEvent.emit(TransferNavEvent.ShowBiometricPrompt)
+                    } else {
+                        _uiState.update { it.copy(currentStep = TransferStep.PIN) }
                     }
-                } else {
-                    // 설정하지 않았다면, 바로 PIN 입력 단계로 넘어갑니다.
-                    _uiState.update { it.copy(currentStep = TransferStep.PIN) }
                 }
             }
             TransferStep.BIOMETRIC -> {  // 이 버튼은 사용자가 다 실패하면 뜸
