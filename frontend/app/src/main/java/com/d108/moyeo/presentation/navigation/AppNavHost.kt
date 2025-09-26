@@ -76,7 +76,11 @@ fun AppNavHost(
         }
 
         // 홈 화면
-        composable(AppScreen.Home.route) {
+        composable(
+            route = AppScreen.Home.route,
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "moyeo://${AppScreen.Home.route}" }
+            )) {
             HomeScreen(navController = navController)
         }
 

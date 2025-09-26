@@ -83,7 +83,10 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     implementation(platform("com.google.firebase:firebase-bom:34.2.0"))
+    implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.firebase:firebase-installations")
+    // Firebase의 비동기 Task를 코루틴의 await()으로 변환해주는 라이브러리
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     implementation(libs.zxing.core)
 
