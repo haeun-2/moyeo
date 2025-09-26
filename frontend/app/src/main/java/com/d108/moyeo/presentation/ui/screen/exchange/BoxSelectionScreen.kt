@@ -66,7 +66,7 @@ fun BoxSelectionScreen(
             TargetBoxContent(
                 selectedBoxId = uiState.selectedBoxId,
                 onBoxSelect = viewModel::onBoxSelected,
-                boxes = boxes
+                boxes = boxes,
             )
         }
 
