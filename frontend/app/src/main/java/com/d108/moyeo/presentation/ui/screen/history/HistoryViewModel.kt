@@ -3,6 +3,7 @@ package com.d108.moyeo.presentation.ui.screen.history
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.domain.model.stats.CategoryStat
 import com.d108.moyeo.domain.usecase.box.GetBoxDetailUseCase
 import com.d108.moyeo.domain.usecase.history.GetTransactionHistoryUseCase
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -28,7 +30,8 @@ sealed class HistoryNavEvent {
 class HistoryViewModel @Inject constructor(
     private val getBoxDetailUseCase: GetBoxDetailUseCase,
     private val getCategoryStatsUseCase: GetCategoryStatsUseCase,
-    private val getTransactionHistoryUseCase: GetTransactionHistoryUseCase
+    private val getTransactionHistoryUseCase: GetTransactionHistoryUseCase,
+    private val userDataManager: UserDataManager
 ): ViewModel() {
     private val _uiState = MutableStateFlow(HistoryUiState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
@@ -37,6 +40,16 @@ class HistoryViewModel @Inject constructor(
     val navigationEvent = _navigationEvent.asSharedFlow()
 
     private val TAG = "HistoryViewModel"
+
+    init {
+        viewModelScope.launch {
+            val lastViewedId = userDataManager.lastViewedHistoryBoxIdFlow.firstOrNull()
+            if (lastViewedId != null) {
+                // 저장된 ID가 있다면, 해당 ID로 바로 데이터 로드를 시작
+                onBoxSelected(lastViewedId)
+            }
+        }
+    }
 
 
     /*
@@ -72,6 +85,7 @@ class HistoryViewModel @Inject constructor(
             getBoxDetailUseCase(boxId)
                 .onSuccess { boxDetail ->
                     _uiState.update { it.copy(selectedBox = boxDetail.box) }
+                    userDataManager.saveLastViewedHistoryBoxId(boxId)
                     loadAllPeriodStats(boxId)
                 }
                 .onFailure { error ->
