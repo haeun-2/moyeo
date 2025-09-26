@@ -17,6 +17,7 @@ import com.mo.moyeo.domain.exchange.rate.entity.ExchangeRate;
 import com.mo.moyeo.domain.exchange.reservation.service.ReservedExchangeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,6 +55,7 @@ public class ExchangeRateService {
 
     // 매일 0시 5분에 실행
     @Scheduled(cron = "0 5 0 * * *")
+    @SchedulerLock(name = "deleteOldExchangeRates", lockAtMostFor = "5m", lockAtLeastFor = "1m")
     @Transactional
     public void deleteOldExchangeRates() {
         // 7일 전 날짜 계산
@@ -64,26 +66,9 @@ public class ExchangeRateService {
     }
 
     @Scheduled(fixedDelay = 1000 * 60 * 10)
+    @SchedulerLock(name = "getExchangeRate", lockAtMostFor = "5m", lockAtLeastFor = "1m")
     @Transactional
-    public void getScheduledLock() {
-        RLock lock = redissonClient.getLock("myScheduledJobLock");
-        boolean available = false;
-        try{
-            available = lock.tryLock(0, 10, TimeUnit.SECONDS);
-            if (available) {
-                doScheduledTask();
-            } else {
-                log.info("다른 서버에서 실행 중, skip");
-            }
-        }catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } finally {
-            if (available) lock.unlock();
-        }
-
-    }
-
-    private void doScheduledTask() {
+    public void getExchangeRate() {
         ExchangeRateResponse exchangeRateResponse = apiCall();
         // recordedAt 설정 (첫 번째 REC 기준)
         LocalDateTime recordedAt = LocalDateTime.parse(
@@ -123,6 +108,7 @@ public class ExchangeRateService {
         //예약환전 체크
 //        reservedExchangeService.checkReservation();
     }
+
 
     private ExchangeRateResponse apiCall() {
         // Header 생성 (ApiUtil 사용)

@@ -7,6 +7,7 @@ import com.mo.moyeo.domain.exchange.reservation.entity.ReservedExchange;
 import com.mo.moyeo.domain.exchange.reservation.repository.ReservedExchangeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ public class ReservedExchangeCronService {
     private final ReservedExchangeService reservedExchangeService;
 
     @Scheduled(initialDelay = 1000*10, fixedDelay = 1000*60*10)
+    @SchedulerLock(name = "checkReservation", lockAtMostFor = "5m", lockAtLeastFor = "1m")
     @Transactional
     public void checkReservation() {
         Map<String, CurrentExchangeRateDto> currentExchangeRate = exchangeRateCacheService.getCurrentExchangeRate();
@@ -67,6 +69,7 @@ public class ReservedExchangeCronService {
 
     // 매일 0시 1분에 실행
     @Scheduled(cron = "0 1 0 * * *")
+    @SchedulerLock(name = "deleteOldExchangeRates", lockAtMostFor = "5m", lockAtLeastFor = "1m")
     @Transactional
     public void deleteOldExchangeRates() {
         LocalDate now = LocalDate.now();

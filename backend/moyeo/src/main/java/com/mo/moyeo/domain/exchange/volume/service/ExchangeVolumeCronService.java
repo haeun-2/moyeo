@@ -10,6 +10,7 @@ import com.mo.moyeo.domain.exchange.volume.repository.ExchangeVolumeRepository;
 import com.mo.moyeo.domain.transaction.exchange.repository.ExchangeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +29,7 @@ public class ExchangeVolumeCronService {
     private final CurrencyService currencyService;
 
     @Scheduled(cron = "0 */10 * * * *") // 초, 분, 시, 일, 월, 요일
-//    @Scheduled(fixedDelay = 1000*60*10)
+    @SchedulerLock(name = "collectRecentVolume", lockAtMostFor = "5m", lockAtLeastFor = "1m")
     @Transactional
     public void collectRecentVolume() {
         //현재 시간을 yyyy-mm-dd hh:mm으로 가져옴
@@ -46,7 +47,7 @@ public class ExchangeVolumeCronService {
 
     // 1시간 단위
     @Scheduled(cron = "0 0 * * * *") // 매 정시마다 실행
-//    @Scheduled(fixedDelay = 1000*10)
+    @SchedulerLock(name = "collectVolumeEveryHour", lockAtMostFor = "5m", lockAtLeastFor = "1m")
     @Transactional
     public void collectVolumeEveryHour() {
         LocalDateTime now = LocalDateTime.now();
@@ -58,7 +59,7 @@ public class ExchangeVolumeCronService {
 
     // 1일 단위
     @Scheduled(cron = "0 0 0 * * *") // 매 자정마다 실행+
-//    @Scheduled(fixedDelay = 1000*10)
+    @SchedulerLock(name = "collectVolumeEveryDay", lockAtMostFor = "5m", lockAtLeastFor = "1m")
     @Transactional
     public void collectVolumeEveryDay() {
         LocalDateTime now = LocalDateTime.now();
