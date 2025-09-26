@@ -11,5 +11,6 @@ data class BoxMemberUi(
 data class MemberUiState(
     val isLoading: Boolean = false,
     val members: List<BoxMemberUi> = emptyList(), // [수정] BoxMemberUi의 리스트를 가짐
+    val isCurrentUserOwner: Boolean = false,
     val error: String? = null
 )

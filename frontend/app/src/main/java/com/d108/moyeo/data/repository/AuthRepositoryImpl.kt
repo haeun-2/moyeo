@@ -5,6 +5,7 @@ import com.d108.moyeo.data.local.UserDataManager // ▼▼▼ AuthDataStore 대�
 import com.d108.moyeo.data.mapper.toDomain
 import com.d108.moyeo.data.remote.api.AuthService
 import com.d108.moyeo.data.remote.dto.auth.LoginRequestDto
+import com.d108.moyeo.data.remote.dto.auth.MeDto
 import com.d108.moyeo.domain.model.Token
 import com.d108.moyeo.domain.repository.AuthRepository
 import com.d108.moyeo.domain.usecase.fcm.RegisterFcmTokenUseCase
@@ -94,6 +95,16 @@ class AuthRepositoryImpl @Inject constructor(
             } else {
                 throw Exception("Server responded with error: ${response.code()}")
             }
+        }
+    }
+
+    override suspend fun getMe(): Result<MeDto> {
+        return runCatching {
+            val response = authService.getMe()
+            if (response.isSuccessful)
+                response.body()!!
+            else
+                throw Exception("Server responded with error: ${response.code()}")
         }
     }
 }

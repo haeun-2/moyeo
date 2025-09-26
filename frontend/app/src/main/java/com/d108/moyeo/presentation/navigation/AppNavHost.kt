@@ -35,7 +35,6 @@ import com.d108.moyeo.presentation.ui.screen.home.NotificationScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.MyBoxDetailScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.calculate.CalculateScreen
 import com.d108.moyeo.presentation.ui.screen.home.box.member.MemberScreen
-//import com.d108.moyeo.presentation.ui.screen.home.box.collect.CollectScreen
 import com.d108.moyeo.presentation.ui.screen.home.charge.ChargeScreen
 import com.d108.moyeo.presentation.ui.screen.home.create.CreateBoxScreen
 import com.d108.moyeo.presentation.ui.screen.home.join.JoinScreen
