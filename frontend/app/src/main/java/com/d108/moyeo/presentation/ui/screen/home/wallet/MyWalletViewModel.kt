@@ -30,6 +30,7 @@ private val TAG = "MyWalletViewModel"
 sealed class WalletNavigationEvent {
     data class NavigateToTransfer(val currencyCode: String) : WalletNavigationEvent()
     data object NavigateToCharge : WalletNavigationEvent() // 충전 화면 이동 이벤트 추가
+    object NavigateToExchange : WalletNavigationEvent()
 }
 
 @HiltViewModel
@@ -232,9 +233,9 @@ class MyWalletViewModel @Inject constructor(
         }
     }
 
-    fun onExchangeClick() {  // TODO: 환전
+    fun onExchangeClick() {
         viewModelScope.launch {
-
+            _navigationEvent.emit(WalletNavigationEvent.NavigateToExchange)
         }
     }
 
