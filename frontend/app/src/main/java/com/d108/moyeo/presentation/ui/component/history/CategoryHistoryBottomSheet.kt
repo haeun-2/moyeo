@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.component.history
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,6 +37,7 @@ fun CategoryHistoryBottomSheet( // TODO: 정렬 기준 변경 및 무한스크�
     groupedHistoryTransactions: Map<String, List<HistoryTransaction>>,
     onDismiss: () -> Unit
 ) {
+    Log.d("BottomSheet", "3. UI에 전달된 Map 키: ${groupedHistoryTransactions.keys}")
     val formattedTotalAmount = DecimalFormat("#,###.##").format(totalAmount)
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
