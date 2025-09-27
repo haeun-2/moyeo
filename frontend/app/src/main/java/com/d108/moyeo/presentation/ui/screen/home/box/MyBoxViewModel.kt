@@ -68,36 +68,52 @@ class MyBoxViewModel @Inject constructor(
 
     private var searchJob: Job? = null
 
+    private var didHandleFirstResume: Boolean = false
+
     init {
-//        Log.d(TAG, "${savedStateHandle.keys()}")
-//        Log.d(TAG, "boxId: $boxId ")
-        val currencyCode = savedStateHandle.get<String>("currencyCode") ?: "KRW"
-
         viewModelScope.launch {
-            // 멤버 목록 가져오기 시작
-            val membersDeferred = async { getBoxMembersUseCase(boxId).getOrNull() ?: emptyList() }
-
-            val historiesJob = if (boxId != -1L) {
-                loadHistories(boxId = boxId, isInitialLoad = true)
-            } else {
-                null
+            boxStore.boxUiStates.collect { allBoxes ->
+                val newBoxInfo = allBoxes.find { it.id == boxId }
+                _uiState.update { it.copy(boxInfo = newBoxInfo) }
             }
+        }
+        viewModelScope.launch {
+            boxStore.personalCurrencies.collect { currencies ->
+                _uiState.update { it.copy(currencies = currencies.map { Currency(it.code, it.name) }) }
+            }
+        }
+    }
 
-            val allBoxes = boxStore.boxUiStates.firstOrNull() ?: emptyList()
-            val boxInfo = allBoxes.find { it.id == boxId }
-            val currencies = boxStore.personalCurrencies.value.map { Currency(it.code, it.name) }
+    fun onResumed() {
+        if (didHandleFirstResume) {
+            refresh()
+        } else {
+            refresh()
+            didHandleFirstResume = true
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            Log.d(TAG, "화면 데이터를 전체 새로고침합니다.")
+            _uiState.update { it.copy(isLoading = true) }
+
+            // BoxStore의 데이터를 먼저 네트워크로부터 새로고침
+            boxStore.refreshBoxes()
+
+            // BoxStore가 최신 상태가 된 후에, 화면에 필요한 데이터를 병렬로 로드
+            val membersDeferred = async { getBoxMembersUseCase(boxId).getOrNull() ?: emptyList() }
+            val historiesJob = loadHistories(boxId = boxId, isInitialLoad = true)
 
             val members = membersDeferred.await()
-            historiesJob?.join()
-
+            historiesJob.join()
             _uiState.update {
                 it.copy(
-                    boxInfo = boxInfo,
-                    selectedCurrencyCode = currencyCode,
-                    currencies = currencies,
-                    members = members
+                    isLoading = false,
+                    members = members,
                 )
             }
+            Log.d(TAG, "새로고침 완료.")
         }
     }
 
@@ -109,8 +125,8 @@ class MyBoxViewModel @Inject constructor(
         val currentState = _uiState.value
         val pageToLoad = if (isInitialLoad) 0 else currentState.page
 
-        // 이미 로딩 중이거나, 다음 페이지가 없으면(마지막 페이지) 함수를 종료하여 중복 호출을 방지
-        if (currentState.isLoading || (!currentState.hasNext && !isInitialLoad)) {
+
+        if ((!isInitialLoad && currentState.isLoadingNextPage)  || (!currentState.hasNext && !isInitialLoad)) {
             return viewModelScope.launch {}
         }
 
@@ -203,14 +219,6 @@ class MyBoxViewModel @Inject constructor(
         val newFilters = uiState.value.filters.copy(scope = category)
         onFilterConfirm(newFilters) // 기존의 필터 확인 함수 재활용
     }
-
-
-    suspend fun forceRefresh() {
-        Log.d(TAG, "Lifecycle Event: ON_RESUME. 강제 새로고침을 시작합니다.")
-        loadHistories(boxId = boxId, isInitialLoad = true).join()
-        Log.d(TAG, "forceRefresh 완료. 다음 작업으로 넘어갑니다.")
-    }
-
 
     // 잔액 부분을 클릭했을 때 호출할 화폐 바텀 시트 관련 로직
     fun onBalanceClick() {
