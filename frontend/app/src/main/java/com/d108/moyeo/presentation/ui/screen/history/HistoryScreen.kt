@@ -197,7 +197,7 @@ fun HistoryScreen(navController: NavController,
                     ) {
                         // 토글 버튼
                         var selectedIndex = uiState.selectedToggleIndex
-                        val options = listOf("전체", "일자")
+                        val options = listOf("전체", "기간")
                         SingleChoiceSegmentedButtonRow {
                             options.forEachIndexed { index, label ->
                                 SegmentedButton(
@@ -384,7 +384,7 @@ fun HistoryScreen(navController: NavController,
 private fun formatDateRange(startMillis: Long?, endMillis: Long?): String {
     val formatter = remember { SimpleDateFormat("yyyy년 M월 d일", Locale.KOREAN) }
 
-    val startDate = startMillis?.let { formatter.format(Date(it)) } ?: "날짜를 선택해주세요"
+    val startDate = startMillis?.let { formatter.format(Date(it)) } ?: "기간을 선택해주세요"
     val endDate = endMillis?.let { formatter.format(Date(it)) } ?: "종료일"
 
     // 시작일만 선택되었거나, 시작일과 종료일이 같은 경우

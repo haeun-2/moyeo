@@ -56,23 +56,6 @@ fun HistoryBoxesItem(  // 모여박스 선택 화면
                 .padding(Spacing.Medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 왼쪽엔 원형 아이콘 적당히 넣어서 모여 박스 대표 프사가 들어갈 공간
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountBox, // 임시 아이콘
-                    contentDescription = "모여박스 아이콘",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-
-            Spacer(modifier = Modifier.width(Spacing.Small))
-
             // 오른쪽엔 이 모여 박스의 이름. 이 모여 박스의 이름이 남은 공간을 모두 차지함
             Text(
                 text = box.title,
