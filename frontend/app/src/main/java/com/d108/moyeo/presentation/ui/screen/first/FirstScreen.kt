@@ -50,6 +50,7 @@ fun FirstScreen(navController: NavHostController,
         FirstStep.BIOMETRICS -> canAuth
         FirstStep.PIN -> uiState.pin.length == 6
     }
+
     LaunchedEffect(uiState.currentStep) {
         if (uiState.currentStep == FirstStep.BIOMETRICS && biometricManager.canAuthenticate()) {
             if (biometricManager.canAuthenticate()) {
@@ -80,6 +81,24 @@ fun FirstScreen(navController: NavHostController,
                 viewModel.skipBiometrics()
             }
 
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is FirstNavigationEvent.NavigateToHome -> {
+                    // 홈 화면으로 이동하고, 이전 화면 스택을 모두 제거합니다.
+                    navController.navigate("home") { // "home"은 실제 홈 화면의 라우트 이름으로 변경해주세요.
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                    }
+                }
+                is FirstNavigationEvent.NavigateBack -> {
+                    activity.finish() // 현재 액티비티를 종료합니다.
+                }
+            }
         }
     }
 
