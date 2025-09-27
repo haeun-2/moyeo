@@ -3,8 +3,8 @@ package com.d108.moyeo.presentation.navigation
 import ExchangeHistoryScreen
 import MyConsultationDetail
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.toString
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.d108.moyeo.presentation.ui.screen.*
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -12,19 +12,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
-import com.d108.moyeo.presentation.ui.screen.exchange.BoxSelectionScreen
 import com.d108.moyeo.presentation.ui.screen.more.account.change.AccountChangeScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.CurrencySelectionScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeAddScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeCompleteScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeKeypadScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeReservationHomeScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ReservationAmountInputScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ReservationFinalCompleteScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ReservationPeriodSelectionScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ReservationRateInputScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.reservation.ReservationScreen
+import com.d108.moyeo.presentation.ui.screen.currency.CurrencyScreen
+import com.d108.moyeo.presentation.ui.screen.currency.exchange.ExchangeScreen
+import com.d108.moyeo.presentation.ui.screen.currency.exchange.ExchangeViewModel
+import com.d108.moyeo.presentation.ui.screen.currency.reservation.ReservationScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryBoxesScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
@@ -194,215 +186,35 @@ fun AppNavHost(
 
         // 환율 화면
         composable(AppScreen.Exchange.route) {
-            ExchangeScreen(navController = navController)
+            CurrencyScreen(navController = navController)
         }
 
         composable(
-            "exchange_keypad/{mode}?currencyCode={currencyCode}&currencyName={currencyName}",
-            arguments= listOf(
-                navArgument("mode") {type = NavType.StringType},
-                navArgument("currencyCode") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("currencyName") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                }
-            )) { backStackEntry ->
-            ExchangeKeypadScreen(
-                navController = navController,
-                mode = backStackEntry.arguments?.getString("mode") ?: "charge",
-                currencyCode = backStackEntry.arguments?.getString("currencyCode"),
-                currencyName = backStackEntry.arguments?.getString("currencyName")
-            )
-        }
-
-        composable(
-            route = "exchange_reservation_home?refresh={refresh}",
+            route = AppScreen.ExchangeFlow.route,
             arguments = listOf(
-                navArgument("refresh") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                }
+                navArgument("mode") { type = NavType.StringType; defaultValue = "charge" },
+                navArgument("targetCurrency") { type = NavType.StringType; nullable = true; defaultValue = null }
             )
         ) {
-            ExchangeReservationHomeScreen(navController = navController)
+            ExchangeScreen(navController = navController, mode = it.arguments?.getString("mode") ?: "charge")
         }
 
-        // 기본 라우트도 유지 (refresh 없는 경우)
-        composable("exchange_reservation") {
-            ReservationScreen(navController = navController)
-        }
-
-//        // 희망환율 입력 (통장 번호 추가)
-//        composable(
-//            route = "reservation_rate_input/{currencyCode}/{currencyName}?boxId={boxId}",
-//            arguments = listOf(
-//                navArgument("currencyCode") { type = NavType.StringType },
-//                navArgument("currencyName") { type = NavType.StringType },
-//                navArgument("boxId") {
-//                    type = NavType.LongType
-//                    defaultValue = 1L
-//                }
-//            )
-//        ) { backStackEntry ->
-//            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
-//            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
-//            val boxId = backStackEntry.arguments?.getLong("boxId") ?: 1L
-//
-//            ReservationRateInputScreen(
-//                navController = navController,
-//                currencyCode = currencyCode,
-//                currencyName = currencyName,
-//                boxId = boxId
-//            )
-//        }
-
-//    // 환전할 금액 입력
-//        composable(
-//            route = "reservation_amount_input/{currencyCode}/{currencyName}/{targetRate}?boxId={boxId}",
-//            arguments = listOf(
-//                navArgument("currencyCode") { type = NavType.StringType },
-//                navArgument("currencyName") { type = NavType.StringType },
-//                navArgument("targetRate") { type = NavType.StringType },
-//                navArgument("boxId") {
-//                    type = NavType.LongType
-//                    defaultValue = 1L
-//                }
-//            )
-//        ) { backStackEntry ->
-//            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
-//            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
-//            val targetRate = backStackEntry.arguments?.getString("targetRate")?.toLongOrNull() ?: 0L
-//            val boxId = backStackEntry.arguments?.getLong("boxId") ?: 1L
-//
-//            ReservationAmountInputScreen(
-//                navController = navController,
-//                currencyCode = currencyCode,
-//                currencyName = currencyName,
-//                targetRate = targetRate,
-//                boxId = boxId
-//            )
-//        }
-
-//// 예약기간 선택
-//        composable(
-//            route = "reservation_period_selection/{currencyCode}/{currencyName}/{targetRate}/{amount}?boxId={boxId}",
-//            arguments = listOf(
-//                navArgument("currencyCode") { type = NavType.StringType },
-//                navArgument("currencyName") { type = NavType.StringType },
-//                navArgument("targetRate") { type = NavType.StringType },
-//                navArgument("amount") { type = NavType.StringType },
-//                navArgument("boxId") {
-//                    type = NavType.LongType
-//                    defaultValue = 1L
-//                }
-//            )
-//        ) { backStackEntry ->
-//            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
-//            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
-//            val targetRate = backStackEntry.arguments?.getString("targetRate") ?: ""
-//            val amount = backStackEntry.arguments?.getString("amount") ?: ""
-//            val boxId = backStackEntry.arguments?.getLong("boxId") ?: 1L
-//
-//            ReservationPeriodSelectionScreen(
-//                navController = navController,
-//                currencyCode = currencyCode,
-//                currencyName = currencyName,
-//                targetRate = targetRate.toLong(),
-//                amount = amount,
-//                boxId = boxId
-//            )
-//        }
-
-
-        // 환율의 추가 버튼을 누르면 이동
-        composable("exchange_add") {
-            ExchangeAddScreen(navController)
-        }
-
-        // 통장 선택 후, 이동
         composable(
-            route = "currency_selection?boxId={boxId}",
+            route = AppScreen.Reservation.route,
             arguments = listOf(
-                navArgument("boxId") {
-                    type = NavType.LongType
-                    defaultValue = 1L
-                }
+                navArgument("initialBoxId") { type = NavType.LongType; defaultValue = -1L },
+                navArgument("entry") { type = NavType.StringType; defaultValue = "home" }
             )
         ) { backStackEntry ->
-            val boxId = backStackEntry.arguments?.getLong("boxId") ?: 1L
-            CurrencySelectionScreen(
+            val initialBoxId = backStackEntry.arguments?.getLong("initialBoxId")?.takeIf { it > 0 }
+            val entry = backStackEntry.arguments?.getString("entry") ?: "home"
+            ReservationScreen(
                 navController = navController,
-                boxId = boxId
+                initialBoxId = initialBoxId,
+                entry = entry
             )
         }
 
-        // 통장 선택하는 경로
-        composable("box_selection") {
-            BoxSelectionScreen(navController = navController)
-        }
-
-//        // 예약환전 완료
-//        composable(
-//            route = "reservation_final_complete/{currencyCode}/{currencyName}/{targetRate}/{amount}/{startDate}/{endDate}?boxId={boxId}",
-//            arguments = listOf(
-//                navArgument("currencyCode") { type = NavType.StringType },
-//                navArgument("currencyName") { type = NavType.StringType },
-//                navArgument("targetRate") { type = NavType.StringType },
-//                navArgument("amount") { type = NavType.StringType },
-//                navArgument("startDate") { type = NavType.StringType },
-//                navArgument("endDate") { type = NavType.StringType },
-//                navArgument("boxId") {
-//                    type = NavType.LongType
-//                    defaultValue = 1L
-//                }
-//            )
-//        ) { backStackEntry ->
-//            val currencyCode = backStackEntry.arguments?.getString("currencyCode") ?: ""
-//            val currencyName = backStackEntry.arguments?.getString("currencyName") ?: ""
-//            val targetRate = backStackEntry.arguments?.getString("targetRate") ?: ""
-//            val amount = backStackEntry.arguments?.getString("amount") ?: ""
-//            val startDate = backStackEntry.arguments?.getString("startDate") ?: ""
-//            val endDate = backStackEntry.arguments?.getString("endDate") ?: ""
-//            val boxId = backStackEntry.arguments?.getLong("boxId") ?: 1L
-//
-//            ReservationFinalCompleteScreen(
-//                navController = navController,
-//                currencyCode = currencyCode,
-//                currencyName = currencyName,
-//                targetRate = targetRate,
-//                amount = amount,
-//                startDate = startDate,
-//                endDate = endDate,
-//                boxId = boxId
-//            )
-//        }
-
-        // 환전 완료 화면
-        composable(
-            route = "exchange_complete/{mode}/{amount}/{currencyUnit}",
-            arguments = listOf(
-                navArgument("mode") { type = NavType.StringType },
-                navArgument("amount") { type = NavType.StringType },
-                navArgument("currencyUnit") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val mode = backStackEntry.arguments?.getString("mode") ?: "charge"
-            val amount = backStackEntry.arguments?.getString("amount") ?: "0"
-            val currencyUnit = backStackEntry.arguments?.getString("currencyUnit") ?: "JPY"
-
-            ExchangeCompleteScreen(
-                navController = navController,
-                mode = mode,
-                amount = amount,
-                currencyUnit = currencyUnit
-            )
-        }
 
         // 환율 히스토리
         composable(
