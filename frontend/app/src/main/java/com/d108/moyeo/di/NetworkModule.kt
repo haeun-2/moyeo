@@ -153,6 +153,9 @@ object NetworkModule {  // 여러 부품을 조립해서 새로운 것을 '만�
     fun provideExchangeHistoryService(retrofit: Retrofit): ExchangeHistoryService {
         return retrofit.create(ExchangeHistoryService::class.java)
     }
+
+
+
     /*
     * 알림 서비스
     */

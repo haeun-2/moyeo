@@ -12,12 +12,6 @@
         val icon: ImageVector? = null,
         val iconResId: Int? = null
     ) {
-
-        // ImageVector가 있으면 바텀 내비 클릭해서 보이는 화면
-        // ImageVector가 없으면 스크린
-
-        object Dummy: AppScreen(route = "dummy", title = "Dummy")
-
         // 로그아웃 또는 앱 최초 설치
         object First: AppScreen(route = "first", title = "First")
 
@@ -91,19 +85,8 @@
             }
         }
 
-        // 충전화 관련된 화면
+        // 충전과 관련된 화면
         object Charge: AppScreen(route = "charge", title = "충전")
-
-        // 모으기와 관련된 화면
-        object Collect : AppScreen(route = "collect/{boxId}?currencyCode={currencyCode}", title = "모으기") {
-            fun createRoute(boxId: String, currencyCode: String? = null): String {
-                return if (currencyCode != null) {
-                    "collect/$boxId?currencyCode=$currencyCode"
-                } else {
-                    "collect/$boxId"
-                }
-            }
-        }
 
         // 정산하기와 관련된 화면
         object Calculate: AppScreen(route="calculate/{boxId}", title = "정산하기") {
@@ -115,17 +98,27 @@
         // 환율 스크린 관련
         object Exchange: AppScreen(route = "exchange", title = "환율", iconResId = R.drawable.outline_currency_exchange_24)
 
-        object ExchangeKeypadCharge : AppScreen(route = "exchange_keypad/charge", title = "충전하기", icon= null, iconResId = null)
-        object ExchangeKeypadRefund : AppScreen(route = "exchange_keypad/refund", title = "돌려받기", icon= null, iconResId = null)
-
-        object ExchangeHistory: AppScreen(
-            route = "exchange_history/{currencyCode}/{currencyName}/{tradeMode}",
-            title = "환율 히스토리"
+        // 환전 플로우 진입 (ExchangeScreen)
+        object ExchangeFlow : AppScreen(
+            route = "exchange?mode={mode}&targetCurrency={targetCurrency}",
+            title = "환전하기"
         ) {
-            fun createRoute(currencyCode: String, currencyName: String, tradeMode: String): String {
-                return "exchange_history/$currencyCode/$currencyName/$tradeMode"
+            fun createRoute(mode: String, targetCurrency: String): String =
+                "exchange?mode=$mode&targetCurrency=$targetCurrency"
+        }
+
+        // 예약환전 (ReservationScreen)
+        object Reservation : AppScreen(
+            route = "exchange_reservation?initialBoxId={initialBoxId}&entry={entry}",
+            title = "예약환전"
+        ) {
+            fun createRoute(initialBoxId: Long?, entry: String = "home"): String {
+                val id = initialBoxId?.takeIf { it > 0 } ?: -1L
+                return "exchange_reservation?initialBoxId=$id&entry=$entry"
             }
         }
+
+
 
         // QR 스크린 관련
         object QR: AppScreen(route = "qr", title = "QR", iconResId = R.drawable.outline_qr_code_24)
@@ -153,19 +146,4 @@
         // 그룹 박스 추가 관련
         object CreateBox: AppScreen(route = "create_box", title = "그룹 박스 생성")
 
-        object ReservationFinalComplete : AppScreen(
-            route = "reservation_final_complete/{currencyCode}/{currencyName}/{targetRate}/{amount}/{startDate}/{endDate}",
-            title = "예약 완료"
-        ) {
-            fun createRoute(
-                currencyCode: String,
-                currencyName: String,
-                targetRate: String,
-                amount: String,
-                startDate: String,
-                endDate: String
-            ): String {
-                return "reservation_final_complete/$currencyCode/$currencyName/$targetRate/$amount/$startDate/$endDate"
-            }
-        }
     }
