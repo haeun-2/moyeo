@@ -263,17 +263,6 @@ fun HistoryScreen(navController: NavController,
                 }
             )
 
-            Spacer(modifier = Modifier.height(Spacing.Small))
-
-            // 4. 지도보기 글자
-            Text(
-                text = "지도 보기",
-                style = Typography.bodyLarge,
-                modifier = Modifier.clickable {
-                    Toast.makeText(context, "지도 보기(텍스트) 클릭됨", Toast.LENGTH_SHORT).show()
-                }
-            )
-
             Spacer(modifier = Modifier.height(Spacing.Large))
 
             // 5. 리스트 영역 - 상태에 따른 분기 처리
