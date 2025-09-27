@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.d108.moyeo.domain.model.history.HistoryTransaction
 import com.d108.moyeo.presentation.theme.Spacing
@@ -118,6 +119,12 @@ private fun TransactionRow(transaction: HistoryTransaction) {
         SimpleDateFormat("M월 d일", Locale.KOREAN).format(it)
     } ?: ""
 
+    val truncatedTitle = if (transaction.title.length > 12) {
+        "${transaction.title.take(12)}..."
+    } else {
+        transaction.title
+    }
+
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -126,10 +133,11 @@ private fun TransactionRow(transaction: HistoryTransaction) {
         ) {
             // 설명 (거래처 이름 등)
             Text(
-                text = transaction.title,
+                text = truncatedTitle,
                 style = Typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold
             )
+
             // 지출액
             Text(
                 text = "$formattedAmount ${transaction.currency}",  // 서버에서 마이너스 붙여줌

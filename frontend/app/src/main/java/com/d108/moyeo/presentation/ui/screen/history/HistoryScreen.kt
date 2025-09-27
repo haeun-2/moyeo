@@ -4,6 +4,7 @@ import android.R.attr.onClick
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,6 +52,7 @@ import com.d108.moyeo.presentation.theme.surfaceLight
 import com.d108.moyeo.presentation.ui.component.history.HistoryItem
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -62,6 +64,7 @@ import com.d108.moyeo.domain.model.history.HistoryTransaction
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.backgroundLight
 import com.d108.moyeo.presentation.theme.outlineLight
+import com.d108.moyeo.presentation.theme.primaryLight
 import com.d108.moyeo.presentation.theme.surfaceDimLight
 import com.d108.moyeo.presentation.theme.surfaceVariantLight
 import com.d108.moyeo.presentation.ui.component.common.DateRangePickerModal
@@ -143,7 +146,7 @@ fun HistoryScreen(navController: NavController,
     ) {
         Column(
             modifier = Modifier.padding(
-                start = Padding.HorizontalLarge, end = Padding.HorizontalLarge,
+                start = Padding.HorizontalMedium, end = Padding.HorizontalMedium,
                 top = Padding.ScreenTop, bottom = Padding.ScreenBottom
             ),
         ) {
@@ -212,27 +215,34 @@ fun HistoryScreen(navController: NavController,
                         }
 
 
+                        val isDropdownEnabled = uiState.currencyOptions.isNotEmpty()
                         // currencyOptions가 비어있지 않을 때만 드롭다운 메뉴를 보여줍니다.
-                        if (uiState.currencyOptions.isNotEmpty()) {
-                            ExposedDropdownMenuBox(
-                                expanded = uiState.isCurrencyMenuExpanded,
-                                onExpandedChange = viewModel::onCurrencyMenuExpanded,
-                            ) {
-                                OutlinedTextField(
-                                    value = uiState.selectedCurrency ?: "통화",
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    trailingIcon = {
-                                        Icon(
-                                            Icons.Default.ArrowDropDown,
-                                            contentDescription = "메뉴 열기"
-                                        )
-                                    },
-                                    modifier = Modifier
-                                        .menuAnchor()
-                                        .width(100.dp),
-                                    textStyle = Typography.bodySmall,
-                                )
+                        ExposedDropdownMenuBox(
+                            expanded = if (isDropdownEnabled) uiState.isCurrencyMenuExpanded else false,
+                            onExpandedChange = {
+                                if (isDropdownEnabled) viewModel.onCurrencyMenuExpanded(it)
+                            },
+                        ) {
+                            OutlinedTextField(
+                                // 데이터 유무에 따라 표시할 텍스트 변경
+                                value = if (isDropdownEnabled) uiState.selectedCurrency ?: "통화" else "내역 없음",
+                                onValueChange = {},
+                                readOnly = true,
+                                // 데이터 없을 때 비활성화 상태로 만듦
+                                enabled = isDropdownEnabled,
+                                trailingIcon = {
+                                    Icon(
+                                        Icons.Default.ArrowDropDown,
+                                        contentDescription = "메뉴 열기"
+                                    )
+                                },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .width(120.dp),
+                                textStyle = Typography.bodySmall,
+                            )
+
+                            if (isDropdownEnabled) {
                                 ExposedDropdownMenu(
                                     expanded = uiState.isCurrencyMenuExpanded,
                                     onDismissRequest = { viewModel.onCurrencyMenuExpanded(false) }
@@ -240,14 +250,14 @@ fun HistoryScreen(navController: NavController,
                                     uiState.currencyOptions.forEach { option ->
                                         DropdownMenuItem(
                                             text = { Text(option) },
-                                            onClick = { viewModel.onCurrencySelected(option)
-                                                focusManager.clearFocus()}
+                                            onClick = {
+                                                viewModel.onCurrencySelected(option)
+                                                focusManager.clearFocus()
+                                            }
                                         )
                                     }
                                 }
                             }
-                        } else {
-                            Text("거래 내역이 없습니다")
                         }
                     }
                 }
@@ -278,15 +288,37 @@ fun HistoryScreen(navController: NavController,
 
                 // 3. 날짜 표시 영역
 
-                Text(
-                    text = dateText,
-                    style = Typography.bodyLarge,
-                    modifier = if (uiState.selectedToggleIndex == 1) {
-                        Modifier.clickable(onClick = viewModel::onDateRangePickerClick)
-                    } else {
-                        Modifier
+                Row(
+                    // ✅ Row 자체에 Modifier를 적용합니다.
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50)) // 모서리를 둥글게 깎아 클릭 효과가 예쁘게 보이도록 함
+                        .clickable(onClick = viewModel::onDateRangePickerClick)
+                        .border(
+                            width = 1.dp,
+                            color = primaryLight,
+                            shape = RoundedCornerShape(50)
+                        )
+                        // ✅ 패딩은 항상 적용하여 '전체'/'일자' 전환 시 UI가 출렁이지 않도록 합니다.
+                        .padding(horizontal = Spacing.Medium, vertical = Spacing.Small),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = dateText,
+                        style = Typography.bodyLarge,
+                        color = primaryLight
+                    )
+
+                    if ( uiState.selectedToggleIndex == 1) {
+                        Spacer(modifier = Modifier.width(Spacing.Small))
+                        Icon(
+                            imageVector = Icons.Default.DateRange, // 달력 아이콘
+                            contentDescription = "날짜 선택",
+                            tint = primaryLight,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
-                )
+                }
 
                 Spacer(modifier = Modifier.height(Spacing.Large))
 
@@ -298,7 +330,7 @@ fun HistoryScreen(navController: NavController,
                 } else if (uiState.selectedToggleIndex == 1 && !uiState.hasSelectedDateRange) {
                     // 일자 모드이면서 날짜를 선택하지 않은 경우
                     Text(
-                        text = "날짜 범위를 선택해주세요",
+                        text = "",
                         style = Typography.bodyLarge
                     )
                 } else if (uiState.currentStats?.content?.isEmpty() == true || uiState.currentStats == null) {
