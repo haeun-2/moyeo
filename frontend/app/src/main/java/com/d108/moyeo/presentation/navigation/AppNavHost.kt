@@ -3,9 +3,7 @@ package com.d108.moyeo.presentation.navigation
 import ExchangeHistoryScreen
 import MyConsultationDetail
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.toString
 import androidx.compose.ui.Modifier
-import com.d108.moyeo.presentation.ui.screen.*
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -20,11 +18,8 @@ import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeCompleteScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeKeypadScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeReservationHomeScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.ExchangeScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ReservationAmountInputScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ReservationFinalCompleteScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ReservationPeriodSelectionScreen
-import com.d108.moyeo.presentation.ui.screen.exchange.ReservationRateInputScreen
 import com.d108.moyeo.presentation.ui.screen.exchange.reservation.ReservationScreen
+import com.d108.moyeo.presentation.ui.screen.first.FirstScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryBoxesScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen
