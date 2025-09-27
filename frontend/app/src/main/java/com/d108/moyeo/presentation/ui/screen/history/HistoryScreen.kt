@@ -53,6 +53,7 @@ import com.d108.moyeo.presentation.ui.component.history.HistoryItem
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -174,7 +175,7 @@ fun HistoryScreen(navController: NavController,
                     Spacer(modifier = Modifier.width(Spacing.Small))
 
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
+                        imageVector = Icons.Default.KeyboardArrowRight,
                         contentDescription = "상세보기로 이동"
                     )
                 }

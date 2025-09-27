@@ -61,7 +61,7 @@ fun HistoryBoxesItem(  // 모여박스 선택 화면
                 text = box.title,
                 style = Typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
