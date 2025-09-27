@@ -20,11 +20,8 @@ import java.util.Locale
 fun RateInputContent(
     paddingValues: PaddingValues,
     currencyCode: String,
-    currencyName: String,
     input: String,
-    currentRate: String,
     onInputChange: (String) -> Unit,
-    onNext: () -> Unit
 ) {
     val baseUnit = currencyUnitMap[currencyCode]?.baseUnit ?: 1
     val krwFormatted = NumberFormat.getNumberInstance(Locale.KOREA)
@@ -43,7 +40,7 @@ fun RateInputContent(
             fontWeight = FontWeight.Medium
         )
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(20.dp))
 
         Box(
             modifier = Modifier.weight(1f),
@@ -78,13 +75,5 @@ fun RateInputContent(
             keyMode = KeyMode.Zeros,
             buttonAspectRatio = 1.2f
         )
-
-        Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = onNext,
-            enabled = input != "0",
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(28.dp)
-        ) { Text("다음으로") }
     }
 }

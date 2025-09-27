@@ -38,10 +38,22 @@ class ExchangeViewModel @Inject constructor(
     private var myPersonalBoxId: Long? = null
     private var myPersonalBalances: List<Balance> = emptyList()
 
+    sealed class ExchangeNavEvent {
+        data object ShowBiometricPrompt : ExchangeNavEvent()
+    }
+    private val _navigationEvent = MutableSharedFlow<ExchangeNavEvent>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
+
+    // 임시 Correct PIN
+    private val correctPin = "111111"
+    private var isSubmitting = false
+
     fun initIfNeeded() {
         val modeArg = (savedStateHandle.get<String>("mode") ?: "CHARGE").uppercase()
-        val initialMode = runCatching { ExchangeMode.valueOf(modeArg) }.getOrElse { ExchangeMode.CHARGE }
-        val targetCurrency = savedStateHandle.get<String>("targetCurrency") // CurrencyScreen에서 전달된 통화
+        val initialMode =
+            runCatching { ExchangeMode.valueOf(modeArg) }.getOrElse { ExchangeMode.CHARGE }
+        val targetCurrency =
+            savedStateHandle.get<String>("targetCurrency") // CurrencyScreen에서 전달된 통화
 
         if (_uiState.value.mode != initialMode || _uiState.value == ExchangeUiState(mode = ExchangeMode.CHARGE)) {
             val startStep = when (initialMode) {
@@ -69,6 +81,10 @@ class ExchangeViewModel @Inject constructor(
                         }
                     }
                     .onFailure { /* TODO: 에러 처리 */ }
+
+                userDataManager.biometricsPreferenceFlow.collect { enabled ->
+                    _uiState.update { it.copy(biometricsEnabled = enabled) }
+                }
             }
         }
     }
@@ -112,52 +128,92 @@ class ExchangeViewModel @Inject constructor(
         _uiState.update { it.copy(amount = if (c.isNotEmpty()) c.dropLast(1) else "") }
     }
 
-    /** 다음 버튼 공통 분기 (Transfer onNextClicked와 동일 구조) */
-    fun onNextClicked() {
-        when (_uiState.value.step) {
-            ExchangeStep.TARGET_BOX -> {
-                _uiState.update { it.copy(step = ExchangeStep.CHOOSE_CURRENCY) }
-            }
-            ExchangeStep.CHOOSE_CURRENCY -> {
-                _uiState.update { it.copy(step = ExchangeStep.HOW_MUCH) }
-            }
-            ExchangeStep.HOW_MUCH -> {
-                submitExchange()
-            }
-            ExchangeStep.FINISH -> {
-                // Screen 에서 pop
+    fun onBiometricsSucceeded() {
+        submitExchange()
+    }
+
+    fun skipBiometrics() {
+        _uiState.update { it.copy(step = ExchangeStep.PIN) }
+    }
+
+    fun onPinInput(digit: String) {
+        if (_uiState.value.pin.length < 6) {
+            _uiState.update { it.copy(pin = it.pin + digit) }
+        }
+    }
+    fun onPinBackspace() { _uiState.update { it.copy(pin = it.pin.dropLast(1)) } }
+    fun onPinClear() { _uiState.update { it.copy(pin = "") } }
+
+    private fun checkPin() {
+        viewModelScope.launch {
+            val s = _uiState.value
+            if (s.pin == correctPin) {
+                _uiState.update { it.copy(pinFailureCount = 0, pinError = null) }
+                onPinSucceeded()
+            } else {
+                val n = s.pinFailureCount + 1
+                if (n >= 3) {
+                    _uiState.update { it.copy(isPinLocked = true, pinError = "PIN 3회 오류로 잠겼습니다.", pin = "") }
+                } else {
+                    _uiState.update { it.copy(pinFailureCount = n, pinError = "PIN이 일치하지 않습니다. (남은 횟수: ${3 - n}회)") }
+                    kotlinx.coroutines.delay(1000L)
+                    onPinClear()
+                }
             }
         }
     }
 
+    fun onPinSucceeded() {
+        submitExchange()
+    }
+
+    /** 다음 버튼 공통 분기 (Transfer onNextClicked와 동일 구조) */
+    fun onNextClicked() {
+        when (_uiState.value.step) {
+            ExchangeStep.TARGET_BOX -> _uiState.update { it.copy(step = ExchangeStep.CHOOSE_CURRENCY) }
+            ExchangeStep.CHOOSE_CURRENCY -> _uiState.update { it.copy(step = ExchangeStep.HOW_MUCH) }
+            ExchangeStep.HOW_MUCH -> {
+                viewModelScope.launch {
+                    if (_uiState.value.biometricsEnabled) {
+                        _uiState.update { it.copy(step = ExchangeStep.BIOMETRIC) }
+                        _navigationEvent.emit(ExchangeNavEvent.ShowBiometricPrompt)
+                    } else {
+                        _uiState.update { it.copy(step = ExchangeStep.PIN) }
+                    }
+                }
+            }
+            ExchangeStep.BIOMETRIC -> {
+                // 버튼으로 넘어온 경우: 생체 스킵 → PIN
+                skipBiometrics()
+            }
+            ExchangeStep.PIN -> {
+                if (!_uiState.value.isPinLocked) checkPin()
+            }
+            ExchangeStep.FINISH -> { /* Screen에서 pop */ }
+        }
+    }
+
     private fun submitExchange() {
+        if (isSubmitting) return
         val state = _uiState.value
         val amount = state.amount.toLongOrNull() ?: 0L
         if (amount <= 0L) return
 
         val targetCurrency = savedStateHandle.get<String>("targetCurrency") ?: ""
-
         val (fromBoxId, fromCurrency, toCurrency) =
             if (state.mode == ExchangeMode.CHARGE) {
-                Triple(
-                    state.selectedBoxId,                  // 선택 박스
-                    state.spendCurrencyCode,              // 지출 통화
-                    targetCurrency                        // 입금 통화 (CurrencyScreen 선택)
-                )
+                Triple(state.selectedBoxId, state.spendCurrencyCode, targetCurrency)
             } else {
-                Triple(
-                    myPersonalBoxId ?: -1L,              // 내 개인 박스
-                    targetCurrency,                       // 지출 통화 = 선택 외화
-                    "KRW"                                 // 입금 통화 고정
-                )
+                Triple(myPersonalBoxId ?: -1L, targetCurrency, "KRW")
             }
-
         if (fromBoxId <= 0L || fromCurrency.isBlank() || toCurrency.isBlank()) return
 
+        isSubmitting = true
         viewModelScope.launch {
             exchangeUseCase(fromBoxId, fromCurrency, toCurrency, amount)
                 .onSuccess { _uiState.update { it.copy(step = ExchangeStep.FINISH) } }
-                .onFailure { /* TODO: 에러 메시지 상태 보관/노출 */ }
+                .onFailure { /* TODO: 에러 상태 반영 */ }
+            isSubmitting = false
         }
     }
 

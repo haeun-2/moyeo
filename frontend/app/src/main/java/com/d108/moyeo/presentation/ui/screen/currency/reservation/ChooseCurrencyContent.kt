@@ -21,7 +21,6 @@ fun ChooseCurrencyContent(
     paddingValues: PaddingValues,
     selected: String?,
     onSelect: (String, String) -> Unit,
-    onNext: () -> Unit
 ) {
     val currencies = remember {
         listOf(
@@ -74,13 +73,5 @@ fun ChooseCurrencyContent(
                 }
             }
         }
-
-        Spacer(Modifier.height(12.dp))
-        Button(
-            onClick = onNext,
-            enabled = !selected.isNullOrBlank(),
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(28.dp)
-        ) { Text("확인", color = Color.White) }
     }
 }

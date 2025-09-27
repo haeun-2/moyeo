@@ -25,7 +25,6 @@ fun AmountInputContent(
     foreignValue: Double,
     onTabChange: (String) -> Unit,
     onInputChange: (String) -> Unit,
-    onNext: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -80,13 +79,5 @@ fun AmountInputContent(
             keyMode = KeyMode.Zeros,
             buttonAspectRatio = 1.2f
         )
-
-        Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = onNext,
-            enabled = inputAmount != "0",
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(28.dp)
-        ) { Text("다음") }
     }
 }
