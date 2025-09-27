@@ -27,8 +27,6 @@ fun AmountInputContent(
     onInputChange: (String) -> Unit,
     onNext: () -> Unit
 ) {
-    val baseUnit = currencyUnitMap[currencyCode]?.baseUnit ?: 1
-
     Column(
         modifier = Modifier
             .fillMaxSize()

@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.data.mapper.toUi
 import com.d108.moyeo.data.remote.dto.exchange.CurrencyResponseDto
-import com.d108.moyeo.domain.model.exchange.Currency
 import com.d108.moyeo.domain.repository.ExchangeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

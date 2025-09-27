@@ -23,7 +23,6 @@ fun ExchangeScreen(
 ) {
     val isRefund = mode.equals("refund", ignoreCase = true)
     val title = if (isRefund) "돌려받기" else "충전하기"
-    val actionLabel = if (isRefund) "돌려받기 실행" else "충전하기 실행"
 
     BackHandler { viewModel.onBackClick(); navController.popBackStack() }
     LaunchedEffect(Unit) { viewModel.initIfNeeded() }
