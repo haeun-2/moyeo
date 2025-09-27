@@ -7,5 +7,7 @@ enum class ReservationStep {
     RateInput,          // 목표 환율 입력
     AmountInput,        // 예약 금액 입력
     PeriodSelection,    // 기간 선택
+    BIOMETRIC,
+    PIN,
     Finished       // 완료
 }

@@ -16,8 +16,6 @@ fun PeriodSelectionContent(
     endDate: String,
     onStartChange: (String) -> Unit,
     onEndChange: (String) -> Unit,
-    isLoading: Boolean,
-    onSubmit: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -40,17 +38,6 @@ fun PeriodSelectionContent(
                 text = endDate.ifEmpty { "종료일 선택" },
                 selected = endDate.isNotEmpty()
             ) { onEndChange(tomorrowIso()) }
-        }
-
-        Spacer(Modifier.weight(1f))
-        Button(
-            onClick = onSubmit,
-            enabled = startDate.isNotEmpty() && endDate.isNotEmpty() && !isLoading,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(28.dp)
-        ) {
-            if (isLoading) CircularProgressIndicator(modifier = Modifier.size(22.dp))
-            else Text("예약하기")
         }
     }
 }

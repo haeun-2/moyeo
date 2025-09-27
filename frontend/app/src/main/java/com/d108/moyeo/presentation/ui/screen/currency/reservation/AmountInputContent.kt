@@ -13,7 +13,6 @@ import com.d108.moyeo.presentation.ui.component.CustomKeypad
 import com.d108.moyeo.presentation.ui.component.KeyMode
 import com.d108.moyeo.presentation.ui.component.KeypadKey
 import com.d108.moyeo.presentation.ui.component.exchange.ReservationSegTab
-import com.d108.moyeo.util.currencyUnitMap
 
 @Composable
 fun AmountInputContent(
@@ -25,7 +24,6 @@ fun AmountInputContent(
     foreignValue: Double,
     onTabChange: (String) -> Unit,
     onInputChange: (String) -> Unit,
-    onNext: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -80,13 +78,5 @@ fun AmountInputContent(
             keyMode = KeyMode.Zeros,
             buttonAspectRatio = 1.2f
         )
-
-        Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = onNext,
-            enabled = inputAmount != "0",
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(28.dp)
-        ) { Text("다음") }
     }
 }
