@@ -13,7 +13,6 @@ import com.d108.moyeo.presentation.ui.component.CustomKeypad
 import com.d108.moyeo.presentation.ui.component.KeyMode
 import com.d108.moyeo.presentation.ui.component.KeypadKey
 import com.d108.moyeo.presentation.ui.component.exchange.ReservationSegTab
-import com.d108.moyeo.util.currencyUnitMap
 
 @Composable
 fun AmountInputContent(
