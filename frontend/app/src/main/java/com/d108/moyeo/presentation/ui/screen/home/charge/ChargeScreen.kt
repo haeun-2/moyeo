@@ -157,47 +157,4 @@ fun ChargeScreen(
             }
         }
     }
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(horizontal = Padding.HorizontalMedium, vertical = Padding.VerticalMedium)
-//    ) {
-//        IconButton(onClick = { viewModel.onBackClick() }) {
-//            Icon(
-//                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-//                contentDescription = "뒤로가기",
-//                modifier = Modifier.size(32.dp)
-//            )
-//        }
-//
-//        Box(
-//            modifier = Modifier  // 스텝에 따라서 컴포저블이 보일 영역
-//                .weight(1f)
-//                .padding(Spacing.Medium)
-//        ) {
-//            when (uiState.currentStep) {
-//                ChargeStep.HOW_MUCH -> HowMuchContent(viewModel = viewModel)
-//                ChargeStep.BIOMETRIC -> BiometricContent()
-//                ChargeStep.PIN -> PinContent(viewModel = viewModel)
-//                ChargeStep.FINISH -> FinishContent(viewModel = viewModel)
-//            }
-//        }
-//
-//        Button(
-//            onClick = { viewModel.onNextClicked() },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(52.dp)
-//                .padding(bottom = Spacing.Medium),
-//            enabled = isButtonEnabled
-//        ) {
-//            val buttonText = when (uiState.currentStep) {
-//                ChargeStep.FINISH -> "확인"
-//                ChargeStep.HOW_MUCH -> "충전하기"
-//                ChargeStep.BIOMETRIC -> "PIN으로 인증하기"
-//                ChargeStep.PIN -> "인증하기"
-//            }
-//            Text(buttonText)
-//        }
-//    }
 }
