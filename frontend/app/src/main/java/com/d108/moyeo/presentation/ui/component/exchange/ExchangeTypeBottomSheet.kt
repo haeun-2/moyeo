@@ -110,7 +110,7 @@ fun ExchangeTypeBottomSheet(
                 )
             ) {
                 Text(
-                    text = "히스토리",
+                    text = "환율 변동 그래프",
                     style = Typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )

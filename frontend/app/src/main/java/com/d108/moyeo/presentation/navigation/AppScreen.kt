@@ -126,7 +126,7 @@
 
 
         // 통장 히스토리 관련
-        object History: AppScreen(route = "history", title = "기록", icon = Icons.Default.AccountBox)
+        object History: AppScreen(route = "history", title = "통계", iconResId = R.drawable.imcomplete_circle_24px)
         object HistoryBoxes : AppScreen(route = "history_boxes", title = "기록 박스 선택")
 
 
