@@ -53,6 +53,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.style.TextAlign
 import com.d108.moyeo.data.remote.dto.exchange.CurrencyResponseDto
 import com.d108.moyeo.presentation.navigation.AppScreen
 import com.d108.moyeo.presentation.theme.Padding
@@ -117,7 +118,7 @@ fun CurrencyScreen(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "예약 환전하기",
+                    text = "예약 환전 하기",
                     color = Color.White,
                     style = Typography.bodyLarge
                 )
@@ -293,7 +294,11 @@ fun CurrencyScreen(
 
     if (showBoxSheet) {
         ModalBottomSheet(onDismissRequest = { showBoxSheet = false }) {
-            Text("박스를 선택해주세요")
+            Text(
+                text = "박스를 선택해주세요",
+                modifier = Modifier.fillMaxWidth(), // 1. 너비를 꽉 채우고
+                textAlign = TextAlign.Center        // 2. 텍스트를 중앙 정렬합니다.
+            )
             Spacer(modifier = Modifier.height(16.dp))
             LazyColumn(
                 modifier = Modifier

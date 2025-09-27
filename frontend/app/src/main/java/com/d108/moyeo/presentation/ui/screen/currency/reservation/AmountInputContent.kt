@@ -14,6 +14,8 @@ import com.d108.moyeo.presentation.ui.component.KeyMode
 import com.d108.moyeo.presentation.ui.component.KeypadKey
 import com.d108.moyeo.presentation.ui.component.exchange.ReservationSegTab
 import com.d108.moyeo.util.currencyUnitMap
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun AmountInputContent(
@@ -27,6 +29,9 @@ fun AmountInputContent(
     onInputChange: (String) -> Unit,
     onNext: () -> Unit
 ) {
+    val formattedInputAmount = NumberFormat.getNumberInstance(Locale.KOREA)
+        .format(inputAmount.toLongOrNull() ?: 0L)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -35,7 +40,7 @@ fun AmountInputContent(
     ) {
         Row {
             Text(
-                text = "$inputAmount $selectedTab".takeIf { inputAmount != "0" } ?: "0 $selectedTab",
+                text = "$formattedInputAmount $selectedTab".takeIf { inputAmount != "0" } ?: "0 $selectedTab",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
