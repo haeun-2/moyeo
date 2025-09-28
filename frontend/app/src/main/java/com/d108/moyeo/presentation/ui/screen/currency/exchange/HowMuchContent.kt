@@ -65,17 +65,21 @@ fun HowMuchContent(
         // 환율 정보 (isMultiStepExchange 값에 따라 동적으로 표시)
         if (isMultiStepExchange) {
             if (rateForStep1 > 0 && rateForStep2 > 0) {
-                // ✨ JPY인 경우 '100 JPY'로, 아니면 통화 코드를 그대로 사용
+                // >> JPY 환율 표시 로직 수정
                 val unitText1 = if (spendingCurrencyCode == "JPY") "100 JPY" else spendingCurrencyCode
                 val unitText2 = if (chargingCurrencyCode == "JPY") "100 JPY" else chargingCurrencyCode
 
+                // JPY일 경우 환율에 100을 곱해서 rateText를 생성
+                val rateText1 = if (spendingCurrencyCode == "JPY") String.format("%,.2f", rateForStep1 * 100) else String.format("%,.2f", rateForStep1)
+                val rateText2 = if (chargingCurrencyCode == "JPY") String.format("%,.2f", rateForStep2 * 100) else String.format("%,.2f", rateForStep2)
+
                 Text(
-                    text = "적용 환율 1: ${String.format("%,.2f", rateForStep1)} KRW / $unitText1",
+                    text = "출발 외화 환율: $rateText1 KRW / $unitText1", // 수정된 rateText 적용
                     style = Typography.bodySmall,
                     color = Color.Gray
                 )
                 Text(
-                    text = "적용 환율 2: ${String.format("%,.2f", rateForStep2)} KRW / $unitText2",
+                    text = "도착 외화 환율: $rateText2 KRW / $unitText2", // 수정된 rateText 적용
                     style = Typography.bodySmall,
                     color = Color.Gray
                 )
