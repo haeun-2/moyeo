@@ -1,5 +1,6 @@
 package com.d108.moyeo.presentation.ui.screen.currency.reservation
 
+import android.widget.Toast
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,11 +12,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,6 +30,11 @@ import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.d108.moyeo.util.BiometricAuthManager
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +50,85 @@ fun ReservationScreen(
     val context = LocalContext.current
     val activity = context as FragmentActivity
     val biometricManager = remember { BiometricAuthManager(activity) }
+
+    var showStartDatePicker by remember { mutableStateOf(false) }
+    var showEndDatePicker by remember { mutableStateOf(false) }
+
+    // 오늘 날짜 자정 (UTC 밀리초)
+    val todayMillis = remember {
+        Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
+
+    if (showStartDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = uiState.periodStart.toMillis().takeIf { it > 0 } ?: todayMillis,
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean = utcTimeMillis >= todayMillis
+            }
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showStartDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let {
+                            val selectedDateStr = it.toFormattedString()
+                            viewModel.changePeriodStart(selectedDateStr)
+                            // 시작일이 종료일보다 늦으면 종료일 초기화
+                            if (uiState.periodEnd.isNotEmpty() && selectedDateStr.toMillis() >= uiState.periodEnd.toMillis()) {
+                                viewModel.changePeriodEnd("")
+                            }
+                        }
+                        showStartDatePicker = false
+                    }
+                ) { Text("확인") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStartDatePicker = false }) { Text("취소") }
+            }
+        ) { DatePicker(state = datePickerState) }
+    }
+
+    // --- 종료일 DatePickerDialog ---
+    if (showEndDatePicker) {
+        val startDateMillis = remember(uiState.periodStart) { uiState.periodStart.toMillis() }
+        val sixMonthsLaterMillis = remember(startDateMillis) {
+            Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                timeInMillis = startDateMillis
+                add(Calendar.MONTH, 6)
+            }.timeInMillis
+        }
+
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = uiState.periodEnd.toMillis().takeIf { it > 0 },
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                    utcTimeMillis > startDateMillis && utcTimeMillis <= sixMonthsLaterMillis
+            }
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showEndDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { viewModel.changePeriodEnd(it.toFormattedString()) }
+                        showEndDatePicker = false
+                    }
+                ) { Text("확인") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEndDatePicker = false }) { Text("취소") }
+            }
+        ) { DatePicker(state = datePickerState) }
+    }
+
 
     LaunchedEffect(Unit) {
         viewModel.navigationEvent.collect { event ->
@@ -161,8 +251,14 @@ fun ReservationScreen(
                             paddingValues = paddingValues,
                             startDate = uiState.periodStart,
                             endDate = uiState.periodEnd,
-                            onStartChange = viewModel::changePeriodStart,
-                            onEndChange = viewModel::changePeriodEnd,
+                            onStartDateClick = { showStartDatePicker = true },
+                            onEndDateClick = {
+                                if (uiState.periodStart.isNotEmpty()) {
+                                    showEndDatePicker = true
+                                } else {
+                                    Toast.makeText(context, "시작일을 먼저 선택해주세요.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
                         )
                     }
 
@@ -251,4 +347,22 @@ fun ReservationScreen(
             }
         }
     }
+}
+
+// --- 날짜 변환 헬퍼 함수 (파일 하단에 추가) ---
+private fun String.toMillis(): Long {
+    if (this.isEmpty()) return 0L
+    return try {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        sdf.timeZone = TimeZone.getTimeZone("UTC")
+        sdf.parse(this)?.time ?: 0L
+    } catch (e: Exception) {
+        0L
+    }
+}
+
+private fun Long.toFormattedString(): String {
+    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    sdf.timeZone = TimeZone.getTimeZone("UTC")
+    return sdf.format(Date(this))
 }
