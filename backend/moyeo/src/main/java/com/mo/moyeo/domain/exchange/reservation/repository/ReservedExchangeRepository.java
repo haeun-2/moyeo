@@ -25,6 +25,7 @@ public interface ReservedExchangeRepository extends JpaRepository<ReservedExchan
     )
     from ReservedExchange re
     where re.box.id = :boxId
+    order by re.expiresAt asc
     """)
     List<ExchangeReserveListDto> findReservationList(Long boxId);
 

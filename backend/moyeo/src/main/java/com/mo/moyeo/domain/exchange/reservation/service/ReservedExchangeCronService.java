@@ -24,7 +24,7 @@ public class ReservedExchangeCronService {
     private final ReservedExchangeRepository reservedExchangeRepository;
     private final ReservedExchangeService reservedExchangeService;
 
-    @Scheduled(initialDelay = 1000*10, fixedDelay = 1000*60*10)
+    @Scheduled(initialDelay = 1000*10, fixedDelay = 1000*60)
     @Transactional
     public void checkReservation() {
         Map<String, CurrentExchangeRateDto> currentExchangeRate = exchangeRateCacheService.getCurrentExchangeRate();
