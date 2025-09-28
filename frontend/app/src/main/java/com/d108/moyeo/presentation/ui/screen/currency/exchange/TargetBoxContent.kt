@@ -20,6 +20,7 @@ import com.d108.moyeo.presentation.theme.primaryLight
 
 @Composable
 fun TargetBoxContent(
+    targetCurrencyName: String,
     selectedBoxId: Long,
     onBoxSelect: (Long) -> Unit,
     boxes: List<BoxStoreUiState>,
@@ -27,7 +28,7 @@ fun TargetBoxContent(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
-            text = "박스를\n선택해주세요",
+            text = "${targetCurrencyName}화를 충전할\n박스를 선택해주세요",
             style = Typography.titleLarge
         )
 

@@ -65,6 +65,7 @@ fun ExchangeScreen(
                     ExchangeStep.TARGET_BOX -> {
                         // CHARGE에서만 보임
                         TargetBoxContent(
+                            targetCurrencyName = uiState.targetCurrencyName,
                             selectedBoxId = uiState.selectedBoxId,
                             onBoxSelect = viewModel::onTargetBoxSelected,
                             boxes = boxes,
@@ -74,6 +75,7 @@ fun ExchangeScreen(
                     ExchangeStep.CHOOSE_CURRENCY -> {
                         // CHARGE에서만 보임 (지출 통화 선택)
                         ChooseCurrencyContent(
+                            targetCurrencyName = uiState.targetCurrencyName,
                             paddingValues = PaddingValues(0.dp),
                             selected = uiState.spendCurrencyCode,
                             currencies = currencies,

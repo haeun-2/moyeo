@@ -1,14 +1,18 @@
 package com.d108.moyeo.presentation.ui.screen.currency.exchange
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.domain.model.box.Balance
+import com.d108.moyeo.domain.model.exchange.Currency
 import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import com.d108.moyeo.domain.usecase.exchange.ExchangeUseCase
+import com.d108.moyeo.domain.usecase.exchange.GetCurrenciesUseCase
 import com.d108.moyeo.domain.usecase.exchange.ReservationExchangeUseCase
+import com.d108.moyeo.util.CurrencyUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -23,6 +27,7 @@ class ExchangeViewModel @Inject constructor(
     private val getPersonalBox: GetPersonalBoxUseCase,
     private val boxStore: BoxStore,
     private val userDataManager: UserDataManager,
+    private val getCurrenciesUseCase: GetCurrenciesUseCase
 ) : ViewModel() {
 
     // Transfer와 동일: 화면에서 구독해 사용할 수 있도록 노출
@@ -38,6 +43,8 @@ class ExchangeViewModel @Inject constructor(
     private var myPersonalBoxId: Long? = null
     private var myPersonalBalances: List<Balance> = emptyList()
 
+    private var exchangeRatesMap: Map<String, Currency> = emptyMap()
+
     fun initIfNeeded() {
         val modeArg = (savedStateHandle.get<String>("mode") ?: "CHARGE").uppercase()
         val initialMode = runCatching { ExchangeMode.valueOf(modeArg) }.getOrElse { ExchangeMode.CHARGE }
@@ -48,9 +55,21 @@ class ExchangeViewModel @Inject constructor(
                 ExchangeMode.CHARGE -> ExchangeStep.TARGET_BOX
                 ExchangeMode.REFUND -> ExchangeStep.HOW_MUCH
             }
-            _uiState.update { it.copy(mode = initialMode, step = startStep) }
+            _uiState.update { it.copy(
+                mode = initialMode,
+                step = startStep,
+                targetCurrencyCode = targetCurrency ?: "",
+                targetCurrencyName = CurrencyUtils.getCurrencyName(targetCurrency ?: "")
+            )}
 
             viewModelScope.launch {
+                getCurrenciesUseCase().onSuccess { rates ->
+                    // 성공 시, ViewModel 내부 변수에 Map 형태로 저장합니다.
+                    exchangeRatesMap = rates
+                }.onFailure {
+                    // TODO: 환율 정보 로딩 실패 시 에러 처리
+                    Log.e("ExchangeViewModel", "Failed to load exchange rates: $it")
+                }
                 getPersonalBox()
                     .onSuccess { box ->
                         myPersonalBoxId = box.id
@@ -81,8 +100,21 @@ class ExchangeViewModel @Inject constructor(
     // 지출 통화 선택 (CHARGE 용)
     fun onCurrencySelected(code: String) {
         val name = currencies.value.find { it.code == code }?.name ?: ""
-        _uiState.update { it.copy(spendCurrencyCode = code, spendCurrencyName = name) }
-    }
+
+        // 1. 현재 선택된 박스를 찾습니다. (boxUiStates는 BoxStore가 제공하는 실시간 박스 목록)
+        val selectedBox = boxUiStates.value.find { it.id == _uiState.value.selectedBoxId }
+
+        // 2. 그 박스의 잔액 목록(balances)에서 방금 선택한 통화(code)의 잔액을 찾습니다.
+        val selectedBalance = selectedBox?.balances?.find { it.currency == code }?.balance ?: 0.0
+
+        // 3. UiState를 업데이트하며 spendCurrency 정보와 함께 '찾아낸 잔액'도 저장합니다.
+        _uiState.update {
+            it.copy(
+                spendCurrencyCode = code,
+                spendCurrencyName = name,
+                availableSpendBalance = selectedBalance
+            )
+        }}
 
     fun changeAmount(newAmount: String) {
         _uiState.update { it.copy(amount = newAmount) }

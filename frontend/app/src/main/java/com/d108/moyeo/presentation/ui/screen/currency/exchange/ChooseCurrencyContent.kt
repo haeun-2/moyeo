@@ -13,10 +13,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.d108.moyeo.presentation.theme.Spacing
+import com.d108.moyeo.presentation.theme.Typography
 import com.d108.moyeo.presentation.ui.screen.home.transfer.CurrencyData
 
 @Composable
 fun ChooseCurrencyContent(
+    targetCurrencyName: String,
     paddingValues: PaddingValues,          // ✅ reservation과 동일
     selected: String?,
     currencies: List<CurrencyData>,
@@ -29,6 +32,12 @@ fun ChooseCurrencyContent(
             .padding(paddingValues)
             .padding(20.dp)
     ) {
+        Text(
+            text = "${targetCurrencyName}화를 충전하기 위해\n사용할 통화를 선택해주세요",
+            style = Typography.titleLarge
+        )
+
+        Spacer(Modifier.height(Spacing.Large))
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier.weight(1f),
