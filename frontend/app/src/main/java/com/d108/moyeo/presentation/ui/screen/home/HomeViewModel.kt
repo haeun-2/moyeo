@@ -77,18 +77,21 @@ class HomeViewModel @Inject constructor(
     val navigationEvent = _navigationEvent.asSharedFlow()
 
     init {
-        refresh()
+        viewModelScope.launch {
+            userDataManager.userNameFlow.collect { name ->
+                _uiState.update { it.copy(userName = name ?: "사용자") }
+            }
+        }
 
         viewModelScope.launch {
             getMeUseCase.invoke()
                 .onSuccess { user ->
                     userDataManager.saveUserName(user.name)
+                    // userNameFlow가 자동으로 UI 업데이트함
                 }
-
-            userDataManager.userNameFlow.collect { name ->
-                _uiState.update { it.copy(userName = name ?: "사용자") }
-            }
         }
+
+        refresh()
     }
 
     /**
