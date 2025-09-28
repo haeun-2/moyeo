@@ -52,6 +52,10 @@ class MyWalletViewModel @Inject constructor(
 
 
     init {
+
+        val initialCurrencyCode = savedStateHandle.get<String>("currencyCode") ?: ""
+        _uiState.update { it.copy(selectedCurrencyCode = initialCurrencyCode) }
+
         viewModelScope.launch {
             boxStore.boxUiStates.collect { allBoxes ->
                 val newWalletInfo = allBoxes.find { it.id == boxId }
