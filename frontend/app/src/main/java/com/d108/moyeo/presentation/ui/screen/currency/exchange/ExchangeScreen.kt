@@ -119,6 +119,7 @@ fun ExchangeScreen(
                     }
                     ExchangeStep.HOW_MUCH -> {
                         HowMuchContent(
+                            mode = uiState.mode,
                             chargingCurrencyName = uiState.targetCurrencyName,
                             chargingCurrencyCode = uiState.targetCurrencyCode,
                             spendingCurrencyName = uiState.spendCurrencyName,

@@ -19,6 +19,7 @@ import java.util.Locale
 
 @Composable
 fun HowMuchContent(
+    mode: ExchangeMode,
     chargingCurrencyName: String,
     chargingCurrencyCode: String,
     spendingCurrencyName: String,
@@ -37,9 +38,19 @@ fun HowMuchContent(
         maximumFractionDigits = 0
     }
     val isBalanceEnough = requiredSpendAmount <= availableBalance
+    val titleText = if (mode == ExchangeMode.REFUND) {
+        "얼마를 돌려받을까요?"
+    } else {
+        "${chargingCurrencyName}화를\n얼마나 충전할까요?"
+    }
 
+    val amountUnitText = if (mode == ExchangeMode.REFUND) {
+        "원"
+    } else {
+        chargingCurrencyName
+    }
     Column {
-        Text(text = "${chargingCurrencyName}화를\n얼마나 충전할까요?", style = Typography.titleLarge)
+        Text(text = titleText, style = Typography.titleLarge) // << 수정된 텍스트 적용
         Spacer(Modifier.height(Spacing.Medium))
 
         // 사용자 입력 금액
@@ -48,7 +59,7 @@ fun HowMuchContent(
             style = Typography.displayLarge,
             fontWeight = FontWeight.Bold
         )
-        Text(text = chargingCurrencyName, style = Typography.bodyLarge)
+        Text(text = amountUnitText, style = Typography.bodyLarge) // << 수정된 단위 적용
         Spacer(Modifier.height(Spacing.Medium))
 
         // 환율 정보 (isMultiStepExchange 값에 따라 동적으로 표시)
@@ -71,12 +82,16 @@ fun HowMuchContent(
             }
         } else {
             if (rateForStep1 > 0) {
-                val baseCurrency = if(spendingCurrencyCode == "KRW") chargingCurrencyCode else spendingCurrencyCode
-                // ✨ JPY인 경우 '100 JPY'로, 아니면 통화 코드를 그대로 사용
+                val baseCurrency = if (mode == ExchangeMode.REFUND) {
+                    spendingCurrencyCode // JPY
+                } else {
+                    if(spendingCurrencyCode == "KRW") chargingCurrencyCode else spendingCurrencyCode
+                }
                 val unitText = if (baseCurrency == "JPY") "100 JPY" else baseCurrency
+                val rateText = if (baseCurrency == "JPY") String.format("%,.2f", rateForStep1 * 100) else String.format("%,.2f", rateForStep1)
 
                 Text(
-                    text = "적용 환율: ${String.format("%,.2f", rateForStep1)} KRW / $unitText",
+                    text = "적용 환율: $rateText KRW / $unitText",
                     style = Typography.bodySmall,
                     color = Color.Gray
                 )

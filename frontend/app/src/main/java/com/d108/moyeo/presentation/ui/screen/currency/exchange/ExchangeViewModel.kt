@@ -97,13 +97,16 @@ class ExchangeViewModel @Inject constructor(
                         myPersonalBalances = box.balances
 
                         if (initialMode == ExchangeMode.REFUND) {
-                            val spend = targetCurrency ?: ""
-                            val name = currencies.value.find { it.code == spend }?.name ?: ""
+                            val spendCurrency = targetCurrency ?: ""
+                            val spendName = currencies.value.find { it.code == spendCurrency }?.name ?: ""
                             _uiState.update {
                                 it.copy(
                                     selectedBoxId = box.id,          // 내 개인 박스
-                                    spendCurrencyCode = spend,       // 선택 외화 (출금)
-                                    spendCurrencyName = name
+                                    spendCurrencyCode = spendCurrency,     // 지출 통화: JPY
+                                    spendCurrencyName = spendName,
+                                    targetCurrencyCode = "KRW",        // 목표(받을) 통화: KRW
+                                    targetCurrencyName = "원",
+                                    availableSpendBalance = myPersonalBalances.find { b -> b.currency == spendCurrency }?.balance ?: 0.0
                                 )
                             }
                         }
@@ -286,54 +289,80 @@ class ExchangeViewModel @Inject constructor(
 
     private fun updateCalculatedValues() {
         val state = _uiState.value
-        val amountInTarget = state.amount.toDoubleOrNull() ?: 0.0
 
-        val toCurrency = state.targetCurrencyCode
-        val fromCurrency = state.spendCurrencyCode
+        if (state.mode == ExchangeMode.REFUND) {
+            val amountInKrw = state.amount.toDoubleOrNull() ?: 0.0
+            val fromCurrency = state.spendCurrencyCode // JPY
 
-        // 이 부분은 기존 changeAmount 함수의 계산 로직과 완전히 동일합니다.
-        if (fromCurrency != "KRW" && toCurrency != "KRW") { // 외화 -> 외화
-            val rateInfoForBuy = exchangeRatesMap[toCurrency]
-            var rateStep2 = rateInfoForBuy?.buyRate?.toDouble() ?: 0.0
-            val rateInfoForSell = exchangeRatesMap[fromCurrency]
-            var rateStep1 = rateInfoForSell?.sellRate?.toDouble() ?: 0.0
+            val rateInfo = exchangeRatesMap[fromCurrency]
+            var sellRate = rateInfo?.sellRate?.toDouble() ?: 0.0 // 팔 때 환율
 
-            if (toCurrency == "JPY") {
-                rateStep2 /= 100.0
-            }
-            // ✨ 만약 지출 통화(fromCurrency)가 엔화이면, 똑같이 100으로 나눠서 1엔당 가격으로 변환
             if (fromCurrency == "JPY") {
-                rateStep1 /= 100.0
+                sellRate /= 100.0
             }
 
-            val requiredKrw = amountInTarget * rateStep2
-            val requiredSpendAmount = if (rateStep1 > 0) requiredKrw / rateStep1 else 0.0
-            _uiState.update {
-                it.copy(
-                    requiredSpendAmount = requiredSpendAmount,
-                    isMultiStepExchange = true,
-                    rateForStep1 = rateStep1,
-                    rateForStep2 = rateStep2
-                )
-            }
-        } else { // 원화 -> 외화
-            val rateInfo = exchangeRatesMap[toCurrency]
-            var currentRate = rateInfo?.buyRate?.toDouble() ?: 0.0
+            // 필요한 외화 = 받을 원화 / (1 외화 당 원화 가치)
+            val requiredSpendAmount = if (sellRate > 0) amountInKrw / sellRate else 0.0
 
-            if (toCurrency == "JPY") {
-                currentRate /= 100.0
-            }
-
-            val requiredSpendAmount = amountInTarget * currentRate
             _uiState.update {
                 it.copy(
                     requiredSpendAmount = requiredSpendAmount,
                     isMultiStepExchange = false,
-                    rateForStep1 = currentRate,
+                    rateForStep1 = sellRate, // 팔 때 환율을 표시
                     rateForStep2 = 0.0
                 )
             }
+        } else {
+            val amountInTarget = state.amount.toDoubleOrNull() ?: 0.0
+
+            val toCurrency = state.targetCurrencyCode
+            val fromCurrency = state.spendCurrencyCode
+
+            // 이 부분은 기존 changeAmount 함수의 계산 로직과 완전히 동일합니다.
+            if (fromCurrency != "KRW" && toCurrency != "KRW") { // 외화 -> 외화
+                val rateInfoForBuy = exchangeRatesMap[toCurrency]
+                var rateStep2 = rateInfoForBuy?.buyRate?.toDouble() ?: 0.0
+                val rateInfoForSell = exchangeRatesMap[fromCurrency]
+                var rateStep1 = rateInfoForSell?.sellRate?.toDouble() ?: 0.0
+
+                if (toCurrency == "JPY") {
+                    rateStep2 /= 100.0
+                }
+                // ✨ 만약 지출 통화(fromCurrency)가 엔화이면, 똑같이 100으로 나눠서 1엔당 가격으로 변환
+                if (fromCurrency == "JPY") {
+                    rateStep1 /= 100.0
+                }
+
+                val requiredKrw = amountInTarget * rateStep2
+                val requiredSpendAmount = if (rateStep1 > 0) requiredKrw / rateStep1 else 0.0
+                _uiState.update {
+                    it.copy(
+                        requiredSpendAmount = requiredSpendAmount,
+                        isMultiStepExchange = true,
+                        rateForStep1 = rateStep1,
+                        rateForStep2 = rateStep2
+                    )
+                }
+            } else { // 원화 -> 외화
+                val rateInfo = exchangeRatesMap[toCurrency]
+                var currentRate = rateInfo?.buyRate?.toDouble() ?: 0.0
+
+                if (toCurrency == "JPY") {
+                    currentRate /= 100.0
+                }
+
+                val requiredSpendAmount = amountInTarget * currentRate
+                _uiState.update {
+                    it.copy(
+                        requiredSpendAmount = requiredSpendAmount,
+                        isMultiStepExchange = false,
+                        rateForStep1 = currentRate,
+                        rateForStep2 = 0.0
+                    )
+                }
+            }
         }
+
     }
 
     fun onBiometricsSucceeded() {
