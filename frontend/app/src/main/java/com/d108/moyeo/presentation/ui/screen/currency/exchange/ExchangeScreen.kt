@@ -100,8 +100,10 @@ fun ExchangeScreen(
                     ExchangeStep.FINISH -> {
                         FinishContent(
                             mode = uiState.mode,
-                            amount = uiState.amount,
-                            currencyUnit = uiState.spendCurrencyCode,
+                            chargedAmount = uiState.amount,
+                            chargedCurrency = uiState.targetCurrencyName,
+                            spentAmount = uiState.requiredSpendAmount,
+                            spentCurrency = uiState.spendCurrencyName,
                             onDone = { navController.popBackStack() }
                         )
                     }
