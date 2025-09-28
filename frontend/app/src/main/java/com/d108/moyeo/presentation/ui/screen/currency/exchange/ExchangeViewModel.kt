@@ -12,6 +12,7 @@ import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import com.d108.moyeo.domain.usecase.exchange.ExchangeUseCase
 import com.d108.moyeo.domain.usecase.exchange.GetCurrenciesUseCase
 import com.d108.moyeo.domain.usecase.exchange.ReservationExchangeUseCase
+import com.d108.moyeo.presentation.ui.component.KeypadKey
 import com.d108.moyeo.util.CurrencyUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -118,6 +119,7 @@ class ExchangeViewModel @Inject constructor(
 
     fun changeAmount(newAmount: String) {
         _uiState.update { it.copy(amount = newAmount) }
+        updateCalculatedValues()
     }
 
     /** 금액 입력(자릿수/제한 처리: Transfer와 동일 로직) */
@@ -127,21 +129,13 @@ class ExchangeViewModel @Inject constructor(
         if (current.isEmpty() && digit == "00") return
         if (newStr.length > 10) return
 
-        // 내 잔액과 비교 (선택 통화 기준). REFUND은 KRW 고정.
-        val currency = _uiState.value.spendCurrencyCode
-        val balance = myPersonalBalances.find { it.currency == currency }?.balance ?: 0.0
-        val maxAmount = balance.toLong()
-        val newLong = newStr.toLongOrNull() ?: 0L
-        if (newLong > maxAmount) {
-            _uiState.update { it.copy(amount = maxAmount.toString()) }
-            return
-        }
-        _uiState.update { it.copy(amount = newStr) }
+        changeAmount(newStr)
     }
 
     fun onMoneyBackspace() {
         val c = _uiState.value.amount
-        _uiState.update { it.copy(amount = if (c.isNotEmpty()) c.dropLast(1) else "") }
+        val next = if (c.isNotEmpty()) c.dropLast(1).ifEmpty { "0" } else "0"
+        changeAmount(next)
     }
 
     /** 다음 버튼 공통 분기 (Transfer onNextClicked와 동일 구조) */
@@ -152,6 +146,7 @@ class ExchangeViewModel @Inject constructor(
             }
             ExchangeStep.CHOOSE_CURRENCY -> {
                 _uiState.update { it.copy(step = ExchangeStep.HOW_MUCH) }
+                updateCalculatedValues()
             }
             ExchangeStep.HOW_MUCH -> {
                 submitExchange()
@@ -215,5 +210,89 @@ class ExchangeViewModel @Inject constructor(
         val bal = myPersonalBalances.find { it.currency == c }?.balance ?: 0.0
         val df = DecimalFormat("#,##0.####")
         return "잔액: ${df.format(bal)} $c"
+    }
+
+    fun onKeyPress(key: KeypadKey) {
+        val currentAmount = _uiState.value.amount
+        var newAmount = currentAmount
+
+        when (key) {
+            // 1. 숫자 키가 눌렸을 때
+            is KeypadKey.Digit -> {
+                newAmount = if (currentAmount == "0") key.value.toString() else currentAmount + key.value
+            }
+            // 2. 초기화(Clear) 키가 눌렸을 때 ('00' 모드)
+            is KeypadKey.Clear -> {
+                newAmount = if (currentAmount == "0") "0" else currentAmount + "00"
+            }
+            // 3. 백스페이스 키가 눌렸을 때
+            is KeypadKey.Backspace -> {
+                newAmount = if (currentAmount.length > 1) currentAmount.dropLast(1) else "0"
+            }
+            // 4. 커스텀 키 (현재 시나리오에서는 사용되지 않음)
+            is KeypadKey.Custom -> {
+                // 필요 시 로직 추가
+            }
+        }
+
+        // 자릿수 제한
+        if (newAmount.length > 10) {
+            return
+        }
+
+        // 모든 키 입력의 최종 결과로 changeAmount를 호출하여 환율 계산 실행
+        changeAmount(newAmount)
+    }
+
+    private fun updateCalculatedValues() {
+        val state = _uiState.value
+        val amountInTarget = state.amount.toDoubleOrNull() ?: 0.0
+
+        val toCurrency = state.targetCurrencyCode
+        val fromCurrency = state.spendCurrencyCode
+
+        // 이 부분은 기존 changeAmount 함수의 계산 로직과 완전히 동일합니다.
+        if (fromCurrency != "KRW" && toCurrency != "KRW") { // 외화 -> 외화
+            val rateInfoForBuy = exchangeRatesMap[toCurrency]
+            var rateStep2 = rateInfoForBuy?.buyRate?.toDouble() ?: 0.0
+            val rateInfoForSell = exchangeRatesMap[fromCurrency]
+            var rateStep1 = rateInfoForSell?.sellRate?.toDouble() ?: 0.0
+
+            if (toCurrency == "JPY") {
+                rateStep2 /= 100.0
+            }
+            // ✨ 만약 지출 통화(fromCurrency)가 엔화이면, 똑같이 100으로 나눠서 1엔당 가격으로 변환
+            if (fromCurrency == "JPY") {
+                rateStep1 /= 100.0
+            }
+
+            val requiredKrw = amountInTarget * rateStep2
+            val requiredSpendAmount = if (rateStep1 > 0) requiredKrw / rateStep1 else 0.0
+            _uiState.update {
+                it.copy(
+                    requiredSpendAmount = requiredSpendAmount,
+                    isMultiStepExchange = true,
+                    rateForStep1 = rateStep1,
+                    rateForStep2 = rateStep2
+                )
+            }
+        } else { // 원화 -> 외화
+            val rateInfo = exchangeRatesMap[toCurrency]
+            var currentRate = rateInfo?.buyRate?.toDouble() ?: 0.0
+
+            if (toCurrency == "JPY") {
+                currentRate /= 100.0
+            }
+
+            val requiredSpendAmount = amountInTarget * currentRate
+            _uiState.update {
+                it.copy(
+                    requiredSpendAmount = requiredSpendAmount,
+                    isMultiStepExchange = false,
+                    rateForStep1 = currentRate,
+                    rateForStep2 = 0.0
+                )
+            }
+        }
     }
 }

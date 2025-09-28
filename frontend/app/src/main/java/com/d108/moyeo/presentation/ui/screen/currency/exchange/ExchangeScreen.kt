@@ -84,11 +84,17 @@ fun ExchangeScreen(
                     }
                     ExchangeStep.HOW_MUCH -> {
                         HowMuchContent(
-                            title = if (uiState.mode == ExchangeMode.CHARGE) "지출 금액을\n입력해주세요" else "환불할 금액을\n입력해주세요",
-                            currencyName = uiState.spendCurrencyName.ifBlank { uiState.spendCurrencyCode.ifBlank { "통화 선택 필요" } },
+                            chargingCurrencyName = uiState.targetCurrencyName,
+                            chargingCurrencyCode = uiState.targetCurrencyCode,
+                            spendingCurrencyName = uiState.spendCurrencyName,
+                            spendingCurrencyCode = uiState.spendCurrencyCode,
                             amount = uiState.amount,
-                            onAmountChange = viewModel::changeAmount,
-                            onSubmit = viewModel::onNextClicked
+                            onKeyPress = viewModel::onKeyPress,
+                            availableBalance = uiState.availableSpendBalance,
+                            requiredSpendAmount = uiState.requiredSpendAmount,
+                            isMultiStepExchange = uiState.isMultiStepExchange,
+                            rateForStep1 = uiState.rateForStep1,
+                            rateForStep2 = uiState.rateForStep2
                         )
                     }
                     ExchangeStep.FINISH -> {
