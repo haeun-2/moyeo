@@ -15,10 +15,16 @@ import com.d108.moyeo.domain.usecase.exchange.ReservationExchangeUseCase
 import com.d108.moyeo.presentation.ui.component.KeypadKey
 import com.d108.moyeo.util.CurrencyUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import javax.inject.Inject
+
+sealed class ExchangeNavEvent {
+    data object NavigateBack : ExchangeNavEvent()
+    data object ShowBiometricPrompt : ExchangeNavEvent()
+}
 
 @HiltViewModel
 class ExchangeViewModel @Inject constructor(
@@ -30,6 +36,20 @@ class ExchangeViewModel @Inject constructor(
     private val userDataManager: UserDataManager,
     private val getCurrenciesUseCase: GetCurrenciesUseCase
 ) : ViewModel() {
+    private val _navigationEvent = MutableSharedFlow<ExchangeNavEvent>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
+
+    // TODO: 임시 정답 핀을 실제 PIN으로 바꾸기
+    private val correctPin = "111111"
+
+    init {
+        // ✨ 생체인증 여부 확인 로직 추가
+        viewModelScope.launch {
+            userDataManager.biometricsPreferenceFlow.collect { enabled ->
+                _uiState.update { it.copy(biometricsEnabled = enabled) }
+            }
+        }
+    }
 
     // Transfer와 동일: 화면에서 구독해 사용할 수 있도록 노출
     val boxUiStates = boxStore.boxUiStates               // 박스 카드(색/텍스트 포함) 목록
@@ -141,18 +161,25 @@ class ExchangeViewModel @Inject constructor(
     /** 다음 버튼 공통 분기 (Transfer onNextClicked와 동일 구조) */
     fun onNextClicked() {
         when (_uiState.value.step) {
-            ExchangeStep.TARGET_BOX -> {
-                _uiState.update { it.copy(step = ExchangeStep.CHOOSE_CURRENCY) }
-            }
+            ExchangeStep.TARGET_BOX -> _uiState.update { it.copy(step = ExchangeStep.CHOOSE_CURRENCY) }
             ExchangeStep.CHOOSE_CURRENCY -> {
                 _uiState.update { it.copy(step = ExchangeStep.HOW_MUCH) }
                 updateCalculatedValues()
             }
             ExchangeStep.HOW_MUCH -> {
-                submitExchange()
+                if (_uiState.value.biometricsEnabled) {
+                    _uiState.update { it.copy(step = ExchangeStep.BIOMETRIC) }
+                    viewModelScope.launch {
+                        _navigationEvent.emit(ExchangeNavEvent.ShowBiometricPrompt)
+                    }
+                } else {
+                    _uiState.update { it.copy(step = ExchangeStep.PIN) }
+                }
             }
-            ExchangeStep.FINISH -> {
-                // Screen 에서 pop
+            ExchangeStep.BIOMETRIC -> skipBiometrics()
+            ExchangeStep.PIN -> if (!_uiState.value.isPinLocked) checkPin()
+            ExchangeStep.FINISH -> viewModelScope.launch {
+                _navigationEvent.emit(ExchangeNavEvent.NavigateBack)
             }
         }
     }
@@ -213,36 +240,49 @@ class ExchangeViewModel @Inject constructor(
     }
 
     fun onKeyPress(key: KeypadKey) {
-        val currentAmount = _uiState.value.amount
-        var newAmount = currentAmount
+        if (_uiState.value.step == ExchangeStep.HOW_MUCH) {
+            val currentAmount = _uiState.value.amount
+            var newAmount = currentAmount
 
-        when (key) {
-            // 1. 숫자 키가 눌렸을 때
-            is KeypadKey.Digit -> {
-                newAmount = if (currentAmount == "0") key.value.toString() else currentAmount + key.value
+            when (key) {
+                // 1. 숫자 키가 눌렸을 때
+                is KeypadKey.Digit -> {
+                    newAmount =
+                        if (currentAmount == "0") key.value.toString() else currentAmount + key.value
+                }
+                // 2. 초기화(Clear) 키가 눌렸을 때 ('00' 모드)
+                is KeypadKey.Clear -> {
+                    newAmount = if (currentAmount == "0") "0" else currentAmount + "00"
+                }
+                // 3. 백스페이스 키가 눌렸을 때
+                is KeypadKey.Backspace -> {
+                    newAmount = if (currentAmount.length > 1) currentAmount.dropLast(1) else "0"
+                }
+                // 4. 커스텀 키 (현재 시나리오에서는 사용되지 않음)
+                is KeypadKey.Custom -> {
+                    // 필요 시 로직 추가
+                }
             }
-            // 2. 초기화(Clear) 키가 눌렸을 때 ('00' 모드)
-            is KeypadKey.Clear -> {
-                newAmount = if (currentAmount == "0") "0" else currentAmount + "00"
+
+            // 자릿수 제한
+            if (newAmount.length > 10) {
+                return
             }
-            // 3. 백스페이스 키가 눌렸을 때
-            is KeypadKey.Backspace -> {
-                newAmount = if (currentAmount.length > 1) currentAmount.dropLast(1) else "0"
-            }
-            // 4. 커스텀 키 (현재 시나리오에서는 사용되지 않음)
-            is KeypadKey.Custom -> {
-                // 필요 시 로직 추가
+
+            // 모든 키 입력의 최종 결과로 changeAmount를 호출하여 환율 계산 실행
+            changeAmount(newAmount)
+        } else if (_uiState.value.step == ExchangeStep.PIN) {
+            // PIN 입력 로직
+            when(key) {
+                is KeypadKey.Digit -> onPinInput(key.value.toString())
+                KeypadKey.Clear -> onPinClear()
+                KeypadKey.Backspace -> onPinBackspace()
+                else -> {}
             }
         }
-
-        // 자릿수 제한
-        if (newAmount.length > 10) {
-            return
-        }
-
-        // 모든 키 입력의 최종 결과로 changeAmount를 호출하여 환율 계산 실행
-        changeAmount(newAmount)
     }
+
+
 
     private fun updateCalculatedValues() {
         val state = _uiState.value
@@ -292,6 +332,44 @@ class ExchangeViewModel @Inject constructor(
                     rateForStep1 = currentRate,
                     rateForStep2 = 0.0
                 )
+            }
+        }
+    }
+
+    fun onBiometricsSucceeded() {
+        submitExchange()
+    }
+    fun skipBiometrics() {
+        _uiState.update { it.copy(step = ExchangeStep.PIN) }
+    }
+    private fun onPinInput(digit: String) {
+        if (_uiState.value.pin.length < 6) {
+            _uiState.update { it.copy(pin = it.pin + digit, pinError = null) }
+        }
+    }
+
+    private fun onPinBackspace() {
+        _uiState.update { it.copy(pin = it.pin.dropLast(1), pinError = null) }
+    }
+
+    private fun onPinClear() {
+        _uiState.update { it.copy(pin = "", pinError = null) }
+    }
+
+    private fun checkPin() {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState.pin == correctPin) {
+                submitExchange() // PIN 성공 시 실제 환전 실행
+            } else {
+                val newFailureCount = currentState.pinFailureCount + 1
+                if (newFailureCount >= 5) {
+                    _uiState.update { it.copy(isPinLocked = true, pinError = "PIN 5회 오류로 잠겼습니다.", pin = "") }
+                } else {
+                    _uiState.update { it.copy(pinFailureCount = newFailureCount, pinError = "PIN이 일치하지 않습니다. (${5 - newFailureCount}회 남음)") }
+                    delay(1000L)
+                    onPinClear()
+                }
             }
         }
     }

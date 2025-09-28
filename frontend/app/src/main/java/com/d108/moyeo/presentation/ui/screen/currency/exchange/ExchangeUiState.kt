@@ -21,7 +21,12 @@ data class ExchangeUiState(
     // 환율 정보 (UI 표시용) ---
     val isMultiStepExchange: Boolean = false, // 이중환전 여부 (UI 분기 처리용)
     val rateForStep1: Double = 0.0,           // 1단계 환율 (단순환전 시에는 이것만 사용)
-    val rateForStep2: Double = 0.0            // 2단계 환율 (이중환전 시에만 사용)
+    val rateForStep2: Double = 0.0,            // 2단계 환율 (이중환전 시에만 사용)
 
-
+    // --- ▼▼▼▼▼ 인증 관련 상태 추가 ▼▼▼▼▼ ---
+    val pin: String = "",
+    val pinError: String? = null,
+    val pinFailureCount: Int = 0,
+    val isPinLocked: Boolean = false,
+    val biometricsEnabled: Boolean = false
 )
