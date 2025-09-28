@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -62,6 +63,7 @@ public class ReservedExchangeService {
         Currency fromCurrency = currencyService.getReferenceByType(exchangeReserveDto.fromCurrency());
         Currency toCurrency = currencyService.getReferenceByType(exchangeReserveDto.toCurrency());
         validateCondition(user, exchangeReserveDto, box);
+        BigDecimal targetRate = exchangeReserveDto.targetRate();
 
         //예약 환전 저장
         Transaction transaction = transactionService.makeExchangeReservationTransaction(box, user);
@@ -72,23 +74,37 @@ public class ReservedExchangeService {
                         .transaction(transaction)
                         .fromCurrency(fromCurrency)
                         .toCurrency(toCurrency)
-                        .targetRate(exchangeReserveDto.targetRate())
+                        .targetRate(targetRate)
                         .amount(exchangeReserveDto.amount())
                         .expiresAt(exchangeReserveDto.expiresAt()).build();
         reservedExchangeRepository.save(reservedExchange);
 
         //예상 금액 차감
-        BigDecimal amount = reservedExchange.getTargetRate().multiply(reservedExchange.getAmount());
+        BigDecimal fromAmount;
+        if (exchangeReserveDto.toCurrency() == CurrencyType.JPY) {
+            // JPY는 100엔 기준
+            fromAmount = targetRate
+                    .multiply(exchangeReserveDto.amount())
+                    .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);// div 100;
+        }else if(exchangeReserveDto.fromCurrency() == CurrencyType.JPY){
+            fromAmount = exchangeReserveDto.amount()
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(targetRate, 0, RoundingMode.HALF_UP);
+        }else {
+            // USD, EUR 같은 경우는 1 단위 기준
+            fromAmount = targetRate.multiply(exchangeReserveDto.amount());
+        }
+
         BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(box, exchangeReserveDto.fromCurrency());
-        if (fromBoxBalance.checkSufficientBalance(amount))
+        if (fromBoxBalance.checkSufficientBalance(fromAmount))
             throw new CustomException(ErrorCode.BAD_REQUEST, "환전에 필요한 금액이 부족합니다.");
-        fromBoxBalance.decreaseBalance(amount);
+        fromBoxBalance.decreaseBalance(fromAmount);
 
         //트랜잭션 및 내역 저장
         BoxHistory boxHistory = BoxHistory.builder()
                 .box(box)
                 .transaction(transaction)
-                .amount(amount.negate())
+                .amount(fromAmount.negate())
                 .currencyCode(exchangeReserveDto.fromCurrency())
                 .totalAmount(fromBoxBalance.getBalance())
                 .title("예약 환전")
@@ -140,13 +156,34 @@ public class ReservedExchangeService {
                     return null;
                 }
         );
+        reservedExchange.cancelReservation();
     }
 
     public void processCancelReservation(ReservedExchange reservedExchange, User user) {
         boxMemberService.validateJoinedBoxMember(reservedExchange.getBox(), user);
 
         // 차감 금액 복원
-        BigDecimal amount = reservedExchange.getTargetRate().multiply(reservedExchange.getAmount());
+        BigDecimal amount;
+        if (reservedExchange.getToCurrency().getCode() == CurrencyType.JPY) {
+            // JPY는 100엔 기준
+
+            log.debug("{} {}" ,  reservedExchange.getTargetRate(), reservedExchange.getAmount());
+            amount = reservedExchange.getTargetRate()
+                    .multiply(reservedExchange.getAmount())
+                    .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);// div 100;
+
+        }else if(reservedExchange.getFromCurrency().getCode() == CurrencyType.JPY){
+            log.debug("{} {}" ,  reservedExchange.getTargetRate(), reservedExchange.getAmount());
+
+            amount = reservedExchange.getAmount()
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(reservedExchange.getTargetRate(), 0, RoundingMode.HALF_UP);
+        }else {
+            // USD, EUR 같은 경우는 1 단위 기준
+            amount = reservedExchange.getTargetRate().multiply(reservedExchange.getAmount());
+        }
+
+
         BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(
                 reservedExchange.getBox(),
                 reservedExchange.getFromCurrency().getCode()
