@@ -16,6 +16,7 @@ import com.d108.moyeo.domain.usecase.box.DeleteBookmarkUseCase
 import com.d108.moyeo.domain.usecase.box.GetGroupBoxesUseCase
 import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import com.d108.moyeo.domain.repository.AuthRepository
+import com.d108.moyeo.domain.usecase.auth.GetMeUseCase
 import com.d108.moyeo.presentation.theme.boxAvailableColors
 import com.d108.moyeo.presentation.ui.screen.home.transfer.CurrencyData
 import com.d108.moyeo.util.CurrencyUtils.getCurrencyName
@@ -51,7 +52,8 @@ class HomeViewModel @Inject constructor(
     private val userDataManager: UserDataManager,
     private val boxStore: BoxStore,
     private val addBookmarkUseCase: AddBookmarkUseCase,
-    private val deleteBookmarkUseCase: DeleteBookmarkUseCase
+    private val deleteBookmarkUseCase: DeleteBookmarkUseCase,
+    private val getMeUseCase: GetMeUseCase
 ) : ViewModel() {
 
     private var didHandleFirstResume: Boolean = false
@@ -78,6 +80,11 @@ class HomeViewModel @Inject constructor(
         refresh()
 
         viewModelScope.launch {
+            getMeUseCase.invoke()
+                .onSuccess { user ->
+                    userDataManager.saveUserName(user.name)
+                }
+
             userDataManager.userNameFlow.collect { name ->
                 _uiState.update { it.copy(userName = name ?: "사용자") }
             }

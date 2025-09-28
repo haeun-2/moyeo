@@ -47,7 +47,7 @@ fun FirstScreen(navController: NavHostController,
     val uiState by viewModel.uiState.collectAsState()
 
     val isButtonEnabled = when(uiState.currentStep) {
-        FirstStep.BIOMETRICS -> canAuth
+        FirstStep.BIOMETRICS -> true
         FirstStep.PIN -> uiState.pin.length == 6
     }
 
