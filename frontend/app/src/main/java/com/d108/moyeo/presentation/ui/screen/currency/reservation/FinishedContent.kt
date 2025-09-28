@@ -16,7 +16,6 @@ fun FinishedContent(
     currencyName: String,
     targetRate: String,
     amount: String,
-    onDone: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -39,10 +38,6 @@ fun FinishedContent(
         InfoRow("지정 환율", "KRW $targetRate 기준")
         InfoRow("예약 금액", "$currencyCode $amount")
         Spacer(Modifier.weight(1f))
-        Button(
-            onClick = onDone,
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) { Text("확인") }
     }
 }
 
