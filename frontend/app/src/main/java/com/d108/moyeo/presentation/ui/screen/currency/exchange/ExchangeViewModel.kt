@@ -109,6 +109,7 @@ class ExchangeViewModel @Inject constructor(
                                     availableSpendBalance = myPersonalBalances.find { b -> b.currency == spendCurrency }?.balance ?: 0.0
                                 )
                             }
+                            updateCalculatedValues()
                         }
                     }
                     .onFailure { /* TODO: 에러 처리 */ }
