@@ -1,0 +1,9 @@
+# prometheus.yml
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'spring'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['app:8080'] # 스프링 애플리케이션 주소

@@ -1,0 +1,82 @@
+package com.mo.moyeo.domain.transaction.transaction.service;
+
+import com.mo.moyeo.domain.box.box.entity.Box;
+import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
+import com.mo.moyeo.domain.transaction.transaction.repository.TransactionRepository;
+import com.mo.moyeo.domain.user.entity.User;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class TransactionService {
+    private final TransactionRepository transactionRepository;
+
+    public Transaction makeExchangeTransaction(Box box, User user){
+        Transaction transaction = Transaction.builder()
+                .toBox(box)
+                .fromBox(box)
+                .user(user)
+                .transactionType(Transaction.Type.EXCHANGE)
+                .uuid(UUID.randomUUID().toString().replace("-", "").substring(0, 20))
+                .build();
+        return transactionRepository.save(transaction);
+    }
+
+    public Transaction makeDepositTransaction(Box box, User user) {
+        Transaction transaction = Transaction.builder()
+                .toBox(box)
+                .user(user)
+                .transactionType(Transaction.Type.DEPOSIT)
+                .uuid(UUID.randomUUID().toString().replace("-", "").substring(0, 20))
+                .build();
+        return transactionRepository.save(transaction);
+    }
+
+    public Transaction makeTransferTransaction(Box fromBox, Box toBox, User user){
+
+        Transaction transaction = Transaction.builder()
+                .toBox(toBox)
+                .fromBox(fromBox)
+                .user(user)
+                .transactionType(Transaction.Type.TRANSFER)
+                .uuid(UUID.randomUUID().toString().replace("-", "").substring(0, 20))
+                .build();
+        return transactionRepository.save(transaction);
+    }
+
+    public Transaction makeWithdrawalTransaction(Box box, User user) {
+        Transaction transaction = Transaction.builder()
+                .fromBox(box)
+                .user(user)
+                .transactionType(Transaction.Type.WITHDRAW)
+                .uuid(UUID.randomUUID().toString().replace("-", "").substring(0, 20))
+                .build();
+
+        return transactionRepository.save(transaction);
+    }
+
+    public Transaction makeExchangeReservationTransaction(Box box, User user){
+        Transaction transaction = Transaction.builder()
+                .toBox(box)
+                .fromBox(box)
+                .user(user)
+                .transactionType(Transaction.Type.EXCHANGE_RESERVATION)
+                .uuid(UUID.randomUUID().toString().replace("-", "").substring(0, 20))
+                .build();
+        return transactionRepository.save(transaction);
+    }
+
+    public Transaction makePaymentTransaction(Box box, User user){
+        Transaction transaction = Transaction.builder()
+                .user(user)
+                .toBox(box)
+                .fromBox(box)
+                .transactionType(Transaction.Type.PAYMENT)
+                .uuid(UUID.randomUUID().toString().replace("-", "").substring(0, 20))
+                .build();
+        return transactionRepository.save(transaction);
+    }
+}

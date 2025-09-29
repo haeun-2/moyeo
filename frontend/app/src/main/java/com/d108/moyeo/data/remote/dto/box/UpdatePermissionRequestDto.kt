@@ -1,0 +1,14 @@
+package com.d108.moyeo.data.remote.dto.box
+
+import com.google.gson.annotations.SerializedName
+
+data class UpdatePermissionRequestDto(
+    @SerializedName("boxMemberId")
+    val boxMemberId: Long,
+    @SerializedName("canTransfer")
+    val canTransfer: Boolean,
+    @SerializedName("canPayment")
+    val canPayment: Boolean,
+    @SerializedName("canExchange")
+    val canExchange: Boolean
+)

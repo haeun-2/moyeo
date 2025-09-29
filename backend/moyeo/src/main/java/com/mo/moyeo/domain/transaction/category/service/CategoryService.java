@@ -1,0 +1,34 @@
+package com.mo.moyeo.domain.transaction.category.service;
+
+import com.mo.moyeo.domain.transaction.category.entity.Category;
+import com.mo.moyeo.domain.transaction.category.entity.CategoryType;
+import com.mo.moyeo.domain.transaction.category.repository.CategoryRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class CategoryService {
+
+    private final CategoryRepository categoryRepository;
+    private final String CATEGORY_KEY = "category";
+
+    @Cacheable(value = CATEGORY_KEY, key = "'all'")
+    public Map<String, Category> getAllCategoryMap() {
+        return categoryRepository.findAllByOrderByIdAsc().stream()
+                .collect(Collectors.toMap(
+                        category -> category.getName().name(),
+                        category -> category,
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ));
+    }
+
+}

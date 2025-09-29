@@ -1,0 +1,121 @@
+package com.mo.moyeo.domain.transaction.transfer.service;
+
+import com.mo.moyeo.common.annotation.BoxDistributedLock;
+import com.mo.moyeo.common.annotation.BoxLockParam;
+import com.mo.moyeo.common.exception.CustomException;
+import com.mo.moyeo.common.exception.ErrorCode;
+import com.mo.moyeo.domain.box.box.entity.Box;
+import com.mo.moyeo.domain.box.balance.entity.BoxBalance;
+import com.mo.moyeo.domain.box.balance.service.BoxBalanceService;
+import com.mo.moyeo.domain.box.member.service.BoxMemberService;
+import com.mo.moyeo.domain.box.box.service.BoxService;
+import com.mo.moyeo.domain.currency.entity.CurrencyType;
+import com.mo.moyeo.domain.currency.service.CurrencyService;
+import com.mo.moyeo.domain.transaction.category.entity.CategoryType;
+import com.mo.moyeo.domain.transaction.category.service.CategoryCacheService;
+import com.mo.moyeo.domain.transaction.history.entity.BoxHistory;
+import com.mo.moyeo.domain.transaction.history.service.BoxHistoryService;
+import com.mo.moyeo.domain.transaction.transaction.entity.Transaction;
+import com.mo.moyeo.domain.transaction.transaction.service.TransactionService;
+import com.mo.moyeo.domain.transaction.transfer.dto.TransferRequest;
+import com.mo.moyeo.domain.transaction.transfer.entity.TransferTransaction;
+import com.mo.moyeo.domain.transaction.transfer.repository.TransferRepository;
+import com.mo.moyeo.domain.user.entity.User;
+import com.mo.moyeo.domain.user.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class TransferService {
+
+    private final TransferRepository transferRepository;
+    private final BoxService boxService;
+    private final BoxMemberService boxMemberService;
+    private final TransactionService transactionService;
+    private final CurrencyService currencyService;
+    private final BoxBalanceService boxBalanceService;
+    private final BoxHistoryService boxHistoryService;
+    private final CategoryCacheService categoryCacheService;
+    private final UserService userService;
+
+    @BoxDistributedLock({
+            @BoxLockParam(boxId = "#request.fromBoxId", currencyCode = "#request.currency"),
+            @BoxLockParam(boxId = "#request.toBoxId", currencyCode = "#request.currency"),
+    })
+    public void transfer(User user, TransferRequest request) {
+        // 요청 검증
+        if (request.getFromBoxId().equals(request.getToBoxId())) {
+            throw new CustomException(ErrorCode.BAD_REQUEST);
+        }
+        BigDecimal amount = request.getAmount();
+        CurrencyType currency = request.getCurrency();
+
+        Box fromBox = boxService.getBoxById(request.getFromBoxId());
+        validatePermission(user, fromBox); // 이체 권한 화인
+        BoxBalance fromBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(fromBox, currency);
+        validateSufficientBalance(fromBoxBalance, amount); // 출금 박스 잔액 확인
+
+        Box toBox = boxService.getBoxById(request.getToBoxId());
+        BoxBalance toBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(toBox, currency);
+
+        // 입출금
+        fromBoxBalance.decreaseBalance(amount);
+        toBoxBalance.increaseBalance(amount);
+
+        // 이체 트랜잭션 생성
+        Transaction transaction = transactionService.makeTransferTransaction(fromBox, toBox, user);
+        TransferTransaction transferTransaction = TransferTransaction.builder()
+                .transaction(transaction)
+                .currency(currencyService.getReferenceByType(currency))
+                .amount(amount)
+                .build();
+        transferRepository.save(transferTransaction);
+
+        String toBoxName = toBox.isPersonal() ? userService.getById(toBox.getOwnerId()).getName() : toBox.getBoxName();
+        String fromBoxName = fromBox.isPersonal() ? userService.getById(fromBox.getOwnerId()).getName() : fromBox.getBoxName();
+
+        // 입출금 히스토리 저장
+        BoxHistory fromHistory = BoxHistory.builder()
+                .box(fromBox)
+                .transaction(transaction)
+                .amount(amount.negate())
+                .currencyCode(currency)
+                .totalAmount(fromBoxBalance.getBalance())
+                .title(toBoxName)
+                .type(Transaction.Type.TRANSFER)
+                .category(categoryCacheService.getByName(CategoryType.WITHDRAW))
+                .createdAt(transaction.getCreatedAt())
+                .build();
+
+        BoxHistory toHistory = BoxHistory.builder()
+                .box(toBox)
+                .transaction(transaction)
+                .amount(amount)
+                .currencyCode(currency)
+                .totalAmount(toBoxBalance.getBalance())
+                .title(fromBoxName)
+                .type(Transaction.Type.TRANSFER)
+                .category(categoryCacheService.getByName(CategoryType.DEPOSIT))
+                .createdAt(transaction.getCreatedAt())
+                .build();
+
+        boxHistoryService.saveHistoryWithoutNotification(fromHistory);
+        boxHistoryService.saveHistory(toHistory);
+    }
+
+    private void validatePermission(User user, Box box) {
+        boxMemberService.validateTransferPermission(box, user);
+    }
+
+    private void validateSufficientBalance(BoxBalance boxBalance, BigDecimal amount) {
+        if (boxBalance.checkSufficientBalance(amount)) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "잔액이 부족합니다.");
+        }
+    }
+
+}
