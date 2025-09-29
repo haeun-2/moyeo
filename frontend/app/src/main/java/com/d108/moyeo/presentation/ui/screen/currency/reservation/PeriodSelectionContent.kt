@@ -6,18 +6,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun PeriodSelectionContent(
     paddingValues: PaddingValues,
     startDate: String,
     endDate: String,
-    onStartChange: (String) -> Unit,
-    onEndChange: (String) -> Unit,
-    isLoading: Boolean,
-    onSubmit: () -> Unit
+    // [수정] ViewModel 함수를 직접 받는 대신, 클릭 이벤트만 전달하도록 변경
+    onStartDateClick: () -> Unit,
+    onEndDateClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -33,24 +30,15 @@ fun PeriodSelectionContent(
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
             PeriodButton(
                 text = startDate.ifEmpty { "시작일 선택" },
-                selected = startDate.isNotEmpty()
-            ) { onStartChange(todayIso()) }
+                selected = startDate.isNotEmpty(),
+                onClick = onStartDateClick // [수정]
+            )
 
             PeriodButton(
                 text = endDate.ifEmpty { "종료일 선택" },
-                selected = endDate.isNotEmpty()
-            ) { onEndChange(tomorrowIso()) }
-        }
-
-        Spacer(Modifier.weight(1f))
-        Button(
-            onClick = onSubmit,
-            enabled = startDate.isNotEmpty() && endDate.isNotEmpty() && !isLoading,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(28.dp)
-        ) {
-            if (isLoading) CircularProgressIndicator(modifier = Modifier.size(22.dp))
-            else Text("예약하기")
+                selected = endDate.isNotEmpty(),
+                onClick = onEndDateClick // [수정]
+            )
         }
     }
 }
@@ -63,21 +51,9 @@ private fun PeriodButton(text: String, selected: Boolean, onClick: () -> Unit) {
         shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (selected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.surfaceVariant
+            else MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = if (selected) MaterialTheme.colorScheme.onPrimary
+            else MaterialTheme.colorScheme.onSurfaceVariant
         )
     ) { Text(text) }
-}
-
-// ✅ RequiresApi 제거, Calendar/DateFormat으로 대체
-private fun todayIso(): String {
-    val cal = Calendar.getInstance()
-    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    return sdf.format(cal.time)
-}
-
-private fun tomorrowIso(): String {
-    val cal = Calendar.getInstance()
-    cal.add(Calendar.DAY_OF_YEAR, 1)
-    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    return sdf.format(cal.time)
 }

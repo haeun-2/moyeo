@@ -4,7 +4,6 @@ import ExchangeHistoryScreen
 import MyConsultationDetail
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.d108.moyeo.presentation.ui.screen.*
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,6 +14,7 @@ import com.d108.moyeo.presentation.ui.screen.more.account.change.AccountChangeSc
 import com.d108.moyeo.presentation.ui.screen.currency.CurrencyScreen
 import com.d108.moyeo.presentation.ui.screen.currency.exchange.ExchangeScreen
 import com.d108.moyeo.presentation.ui.screen.currency.reservation.ReservationScreen
+import com.d108.moyeo.presentation.ui.screen.first.FirstScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryBoxesScreen
 import com.d108.moyeo.presentation.ui.screen.history.HistoryScreen
 import com.d108.moyeo.presentation.ui.screen.home.HomeScreen

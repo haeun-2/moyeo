@@ -106,7 +106,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             HomeHeader(
-                title = uiState.userName,
+                title = "${uiState.userName}님, 환영합니다!",
                 onBellClick = { navController.navigate(AppScreen.Notification.route) }
             )
         },

@@ -37,6 +37,12 @@ data class ReservationUiState(
     // (선택) 표시용
     val myKrwBalanceText: String = "",
 
-    val reservations: List<Reservation> = emptyList()
+    val reservations: List<Reservation> = emptyList(),
+
+    val pin: String = "",
+    val pinFailureCount: Int = 0,
+    val isPinLocked: Boolean = false,
+    val pinError: String? = null,
+    val biometricsEnabled: Boolean = false
 )
 

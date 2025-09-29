@@ -173,7 +173,7 @@ class MyBoxDetailViewModel @Inject constructor(
                     }
                 }
                 .onFailure {
-                    _uiState.update { it.copy(isLoading = false, errorMessage = "환전 정보를 불러오지 못했습니다.") }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "예약 환전이 취소되었습니다.") }
                 }
         }
     }

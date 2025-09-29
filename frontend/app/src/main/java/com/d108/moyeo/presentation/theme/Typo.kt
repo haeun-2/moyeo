@@ -87,12 +87,12 @@ val Typography = Typography(
         fontSize = 14.sp,
         lineHeight = 20.sp,
     ),
-//    bodySmall = TextStyle(
-//        fontFamily = PretendardFontFamily,
-//        fontWeight = FontWeight.Normal,
-//        fontSize = 12.sp,
-//        lineHeight = 16.sp,
-//    ),
+    bodySmall = TextStyle(
+        fontFamily = PretendardFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+    ),
     labelLarge = TextStyle(
         fontFamily = PretendardFontFamily,
         fontWeight = FontWeight.Normal,

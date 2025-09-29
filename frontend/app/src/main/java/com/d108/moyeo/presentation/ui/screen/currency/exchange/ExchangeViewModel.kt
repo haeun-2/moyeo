@@ -1,19 +1,30 @@
 package com.d108.moyeo.presentation.ui.screen.currency.exchange
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.domain.model.box.Balance
+import com.d108.moyeo.domain.model.exchange.Currency
 import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import com.d108.moyeo.domain.usecase.exchange.ExchangeUseCase
+import com.d108.moyeo.domain.usecase.exchange.GetCurrenciesUseCase
 import com.d108.moyeo.domain.usecase.exchange.ReservationExchangeUseCase
+import com.d108.moyeo.presentation.ui.component.KeypadKey
+import com.d108.moyeo.util.CurrencyUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import javax.inject.Inject
+
+sealed class ExchangeNavEvent {
+    data object NavigateBack : ExchangeNavEvent()
+    data object ShowBiometricPrompt : ExchangeNavEvent()
+}
 
 @HiltViewModel
 class ExchangeViewModel @Inject constructor(
@@ -23,7 +34,22 @@ class ExchangeViewModel @Inject constructor(
     private val getPersonalBox: GetPersonalBoxUseCase,
     private val boxStore: BoxStore,
     private val userDataManager: UserDataManager,
+    private val getCurrenciesUseCase: GetCurrenciesUseCase
 ) : ViewModel() {
+    private val _navigationEvent = MutableSharedFlow<ExchangeNavEvent>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
+
+    // TODO: 임시 정답 핀을 실제 PIN으로 바꾸기
+    private val correctPin = "111111"
+
+    init {
+        // ✨ 생체인증 여부 확인 로직 추가
+        viewModelScope.launch {
+            userDataManager.biometricsPreferenceFlow.collect { enabled ->
+                _uiState.update { it.copy(biometricsEnabled = enabled) }
+            }
+        }
+    }
 
     // Transfer와 동일: 화면에서 구독해 사용할 수 있도록 노출
     val boxUiStates = boxStore.boxUiStates               // 박스 카드(색/텍스트 포함) 목록
@@ -38,6 +64,8 @@ class ExchangeViewModel @Inject constructor(
     private var myPersonalBoxId: Long? = null
     private var myPersonalBalances: List<Balance> = emptyList()
 
+    private var exchangeRatesMap: Map<String, Currency> = emptyMap()
+
     fun initIfNeeded() {
         val modeArg = (savedStateHandle.get<String>("mode") ?: "CHARGE").uppercase()
         val initialMode = runCatching { ExchangeMode.valueOf(modeArg) }.getOrElse { ExchangeMode.CHARGE }
@@ -48,24 +76,40 @@ class ExchangeViewModel @Inject constructor(
                 ExchangeMode.CHARGE -> ExchangeStep.TARGET_BOX
                 ExchangeMode.REFUND -> ExchangeStep.HOW_MUCH
             }
-            _uiState.update { it.copy(mode = initialMode, step = startStep) }
+            _uiState.update { it.copy(
+                mode = initialMode,
+                step = startStep,
+                targetCurrencyCode = targetCurrency ?: "",
+                targetCurrencyName = CurrencyUtils.getCurrencyName(targetCurrency ?: "")
+            )}
 
             viewModelScope.launch {
+                getCurrenciesUseCase().onSuccess { rates ->
+                    // 성공 시, ViewModel 내부 변수에 Map 형태로 저장합니다.
+                    exchangeRatesMap = rates
+                }.onFailure {
+                    // TODO: 환율 정보 로딩 실패 시 에러 처리
+                    Log.e("ExchangeViewModel", "Failed to load exchange rates: $it")
+                }
                 getPersonalBox()
                     .onSuccess { box ->
                         myPersonalBoxId = box.id
                         myPersonalBalances = box.balances
 
                         if (initialMode == ExchangeMode.REFUND) {
-                            val spend = targetCurrency ?: ""
-                            val name = currencies.value.find { it.code == spend }?.name ?: ""
+                            val spendCurrency = targetCurrency ?: ""
+                            val spendName = currencies.value.find { it.code == spendCurrency }?.name ?: ""
                             _uiState.update {
                                 it.copy(
                                     selectedBoxId = box.id,          // 내 개인 박스
-                                    spendCurrencyCode = spend,       // 선택 외화 (출금)
-                                    spendCurrencyName = name
+                                    spendCurrencyCode = spendCurrency,     // 지출 통화: JPY
+                                    spendCurrencyName = spendName,
+                                    targetCurrencyCode = "KRW",        // 목표(받을) 통화: KRW
+                                    targetCurrencyName = "원",
+                                    availableSpendBalance = myPersonalBalances.find { b -> b.currency == spendCurrency }?.balance ?: 0.0
                                 )
                             }
+                            updateCalculatedValues()
                         }
                     }
                     .onFailure { /* TODO: 에러 처리 */ }
@@ -81,11 +125,25 @@ class ExchangeViewModel @Inject constructor(
     // 지출 통화 선택 (CHARGE 용)
     fun onCurrencySelected(code: String) {
         val name = currencies.value.find { it.code == code }?.name ?: ""
-        _uiState.update { it.copy(spendCurrencyCode = code, spendCurrencyName = name) }
-    }
+
+        // 1. 현재 선택된 박스를 찾습니다. (boxUiStates는 BoxStore가 제공하는 실시간 박스 목록)
+        val selectedBox = boxUiStates.value.find { it.id == _uiState.value.selectedBoxId }
+
+        // 2. 그 박스의 잔액 목록(balances)에서 방금 선택한 통화(code)의 잔액을 찾습니다.
+        val selectedBalance = selectedBox?.balances?.find { it.currency == code }?.balance ?: 0.0
+
+        // 3. UiState를 업데이트하며 spendCurrency 정보와 함께 '찾아낸 잔액'도 저장합니다.
+        _uiState.update {
+            it.copy(
+                spendCurrencyCode = code,
+                spendCurrencyName = name,
+                availableSpendBalance = selectedBalance
+            )
+        }}
 
     fun changeAmount(newAmount: String) {
         _uiState.update { it.copy(amount = newAmount) }
+        updateCalculatedValues()
     }
 
     /** 금액 입력(자릿수/제한 처리: Transfer와 동일 로직) */
@@ -95,37 +153,37 @@ class ExchangeViewModel @Inject constructor(
         if (current.isEmpty() && digit == "00") return
         if (newStr.length > 10) return
 
-        // 내 잔액과 비교 (선택 통화 기준). REFUND은 KRW 고정.
-        val currency = _uiState.value.spendCurrencyCode
-        val balance = myPersonalBalances.find { it.currency == currency }?.balance ?: 0.0
-        val maxAmount = balance.toLong()
-        val newLong = newStr.toLongOrNull() ?: 0L
-        if (newLong > maxAmount) {
-            _uiState.update { it.copy(amount = maxAmount.toString()) }
-            return
-        }
-        _uiState.update { it.copy(amount = newStr) }
+        changeAmount(newStr)
     }
 
     fun onMoneyBackspace() {
         val c = _uiState.value.amount
-        _uiState.update { it.copy(amount = if (c.isNotEmpty()) c.dropLast(1) else "") }
+        val next = if (c.isNotEmpty()) c.dropLast(1).ifEmpty { "0" } else "0"
+        changeAmount(next)
     }
 
     /** 다음 버튼 공통 분기 (Transfer onNextClicked와 동일 구조) */
     fun onNextClicked() {
         when (_uiState.value.step) {
-            ExchangeStep.TARGET_BOX -> {
-                _uiState.update { it.copy(step = ExchangeStep.CHOOSE_CURRENCY) }
-            }
+            ExchangeStep.TARGET_BOX -> _uiState.update { it.copy(step = ExchangeStep.CHOOSE_CURRENCY) }
             ExchangeStep.CHOOSE_CURRENCY -> {
                 _uiState.update { it.copy(step = ExchangeStep.HOW_MUCH) }
+                updateCalculatedValues()
             }
             ExchangeStep.HOW_MUCH -> {
-                submitExchange()
+                if (_uiState.value.biometricsEnabled) {
+                    _uiState.update { it.copy(step = ExchangeStep.BIOMETRIC) }
+                    viewModelScope.launch {
+                        _navigationEvent.emit(ExchangeNavEvent.ShowBiometricPrompt)
+                    }
+                } else {
+                    _uiState.update { it.copy(step = ExchangeStep.PIN) }
+                }
             }
-            ExchangeStep.FINISH -> {
-                // Screen 에서 pop
+            ExchangeStep.BIOMETRIC -> skipBiometrics()
+            ExchangeStep.PIN -> if (!_uiState.value.isPinLocked) checkPin()
+            ExchangeStep.FINISH -> viewModelScope.launch {
+                _navigationEvent.emit(ExchangeNavEvent.NavigateBack)
             }
         }
     }
@@ -183,5 +241,166 @@ class ExchangeViewModel @Inject constructor(
         val bal = myPersonalBalances.find { it.currency == c }?.balance ?: 0.0
         val df = DecimalFormat("#,##0.####")
         return "잔액: ${df.format(bal)} $c"
+    }
+
+    fun onKeyPress(key: KeypadKey) {
+        if (_uiState.value.step == ExchangeStep.HOW_MUCH) {
+            val currentAmount = _uiState.value.amount
+            var newAmount = currentAmount
+
+            when (key) {
+                // 1. 숫자 키가 눌렸을 때
+                is KeypadKey.Digit -> {
+                    newAmount =
+                        if (currentAmount == "0") key.value.toString() else currentAmount + key.value
+                }
+                // 2. 초기화(Clear) 키가 눌렸을 때 ('00' 모드)
+                is KeypadKey.Clear -> {
+                    newAmount = if (currentAmount == "0") "0" else currentAmount + "00"
+                }
+                // 3. 백스페이스 키가 눌렸을 때
+                is KeypadKey.Backspace -> {
+                    newAmount = if (currentAmount.length > 1) currentAmount.dropLast(1) else "0"
+                }
+                // 4. 커스텀 키 (현재 시나리오에서는 사용되지 않음)
+                is KeypadKey.Custom -> {
+                    // 필요 시 로직 추가
+                }
+            }
+
+            // 자릿수 제한
+            if (newAmount.length > 10) {
+                return
+            }
+
+            // 모든 키 입력의 최종 결과로 changeAmount를 호출하여 환율 계산 실행
+            changeAmount(newAmount)
+        } else if (_uiState.value.step == ExchangeStep.PIN) {
+            // PIN 입력 로직
+            when(key) {
+                is KeypadKey.Digit -> onPinInput(key.value.toString())
+                KeypadKey.Clear -> onPinClear()
+                KeypadKey.Backspace -> onPinBackspace()
+                else -> {}
+            }
+        }
+    }
+
+
+
+    private fun updateCalculatedValues() {
+        val state = _uiState.value
+
+        if (state.mode == ExchangeMode.REFUND) {
+            val amountInKrw = state.amount.toDoubleOrNull() ?: 0.0
+            val fromCurrency = state.spendCurrencyCode // JPY
+
+            val rateInfo = exchangeRatesMap[fromCurrency]
+            var sellRate = rateInfo?.sellRate?.toDouble() ?: 0.0 // 팔 때 환율
+
+            if (fromCurrency == "JPY") {
+                sellRate /= 100.0
+            }
+
+            // 필요한 외화 = 받을 원화 / (1 외화 당 원화 가치)
+            val requiredSpendAmount = if (sellRate > 0) amountInKrw / sellRate else 0.0
+
+            _uiState.update {
+                it.copy(
+                    requiredSpendAmount = requiredSpendAmount,
+                    isMultiStepExchange = false,
+                    rateForStep1 = sellRate, // 팔 때 환율을 표시
+                    rateForStep2 = 0.0
+                )
+            }
+        } else {
+            val amountInTarget = state.amount.toDoubleOrNull() ?: 0.0
+
+            val toCurrency = state.targetCurrencyCode
+            val fromCurrency = state.spendCurrencyCode
+
+            // 이 부분은 기존 changeAmount 함수의 계산 로직과 완전히 동일합니다.
+            if (fromCurrency != "KRW" && toCurrency != "KRW") { // 외화 -> 외화
+                val rateInfoForBuy = exchangeRatesMap[toCurrency]
+                var rateStep2 = rateInfoForBuy?.buyRate?.toDouble() ?: 0.0
+                val rateInfoForSell = exchangeRatesMap[fromCurrency]
+                var rateStep1 = rateInfoForSell?.sellRate?.toDouble() ?: 0.0
+
+                if (toCurrency == "JPY") {
+                    rateStep2 /= 100.0
+                }
+                // ✨ 만약 지출 통화(fromCurrency)가 엔화이면, 똑같이 100으로 나눠서 1엔당 가격으로 변환
+                if (fromCurrency == "JPY") {
+                    rateStep1 /= 100.0
+                }
+
+                val requiredKrw = amountInTarget * rateStep2
+                val requiredSpendAmount = if (rateStep1 > 0) requiredKrw / rateStep1 else 0.0
+                _uiState.update {
+                    it.copy(
+                        requiredSpendAmount = requiredSpendAmount,
+                        isMultiStepExchange = true,
+                        rateForStep1 = rateStep1,
+                        rateForStep2 = rateStep2
+                    )
+                }
+            } else { // 원화 -> 외화
+                val rateInfo = exchangeRatesMap[toCurrency]
+                var currentRate = rateInfo?.buyRate?.toDouble() ?: 0.0
+
+                if (toCurrency == "JPY") {
+                    currentRate /= 100.0
+                }
+
+                val requiredSpendAmount = amountInTarget * currentRate
+                _uiState.update {
+                    it.copy(
+                        requiredSpendAmount = requiredSpendAmount,
+                        isMultiStepExchange = false,
+                        rateForStep1 = currentRate,
+                        rateForStep2 = 0.0
+                    )
+                }
+            }
+        }
+
+    }
+
+    fun onBiometricsSucceeded() {
+        submitExchange()
+    }
+    fun skipBiometrics() {
+        _uiState.update { it.copy(step = ExchangeStep.PIN) }
+    }
+    private fun onPinInput(digit: String) {
+        if (_uiState.value.pin.length < 6) {
+            _uiState.update { it.copy(pin = it.pin + digit, pinError = null) }
+        }
+    }
+
+    private fun onPinBackspace() {
+        _uiState.update { it.copy(pin = it.pin.dropLast(1), pinError = null) }
+    }
+
+    private fun onPinClear() {
+        _uiState.update { it.copy(pin = "", pinError = null) }
+    }
+
+    private fun checkPin() {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            if (currentState.pin == correctPin) {
+                submitExchange() // PIN 성공 시 실제 환전 실행
+            } else {
+                val newFailureCount = currentState.pinFailureCount + 1
+                if (newFailureCount >= 5) {
+                    _uiState.update { it.copy(isPinLocked = true, pinError = "PIN 5회 오류로 잠겼습니다.", pin = "") }
+                } else {
+                    _uiState.update { it.copy(pinFailureCount = newFailureCount, pinError = "PIN이 일치하지 않습니다. (${5 - newFailureCount}회 남음)") }
+                    delay(1000L)
+                    onPinClear()
+                }
+            }
+        }
     }
 }
