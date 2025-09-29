@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 아이콘 자체 배경은 투명 (스플래시 전체 배경은 themes.xml에서 색 지정) -->
+    <background android:drawable="@color/moyeo_brand_purple"/>
+    <!-- 여백을 준 foreground 래퍼 -->
+    <foreground android:drawable="@drawable/ic_splash_foreground_inset"/>
+</adaptive-icon>

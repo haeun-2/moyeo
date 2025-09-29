@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>모여 초대</title>
+    <script>
+        function openMoyeoApp() {
+          // 쿼리스트링에서 code 파싱
+          const params = new URLSearchParams(window.location.search);
+          const code = params.get("code");
+
+          const appUrl = "moyeo://invite?code=" + code;
+
+          // 앱 실행 시도
+          window.location = appUrl;
+
+          // 앱이 없을 경우 fallback
+          setTimeout(function() {
+            window.alert("앱 설치가 필요합니다.");
+          }, 1500);
+        }
+    </script>
+</head>
+<body onload="openMoyeoApp()">
+<h1>모여 초대 중...</h1>
+
+<p>모임에 가입하려면 앱을 설치하세요.</p>
+<!-- TODO 실제 APP 설치 링크 필요 -->
+<a href="" download>앱 설치하기 (APK)</a>
+</body>
+</html>

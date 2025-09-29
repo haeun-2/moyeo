@@ -1,0 +1,52 @@
+package com.d108.moyeo.presentation.ui.screen.signup
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import com.d108.moyeo.presentation.theme.Typography
+import com.d108.moyeo.presentation.theme.onSurfaceLight
+
+@Composable
+fun PhoneInputContent(uiState: SignUpUiState, viewModel: SignUpViewModel) {
+    Column {
+        Text("휴대폰 번호를\n입력해주세요", style = Typography.titleLarge)
+        Spacer(Modifier.height(20.dp))  // 후에 상수화 할 것
+        OutlinedTextField(
+            value = uiState.phoneNumber,
+            onValueChange = viewModel::onPhoneNumberChanged,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            placeholder = {
+                Text(text = "- 없이 입력해주세요 (예시: 01012345678)",
+                    style = Typography.bodyMedium,
+                    color = onSurfaceLight
+                )}, // 플레이스홀더 텍스트 설정
+            shape = RoundedCornerShape(15.dp),  // 모서리를 둥글게 설정. 후에 상수화 할 것
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            )
+        )
+        Spacer(Modifier.height(16.dp))
+        Button(
+            onClick = viewModel::onDebugPhoneNumberVerified,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = uiState.phoneNumber.isNotBlank(), // 전화번호가 입력되어야 활성화
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Magenta)
+        ) {
+            Text("[디버그] 즉시 인증")
+        }
+    }
+
+}
