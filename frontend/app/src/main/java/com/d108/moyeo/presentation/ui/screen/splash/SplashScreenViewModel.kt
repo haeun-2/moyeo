@@ -45,7 +45,7 @@ class SplashScreenViewModel : ViewModel() {
 
     // 실제로는 DataStore나 SharedPreferences를 확인해야 합니다.
     private suspend fun checkUserLoginStatus(): Boolean {
-        delay(1500L) // 가상 네트워크 딜레이
+        delay(300L) // 가상 네트워크 딜레이
         return false // 테스트를 위해 '로그인 안 됨'으로 설정
     }
 }

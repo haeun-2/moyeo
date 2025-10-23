@@ -5,7 +5,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
-import com.d108.moyeo.domain.model.box.BoxType
 import com.d108.moyeo.domain.usecase.history.GetTransactionHistoryUseCase
 import com.d108.moyeo.presentation.ui.component.home.Currency
 import com.d108.moyeo.presentation.ui.component.home.FilterOptionData.allScopeOptions
@@ -16,7 +15,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -50,34 +48,53 @@ class MyWalletViewModel @Inject constructor(
 
     private var searchJob: Job? = null
 
+    private var didHandleFirstResume: Boolean = false
+
+
     init {
-//        Log.d(TAG, "${savedStateHandle.keys()}")
-//        Log.d(TAG, "boxId: $boxId ")
-        val currencyCode = savedStateHandle.get<String>("currencyCode") ?: ""
+
+        val initialCurrencyCode = savedStateHandle.get<String>("currencyCode") ?: ""
+        _uiState.update { it.copy(selectedCurrencyCode = initialCurrencyCode) }
 
         viewModelScope.launch {
-            val allBoxes = boxStore.boxUiStates.firstOrNull() ?: emptyList()
-            Log.d(TAG, "size: ${allBoxes.size}")
-            val walletInfo = allBoxes.find { it.type == BoxType.PERSONAL }
-            Log.d(TAG, "walletInfo: $walletInfo")  //
+            boxStore.boxUiStates.collect { allBoxes ->
+                val newWalletInfo = allBoxes.find { it.id == boxId }
+                _uiState.update { it.copy(walletInfo = newWalletInfo) }
+            }
+        }
+        viewModelScope.launch {
+            boxStore.personalCurrencies.collect { currencies ->
+                _uiState.update { it.copy(currencies = currencies.map { Currency(it.code, it.name) }) }
+            }
+        }
+    }
 
+    fun onResumed() {
+        if (didHandleFirstResume) {
+            refresh()
+        } else {
+            refresh()
+            didHandleFirstResume = true
+        }
+    }
 
-            // TODO: 퍼스널 커런시가 뭐지
-            // BoxStore의 personalCurrencies는 CurrencyData 타입이므로 UI에 맞는 Currency 타입으로 변환
-            // TODO: 사실상 CurrencyData와 Currency는 같은 모양임...
-            val currencies = boxStore.personalCurrencies.value.map { Currency(it.code, it.name) }
+    fun refresh() {
+        viewModelScope.launch {
+            Log.d(TAG, "화면 데이터를 전체 새로고침합니다.")
+            _uiState.update { it.copy(isLoading = true) }
 
+            // BoxStore의 데이터를 먼저 네트워크로부터 새로고침
+            boxStore.refreshBoxes()
+
+            val historiesJob = loadHistories(boxId = boxId, isInitialLoad = true)
+
+            historiesJob.join()
             _uiState.update {
                 it.copy(
-                    walletInfo = walletInfo,
-                    selectedCurrencyCode = currencyCode,
-                    currencies = currencies
+                    isLoading = false,
                 )
             }
-
-            if (boxId != -1L) {
-                loadHistories(boxId = boxId, isInitialLoad = true)
-            }
+            Log.d(TAG, "새로고침 완료.")
         }
     }
 
@@ -89,8 +106,8 @@ class MyWalletViewModel @Inject constructor(
         val currentState = _uiState.value
         val pageToLoad = if (isInitialLoad) 0 else currentState.page
 
-        // 이미 로딩 중이거나, 다음 페이지가 없으면(마지막 페이지) 함수를 종료하여 중복 호출을 방지
-        if (currentState.isLoading || (!currentState.hasNext && !isInitialLoad)) {
+
+        if ((!isInitialLoad && currentState.isLoadingNextPage)  || (!currentState.hasNext && !isInitialLoad)) {
             return viewModelScope.launch {}
         }
 
@@ -255,13 +272,6 @@ class MyWalletViewModel @Inject constructor(
     fun searchWithCategory(category: String) {
         val newFilters = uiState.value.filters.copy(scope = category)
         onFilterConfirm(newFilters) // 기존의 필터 확인 함수 재활용
-    }
-
-
-    suspend fun forceRefresh() {
-        Log.d(TAG, "Lifecycle Event: ON_RESUME. 강제 새로고침을 시작합니다.")
-        loadHistories(boxId = boxId, isInitialLoad = true).join()
-        Log.d(TAG, "forceRefresh 완료. 다음 작업으로 넘어갑니다.")
     }
 
     private fun Date.toApiDateString(): String {

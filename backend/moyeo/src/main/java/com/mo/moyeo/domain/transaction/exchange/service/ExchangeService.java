@@ -102,7 +102,7 @@ public class ExchangeService {
         BoxBalance toBoxBalance = boxBalanceService.findBoxBalanceByBoxAndCurrencyType(box, exchangeRequestDto.getToCurrency());
 
         toBoxBalance.increaseBalance(toAmount);
-        if(fromBoxBalance.checkSufficientBalance(fromAmount))
+        if (fromBoxBalance.checkSufficientBalance(fromAmount))
             throw new CustomException(ErrorCode.BAD_REQUEST, "환전에 필요한 금액이 부족합니다.");
         fromBoxBalance.decreaseBalance(fromAmount);
 
@@ -155,7 +155,7 @@ public class ExchangeService {
         BigDecimal toAmount = exchangeRequestDto.getAmount();
         BigDecimal fromAmount;
 
-        log.debug("환율{}",sellRate);
+        log.debug("환율{}", sellRate);
         if (fromCurrency == CurrencyType.JPY) {
             // JPY는 100엔 기준이므로 나눠줘야 함
             fromAmount = toAmount
@@ -163,7 +163,7 @@ public class ExchangeService {
                     .divide(sellRate, 0, RoundingMode.HALF_UP);
         } else {
             // USD, EUR 같은 경우는 1 단위 기준
-            fromAmount = toAmount.divide(sellRate,0, RoundingMode.HALF_UP);
+            fromAmount = toAmount.divide(sellRate, 0, RoundingMode.HALF_UP);
         }
 
         return ExchangeTransaction.builder()
@@ -186,8 +186,8 @@ public class ExchangeService {
         if (toCurrency == CurrencyType.JPY) {
             // JPY는 100엔 기준
             fromAmount = buyRate
-                    .divide(BigDecimal.valueOf(100),0, RoundingMode.HALF_UP) // div 100
-                    .multiply(toAmount);
+                    .multiply(toAmount)
+                    .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);// div 100;
         } else {
             // USD, EUR 같은 경우는 1 단위 기준
             fromAmount = buyRate.multiply(toAmount);

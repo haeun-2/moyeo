@@ -1,10 +1,14 @@
 package com.d108.moyeo
 
 import SplashScreenViewModel
+import android.Manifest
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -28,11 +32,33 @@ import kotlin.getValue
 @AndroidEntryPoint  // MainActivity는 Hilt의 관리를 받음
 class MainActivity : FragmentActivity() {
 
+    // ✨ 1. 권한 요청을 위한 런처 등록
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // 사용자가 권한을 허용한 경우의 동작 (예: 로그 남기기)
+            Log.d("MainActivity", "알림 권한이 허용되었습니다.")
+        } else {
+            // 사용자가 권한을 거부한 경우의 동작
+            Log.d("MainActivity", "알림 권한이 거부되었습니다.")
+        }
+    }
+
+    private fun askNotificationPermission() {
+        // ✨ 2. Android 13 이상에서만 권한 요청
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     private val splashScreenViewModel: SplashScreenViewModel by viewModels()
     private lateinit var navController: NavHostController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        askNotificationPermission()
 
         installSplashScreen().apply {
             setKeepOnScreenCondition { !splashScreenViewModel.isReady.value }

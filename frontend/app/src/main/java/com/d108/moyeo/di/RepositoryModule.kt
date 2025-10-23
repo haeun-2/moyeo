@@ -12,8 +12,10 @@ import com.d108.moyeo.data.repository.BoxStatisticsRepositoryImpl
 import com.d108.moyeo.data.repository.ChargeRepositoryImpl
 import com.d108.moyeo.data.repository.ExchangeHistoryRepositoryImpl
 import com.d108.moyeo.data.repository.ExchangeRepositoryImpl
+import com.d108.moyeo.data.repository.FcmTokenRepositoryImpl
 import com.d108.moyeo.data.repository.NotificationRepositoryImpl
 import com.d108.moyeo.data.repository.PaymentRepositoryImpl
+import com.d108.moyeo.data.repository.ReservationRepositoryImpl
 import com.d108.moyeo.data.repository.SignUpRepositoryImpl
 import com.d108.moyeo.data.repository.TransferRepositoryImpl
 import com.d108.moyeo.domain.repository.AccountRepository
@@ -27,9 +29,11 @@ import com.d108.moyeo.domain.repository.BoxStatisticsRepository
 import com.d108.moyeo.domain.repository.ChargeRepository
 import com.d108.moyeo.domain.repository.ExchangeHistoryRepository
 import com.d108.moyeo.domain.repository.ExchangeRepository
+import com.d108.moyeo.domain.repository.FcmTokenRepository
 import com.d108.moyeo.domain.repository.FidRepository
 import com.d108.moyeo.domain.repository.NotificationRepository
 import com.d108.moyeo.domain.repository.PaymentRepository
+import com.d108.moyeo.domain.repository.ReservationRepository
 import com.d108.moyeo.domain.repository.SignUpRepository
 import com.d108.moyeo.domain.repository.TransferRepository
 import dagger.Binds
@@ -151,4 +155,17 @@ abstract class RepositoryModule {  // @Binds 함수는 함수 본문이 없어�
     abstract fun bindAccountRepository(
         accountRepositoryImpl: AccountRepositoryImpl
     ): AccountRepository
+
+
+    @Binds
+    @Singleton
+    abstract fun bindFcmTokenRepository(
+        fcmTokenRepositoryImpl: FcmTokenRepositoryImpl
+    ): FcmTokenRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindReservationRepository(
+        reservationRepositoryImpl: ReservationRepositoryImpl
+    ): ReservationRepository
 }

@@ -3,6 +3,7 @@ package com.d108.moyeo.presentation.ui.screen.history
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.d108.moyeo.data.local.UserDataManager
 import com.d108.moyeo.domain.model.stats.CategoryStat
 import com.d108.moyeo.domain.usecase.box.GetBoxDetailUseCase
 import com.d108.moyeo.domain.usecase.history.GetTransactionHistoryUseCase
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -28,7 +30,8 @@ sealed class HistoryNavEvent {
 class HistoryViewModel @Inject constructor(
     private val getBoxDetailUseCase: GetBoxDetailUseCase,
     private val getCategoryStatsUseCase: GetCategoryStatsUseCase,
-    private val getTransactionHistoryUseCase: GetTransactionHistoryUseCase
+    private val getTransactionHistoryUseCase: GetTransactionHistoryUseCase,
+    private val userDataManager: UserDataManager
 ): ViewModel() {
     private val _uiState = MutableStateFlow(HistoryUiState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
@@ -37,6 +40,16 @@ class HistoryViewModel @Inject constructor(
     val navigationEvent = _navigationEvent.asSharedFlow()
 
     private val TAG = "HistoryViewModel"
+
+    init {
+        viewModelScope.launch {
+            val lastViewedId = userDataManager.lastViewedHistoryBoxIdFlow.firstOrNull()
+            if (lastViewedId != null) {
+                // 저장된 ID가 있다면, 해당 ID로 바로 데이터 로드를 시작
+                onBoxSelected(lastViewedId)
+            }
+        }
+    }
 
 
     /*
@@ -72,6 +85,7 @@ class HistoryViewModel @Inject constructor(
             getBoxDetailUseCase(boxId)
                 .onSuccess { boxDetail ->
                     _uiState.update { it.copy(selectedBox = boxDetail.box) }
+                    userDataManager.saveLastViewedHistoryBoxId(boxId)
                     loadAllPeriodStats(boxId)
                 }
                 .onFailure { error ->
@@ -153,12 +167,18 @@ class HistoryViewModel @Inject constructor(
         _uiState.update { it.copy(selectedToggleIndex = index) }
 
         val currentState = _uiState.value  // 모든 상태를 받음
+        // 현재 선택된 통화를 미리 저장해
+        val previouslySelectedCurrency = currentState.selectedCurrency
 
         if (index == 0) { // "전체" 탭을 선택한 경우
             _uiState.update {
                 // 전체 기간 데이터 캐시에서 통화 목록과 현재 통계를 복원
                 val currencyOptions = it.allPeriodStatsMap.keys.toList()
-                val selectedCurrency = currencyOptions.firstOrNull() ?: "기록 없음"
+                val selectedCurrency = if (previouslySelectedCurrency in currencyOptions) {
+                    previouslySelectedCurrency
+                } else {
+                    currencyOptions.firstOrNull() ?: "기록 없음"
+                }
                 it.copy(
                     currencyOptions = currencyOptions,
                     selectedCurrency = selectedCurrency,
@@ -170,7 +190,11 @@ class HistoryViewModel @Inject constructor(
                 // 날짜를 선택한 이력이 있다면 기간별 데이터 캐시에서 복원
                 _uiState.update {
                     val currencyOptions = it.dateRangeStatsMap.keys.toList()
-                    val selectedCurrency = currencyOptions.firstOrNull() ?: "기록 없음"
+                    val selectedCurrency = if (previouslySelectedCurrency in currencyOptions) {
+                        previouslySelectedCurrency
+                    } else {
+                        currencyOptions.firstOrNull() ?: "기록 없음"
+                    }
                     it.copy(
                         currencyOptions = currencyOptions,
                         selectedCurrency = selectedCurrency,
@@ -264,15 +288,18 @@ class HistoryViewModel @Inject constructor(
                 page = 0,
                 size = 100 // 일단 100개까지 불러오도록 설정
             ).onSuccess { paginatedHistory ->
+                Log.d(TAG, "1. 원본 데이터: ${paginatedHistory.content}")
+                val groupedAndSortedData = paginatedHistory.content
+                    .groupBy { transaction ->
+                        transaction.datetime.substring(0, 10) // "2025-09-20"
+                    }
+                    .toSortedMap(compareBy { it }) // 생성 시점부터 정렬된 Map
 
-                val groupedData = paginatedHistory.content.groupBy { transaction ->
-                    transaction.datetime.substring(0, 10) // "2025-09-20"
-                }
-                Log.d(TAG, "상세 거래내역 서버 응답: $paginatedHistory")
+                Log.d(TAG, "2. 정렬된 Map 키: ${groupedAndSortedData.keys}")
                 _uiState.update {
                     it.copy(
                         isSheetLoading = false,
-                        groupedHistoryTransactions = groupedData // 2. 그룹화된 Map을 UI 상태에 저장
+                        groupedHistoryTransactions = groupedAndSortedData // 정렬된 Map 전달
                     )
                 }
             }.onFailure { error ->

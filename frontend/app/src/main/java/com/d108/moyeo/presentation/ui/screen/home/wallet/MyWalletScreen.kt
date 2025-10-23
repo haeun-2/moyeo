@@ -54,29 +54,22 @@ fun MyWalletScreen(
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
 
-    val scope = rememberCoroutineScope()
-
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                // [수정] scope.launch로 코루틴을 시작합니다.
-                scope.launch {
-                    // 1. ViewModel의 forceRefresh가 끝날 때까지 '반드시' 기다립니다.
-                    viewModel.forceRefresh()
+                viewModel.onResumed()
 
-                    // 2. forceRefresh가 완전히 끝난 후에, 검색어/카테고리 확인 로직을 실행합니다.
-                    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
-                    val searchQuery = savedStateHandle?.get<String>("search_query")
-                    if (searchQuery != null) {
-                        viewModel.searchWithQuery(searchQuery)
-                        savedStateHandle.remove<String>("search_query")
-                    } else {
-                        val searchCategory = savedStateHandle?.get<String>("search_category")
-                        if (searchCategory != null) {
-                            viewModel.searchWithCategory(searchCategory)
-                            savedStateHandle.remove<String>("search_category")
-                        }
+                val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+                val searchQuery = savedStateHandle?.get<String>("search_query")
+                if (searchQuery != null) {
+                    viewModel.searchWithQuery(searchQuery)
+                    savedStateHandle.remove<String>("search_query")
+                } else {
+                    val searchCategory = savedStateHandle?.get<String>("search_category")
+                    if (searchCategory != null) {
+                        viewModel.searchWithCategory(searchCategory)
+                        savedStateHandle.remove<String>("search_category")
                     }
                 }
             }

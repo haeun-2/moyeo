@@ -62,6 +62,17 @@ class BoxRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getPaymentBoxes(): Result<List<Box>> {
+        return runCatching {
+            val response = api.getPaymentBoxes()
+            if (response.isSuccessful) {
+                response.body()?.map {it.toDomain()} ?: emptyList()
+            } else {
+                throw Exception("Server responded with error: ${response.code()}")
+            }
+        }
+    }
+
     override suspend fun getGroupBoxes(size: Int): Result<List<Box>> {
         return runCatching {
             val response = api.getGroupBoxes(size)

@@ -40,7 +40,7 @@ fun QRScreen(
 ) {
     // ViewModel의 상태를 구독합니다.
     val uiState by viewModel.uiState.collectAsState()
-    val bookmarkedBoxes by viewModel.bookmarkedBoxes.collectAsState()
+    val bookmarkedBoxes by viewModel.bookmarkedPaymentBoxes.collectAsState()
 
     // 선택한 걸 중앙에 두려고
     val lazyListState = rememberLazyListState()
@@ -52,11 +52,18 @@ fun QRScreen(
         if (newId != null) {
             viewModel.selectBoxOnReturn(newId)
             savedStateHandle.remove<Long>("newly_bookmarked_id")
+        }
+    }
 
-            val index = bookmarkedBoxes.indexOfFirst { it.id == newId }
+    LaunchedEffect(bookmarkedBoxes, uiState.scrollToBoxId) {
+        val boxIdToScroll = uiState.scrollToBoxId
+        // 스크롤 타겟이 있고, 박스 목록이 비어있지 않을 때만 실행
+        if (boxIdToScroll != null && bookmarkedBoxes.isNotEmpty()) {
+            val index = bookmarkedBoxes.indexOfFirst { it.id == boxIdToScroll }
             if (index != -1) {
                 coroutineScope.launch {
-                    lazyListState.animateScrollToItem(index = max(0, index - 1))  // 가운데로 위치
+                    lazyListState.animateScrollToItem(index = max(0, index - 1))
+                    viewModel.onScrollCompleted() // 스크롤 완료 후 상태 초기화
                 }
             }
         }

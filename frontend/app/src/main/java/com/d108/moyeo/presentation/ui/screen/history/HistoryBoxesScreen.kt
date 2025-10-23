@@ -3,8 +3,13 @@ package com.d108.moyeo.presentation.ui.screen.history
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,11 +57,21 @@ fun HistoryBoxesScreen(
     ) {
         Box(
             modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
         ) {
+            IconButton(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier.align(Alignment.CenterStart)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowLeft,
+                    contentDescription = "뒤로가기"
+                )
+            }
+
             Text(
-                text = "내 모여 박스 목록",
-                style = Typography.titleLarge
+                text = "통계를 볼 박스를\n선택해주세요",
+                style = Typography.titleLarge,
+                modifier = Modifier.align(Alignment.Center)
             )
         }
 

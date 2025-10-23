@@ -206,6 +206,8 @@ private fun ExchangeDetailContent(
             DetailInfoRow(label = "거래 금액", content = { Text("$formattedAmount ${transaction.currency}", style = Typography.bodyLarge, color = amountColor) })
             DetailInfoRow(label = "거래 후 잔액", content = { Text("$formattedBalance ${transaction.currency}", style = Typography.bodyLarge) })
 
+            Spacer(modifier = Modifier.height(Spacing.Medium))
+            HorizontalDivider()
 
             // 추가 정보 (API 호출 상태에 따라 표시)
             Box(
@@ -220,75 +222,87 @@ private fun ExchangeDetailContent(
                         exchangeDetail.forEachIndexed { index, detail ->
                             if (index > 0) {
                                 Spacer(modifier = Modifier.height(Spacing.Medium))
-                                HorizontalDivider()
-                                Spacer(modifier = Modifier.height(Spacing.Medium))
                             }
-                            Text(
-                                text = "${index + 1}차 환전",
-                                style = Typography.titleMedium,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            Spacer(modifier = Modifier.height(Spacing.Small))
-
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceAround,
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = Spacing.Medium),
+                                horizontalArrangement = Arrangement.SpaceBetween,
                             ) {
-                                CurrencyAmount(
-                                    label = "From",
-                                    amount = "- ${DecimalFormat("#,###.##").format(detail.fromAmount)}",
-                                    currency = detail.fromCurrency,
-                                    color = Color.Red
-                                )
-                                Text(text = "→", style = Typography.headlineMedium)
-                                CurrencyAmount(
-                                    label = "To",
-                                    amount = "+ ${DecimalFormat("#,###.##").format(detail.toAmount)}",
-                                    currency = detail.toCurrency,
-                                    color = Color.Blue
-                                )
-                            }
+                                Column(
+                                    horizontalAlignment = Alignment.Start
+                                ) {
+                                    Text(
+                                        text = "${index + 1}차 환전",
+                                        style = Typography.bodyLarge,
+                                        color = Color.Gray
+                                    )
 
-                            // 적용 환율에 표시될 숫자
-                            val leftCurrency: String
-                            val leftUnit: String
-                            val rightCurrency: String
-                            val rightUnit: String
+                                    Spacer(modifier = Modifier.height(Spacing.Medium))
 
-                            if (detail.fromCurrency == "KRW") {  // 한화에서 외화로 가는 경우
-                                if (detail.toCurrency == "JPY") {  // 한 -> 일화
-                                    leftCurrency = "KRW"
-                                    leftUnit = detail.exchangeRate.toString()
-                                    rightCurrency = detail.toCurrency
-                                    rightUnit = "100"
-                                } else {
-                                    leftCurrency = "KRW"
-                                    leftUnit = detail.exchangeRate.toString()
-                                    rightCurrency = detail.toCurrency
-                                    rightUnit = "1"
+                                    // 적용 환율에 표시될 숫자
+                                    val leftCurrency: String
+                                    val leftUnit: String
+                                    val rightCurrency: String
+                                    val rightUnit: String
+
+                                    if (detail.fromCurrency == "KRW") {  // 한화에서 외화로 가는 경우
+                                        if (detail.toCurrency == "JPY") {  // 한 -> 일화
+                                            leftCurrency = "KRW"
+                                            leftUnit = detail.exchangeRate.toString()
+                                            rightCurrency = detail.toCurrency
+                                            rightUnit = "100"
+                                        } else {
+                                            leftCurrency = "KRW"
+                                            leftUnit = detail.exchangeRate.toString()
+                                            rightCurrency = detail.toCurrency
+                                            rightUnit = "1"
+                                        }
+                                    } else {  // 외화에서 한화로 가는 경우
+                                        if (detail.fromCurrency == "JPY") {
+                                            leftCurrency = "KRW"
+                                            leftUnit = detail.exchangeRate.toString()
+                                            rightCurrency = detail.fromCurrency
+                                            rightUnit = "100"
+                                        } else {
+                                            leftCurrency = "KRW"
+                                            leftUnit = detail.exchangeRate.toString()
+                                            rightCurrency = detail.fromCurrency
+                                            rightUnit = "1"
+                                        }
+                                    }
+
+                                    Text(
+                                        text = "$leftUnit $leftCurrency ≈ $rightUnit $rightCurrency",
+                                        style = Typography.bodyLarge
+                                    )
                                 }
-                            } else {  // 외화에서 한화로 가는 경우
-                                if (detail.fromCurrency == "JPY") {
-                                    leftCurrency = "KRW"
-                                    leftUnit = detail.exchangeRate.toString()
-                                    rightCurrency = detail.fromCurrency
-                                    rightUnit = "100"
-                                } else {
-                                    leftCurrency = "KRW"
-                                    leftUnit = detail.exchangeRate.toString()
-                                    rightCurrency = detail.fromCurrency
-                                    rightUnit = "1"
+
+                                Column(
+                                    horizontalAlignment = Alignment.End
+                                ) {
+                                    Text(
+                                        text = "- ${DecimalFormat("#,###.##").format(detail.fromAmount)} ${detail.fromCurrency}",
+                                        style = Typography.bodyLarge,
+                                        color = Color.Red,
+                                        fontWeight = FontWeight.Medium
+                                    )
+
+                                    Spacer(modifier = Modifier.height(Spacing.Small))
+
+                                    Text("↓", style = Typography.bodyLarge)
+
+                                    Spacer(modifier = Modifier.height(Spacing.Medium))
+
+                                    Text(
+                                        text = "+ ${DecimalFormat("#,###.##").format(detail.toAmount)} ${detail.toCurrency}",
+                                        style = Typography.bodyLarge,
+                                        color = Color.Blue,
+                                        fontWeight = FontWeight.Medium
+                                    )
                                 }
                             }
-
-                            DetailInfoRow(label = "적용 환율", content = {
-                                Text("$leftUnit $leftCurrency = $rightUnit $rightCurrency", style = Typography.bodyLarge)
-                            })
                         }
-
-
                     }
                     // 3. API 호출 실패
                     uiState.errorMessage != null -> Text(uiState.errorMessage, color = Color.Red)

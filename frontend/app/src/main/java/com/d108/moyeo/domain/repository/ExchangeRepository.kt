@@ -1,23 +1,23 @@
 package com.d108.moyeo.domain.repository
 
-import com.d108.moyeo.data.remote.dto.exchange.ExchangeRateItem
-import com.d108.moyeo.data.remote.dto.exchange.ExchangeReservationResponseDto
-import com.d108.moyeo.domain.model.exchange.ExchangeRate
+import com.d108.moyeo.domain.model.exchange.Currency
 
 interface ExchangeRepository {
-    suspend fun getCurrentExchangeRates(): Result<Map<String, ExchangeRateItem>>
+    suspend fun exchange(
+        fromBoxId: Long,
+        fromCurrency: String,
+        toCurrency: String,
+        amount: Long
+    ): Result<Unit>
 
-    suspend fun createExchangeReservation(
+    suspend fun reservationExchange(
         boxId: Long,
         fromCurrency: String,
         toCurrency: String,
         amount: Long,
-        targetRate: Long,
+        targetRate: Double,
         expiresAt: String
     ): Result<Unit>
 
-    suspend fun getExchangeReservations(boxId: Long): Result<List<ExchangeReservationResponseDto>>
-
-    suspend fun cancelExchangeReservation(reservationId: String): Result<Unit>
-
+    suspend fun getCurrencies(): Result<Map<String, Currency>>
 }

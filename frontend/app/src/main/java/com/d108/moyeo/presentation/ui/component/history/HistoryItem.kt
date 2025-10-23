@@ -44,7 +44,7 @@ fun HistoryItem(  // 히스토리 탭에서 하단에 레이지컬럼으로 표�
             startAngle = startAngle
         )
 
-        Spacer(modifier = Modifier.width(Padding.HorizontalMedium))
+        Spacer(modifier = Modifier.width(Padding.HorizontalSmall))
 
         // 가운데: 품목 이름과 퍼센테이지
         Column {

@@ -39,7 +39,7 @@ fun QRBoxesScreen(
 ) {
 
     val uiState by viewModel.uiState.collectAsState()
-    val boxes by viewModel.groupBoxesUi.collectAsState()
+    val boxes by viewModel.paymentBoxes.collectAsState()
 
     BackHandler { viewModel.onBackClick() }
 

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
 import com.d108.moyeo.core.BoxStoreUiState
 import com.d108.moyeo.data.local.UserDataManager
+import com.d108.moyeo.data.mapper.toBoxStoreUiState
 import com.d108.moyeo.domain.model.box.Box
 import com.d108.moyeo.domain.model.box.BoxType
 import com.d108.moyeo.domain.usecase.box.AddBookmarkUseCase
@@ -15,6 +16,7 @@ import com.d108.moyeo.domain.usecase.box.DeleteBookmarkUseCase
 import com.d108.moyeo.domain.usecase.box.GetGroupBoxesUseCase
 import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import com.d108.moyeo.domain.repository.AuthRepository
+import com.d108.moyeo.domain.usecase.auth.GetMeUseCase
 import com.d108.moyeo.presentation.theme.boxAvailableColors
 import com.d108.moyeo.presentation.ui.screen.home.transfer.CurrencyData
 import com.d108.moyeo.util.CurrencyUtils.getCurrencyName
@@ -47,12 +49,11 @@ import kotlin.math.abs
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val getPersonalBoxUseCase: GetPersonalBoxUseCase,
-    private val getGroupBoxesUseCase: GetGroupBoxesUseCase,
     private val userDataManager: UserDataManager,
     private val boxStore: BoxStore,
     private val addBookmarkUseCase: AddBookmarkUseCase,
-    private val deleteBookmarkUseCase: DeleteBookmarkUseCase
+    private val deleteBookmarkUseCase: DeleteBookmarkUseCase,
+    private val getMeUseCase: GetMeUseCase
 ) : ViewModel() {
 
     private var didHandleFirstResume: Boolean = false
@@ -76,14 +77,21 @@ class HomeViewModel @Inject constructor(
     val navigationEvent = _navigationEvent.asSharedFlow()
 
     init {
-        // ... (토큰 로깅은 그대로)
-        refresh()
-
         viewModelScope.launch {
             userDataManager.userNameFlow.collect { name ->
                 _uiState.update { it.copy(userName = name ?: "사용자") }
             }
         }
+
+        viewModelScope.launch {
+            getMeUseCase.invoke()
+                .onSuccess { user ->
+                    userDataManager.saveUserName(user.name)
+                    // userNameFlow가 자동으로 UI 업데이트함
+                }
+        }
+
+        refresh()
     }
 
     /**
@@ -103,40 +111,10 @@ class HomeViewModel @Inject constructor(
     fun refresh() = viewModelScope.launch {
         _uiState.update { it.copy(isRefreshing = true) }
 
-        // 1. async를 사용하여 개인 박스와 그룹 박스를 '동시에' 요청
-        val personalBoxResultDeferred = async { getPersonalBoxUseCase() }
-        val groupBoxesResultDeferred = async { getGroupBoxesUseCase(size = 30) }
-
-        val personalResult = personalBoxResultDeferred.await()
-        val groupResult = groupBoxesResultDeferred.await()
-
-        // 2. 두 요청의 성공적인 결과를 하나의 리스트로 합침
-        val allServerBoxes = mutableListOf<Box>()
-        personalResult.onSuccess { allServerBoxes.add(it) }
-        groupResult.onSuccess { allServerBoxes.addAll(it) }
-
-        // 3. 합쳐진 전체 리스트를 기준으로 '완전체' UI State 리스트로 변환 (로컬 데이터와 조합)
-        val finalUiStateList = coroutineScope {
-            allServerBoxes.map { serverBox ->
-                async {
-                    serverBox.toBoxStoreUiState()
-                }
-            }.awaitAll()
-        }
-
-        // 4. 최종적으로 통합된 리스트를 BoxStore에 저장
-        boxStore.setUiStates(finalUiStateList)
-
-        // 5. BoxStore의 최신 데이터를 기반으로 홈 화면 UI를 업데이트
+        // 모든 로직을 BoxStore에 위임
+        boxStore.refreshBoxes()
+        // BoxStore가 업데이트되었으니, 그 최신 데이터를 기반으로 UI 작업
         updateUiFromBoxStore()
-
-        // 6. 개인 지갑 통화 목록도 BoxStore에 저장
-        personalResult.onSuccess { personalBox ->
-            val currencies = personalBox.balances
-//                .filter { it.balance != 0.0 }  //TODO: 일단 이거 0원 아닌 것도 나오게 해봄
-                .map { CurrencyData(name = getCurrencyName(it.currency), code = it.currency) }
-            boxStore.setPersonalCurrencies(currencies)
-        }
 
         _uiState.update { it.copy(isRefreshing = false) }
     }
@@ -277,32 +255,6 @@ class HomeViewModel @Inject constructor(
 
     // ---------- 헬퍼 함수 ----------
 
-    private suspend fun Box.toBoxStoreUiState(): BoxStoreUiState {
-        val localColor = if (this.type == BoxType.PERSONAL) {
-            userDataManager.walletColorFlow.first()
-        } else {
-            userDataManager.getGroupColor(this.id)
-        }
-        val finalColor = localColor?.let { Color(it) } ?: colorFromId(this.id)
-
-        val serverIsBookmarked = this.isBookmarked
-        val localIsBookmarked = userDataManager.isBookmarked(this.id)
-        val finalIsBookmarked = serverIsBookmarked || localIsBookmarked
-
-        val repr = this.balances.maxByOrNull { it.balance }
-        val amountText = if (repr == null) "잔액 없음" else formatAmount(repr.currency, repr.balance)
-
-        return BoxStoreUiState(
-            id = this.id,
-            title = this.name,
-            bg = finalColor,
-            textColor = textColorUtil(finalColor),
-            isBookmarked = finalIsBookmarked,
-            amount = amountText,
-            balances = this.balances,
-            type = this.type
-        )
-    }
 
     private fun BoxStoreUiState.toGroupBox(): GroupBox = GroupBox(
         id = this.id,
@@ -350,8 +302,4 @@ class HomeViewModel @Inject constructor(
         return "$formattedNumber $code"
     }
 
-    private fun colorFromId(id: Long): Color {
-        val base = abs(id.hashCode())
-        return boxAvailableColors[base % boxAvailableColors.size]
-    }
 }

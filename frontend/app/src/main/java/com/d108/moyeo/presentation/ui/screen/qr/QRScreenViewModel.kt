@@ -4,17 +4,21 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d108.moyeo.core.BoxStore
+import com.d108.moyeo.core.BoxStoreUiState
+import com.d108.moyeo.data.local.UserDataManager
+import com.d108.moyeo.data.mapper.toBoxStoreUiState
 import com.d108.moyeo.domain.model.box.BoxType
+import com.d108.moyeo.domain.usecase.box.GetPaymentBoxesUseCase
 import com.d108.moyeo.domain.usecase.payment.GenerateQRTokenUseCase
 import com.d108.moyeo.util.generateQRCodeBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -23,21 +27,45 @@ private val TAG = "QRScreenViewModel"
 @HiltViewModel
 class QRScreenViewModel @Inject constructor(
     private val generateQRTokenUseCase: GenerateQRTokenUseCase,
+    private val getPaymentBoxesUseCase: GetPaymentBoxesUseCase,
+    private val userDataManager: UserDataManager, // Mapper에 필요하므로 주입
     private val boxStore: BoxStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(QRScreenUiState())
     val uiState = _uiState.asStateFlow()
 
-    val bookmarkedBoxes = boxStore.boxUiStates.map { allBoxes ->
-        allBoxes.filter { it.type == BoxType.PERSONAL || it.isBookmarked }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+
+    // ✨ 3. 화면에 표시할 최종 박스 목록을 담을 StateFlow
+    private val _bookmarkedPaymentBoxes = MutableStateFlow<List<BoxStoreUiState>>(emptyList())
+    val bookmarkedPaymentBoxes = _bookmarkedPaymentBoxes.asStateFlow()
 
     private var timerJob: Job? = null  // 현재 실행 중인 타이머 작업
+
+    init {
+        loadBookmarkedPaymentBoxes()
+    }
+
+    private fun loadBookmarkedPaymentBoxes() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingBoxes = true) }
+            getPaymentBoxesUseCase()
+                .onSuccess { paymentBoxes ->
+                    // UI State로 변환
+                    val uiStateBoxes = coroutineScope {
+                        paymentBoxes.map { async { it.toBoxStoreUiState(userDataManager) } }.awaitAll()
+                    }
+
+                    // 개인 지갑이거나, 즐겨찾기된 박스만 필터링
+                    val filteredBoxes = uiStateBoxes.filter { it.type == BoxType.PERSONAL || it.isBookmarked }
+                    _bookmarkedPaymentBoxes.value = filteredBoxes
+                    _uiState.update { it.copy(isLoadingBoxes = false) }
+                }
+                .onFailure {
+                    _uiState.update { it.copy(isLoadingBoxes = false, errorMessage = "박스 목록을 불러올 수 없습니다.") }
+                }
+        }
+    }
 
 
     // 사용자가 모여박스를 클릭했을 때 호출될 함수
@@ -58,7 +86,13 @@ class QRScreenViewModel @Inject constructor(
     }
 
     fun selectBoxOnReturn(boxIdToSelect: Long) {
+        _uiState.update { it.copy(scrollToBoxId = boxIdToSelect) }
+        loadBookmarkedPaymentBoxes()
         selectBox(boxIdToSelect)
+    }
+
+    fun onScrollCompleted() {
+        _uiState.update { it.copy(scrollToBoxId = null) }
     }
 
     /*

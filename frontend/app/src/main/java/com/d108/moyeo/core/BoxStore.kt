@@ -1,8 +1,17 @@
 package com.d108.moyeo.core
 
 import androidx.compose.ui.graphics.Color
+import com.d108.moyeo.data.local.UserDataManager
+import com.d108.moyeo.data.mapper.toBoxStoreUiState
+import com.d108.moyeo.domain.model.box.Box
+import com.d108.moyeo.domain.usecase.box.GetGroupBoxesUseCase
+import com.d108.moyeo.domain.usecase.box.GetPersonalBoxUseCase
 import com.d108.moyeo.presentation.ui.screen.home.transfer.CurrencyData
+import com.d108.moyeo.util.CurrencyUtils.getCurrencyName
 import com.d108.moyeo.util.textColorUtil
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +29,11 @@ import javax.inject.Singleton
  * @see HomeViewModel - 이 Store의 데이터를 생성하고 공급하는 유일한 ViewModel.
  */
 @Singleton
-class BoxStore @Inject constructor() {
+class BoxStore @Inject constructor(
+    private val getPersonalBoxUseCase: GetPersonalBoxUseCase,
+    private val getGroupBoxesUseCase: GetGroupBoxesUseCase,
+    private val userDataManager: UserDataManager
+) {
 
     private val _boxUiStates = MutableStateFlow<List<BoxStoreUiState>>(emptyList())
     val boxUiStates: StateFlow<List<BoxStoreUiState>> = _boxUiStates.asStateFlow()
@@ -28,11 +41,6 @@ class BoxStore @Inject constructor() {
     // CurrencyData UiState 적용
     private val _personalCurrencies = MutableStateFlow<List<CurrencyData>>(emptyList())
     val personalCurrencies: StateFlow<List<CurrencyData>> = _personalCurrencies.asStateFlow()
-
-    // 그룹 박스 정보 저장
-    fun setUiStates(list: List<BoxStoreUiState>) {
-        _boxUiStates.value = list
-    }
 
     fun patchBox(
         id: Long,
@@ -57,10 +65,31 @@ class BoxStore @Inject constructor() {
     }
 
 
-    // 개인 박스 통화 종류 저장
-    // 통화량 등의 민감 정보는 배제
-    fun setPersonalCurrencies(list: List<CurrencyData>) {
-        _personalCurrencies.value = list  //
+    suspend fun refreshBoxes() {
+        coroutineScope {
+            val personalBoxResultDeferred = async { getPersonalBoxUseCase() }
+            val groupBoxesResultDeferred = async { getGroupBoxesUseCase(size = 30) }
+
+            val personalResult = personalBoxResultDeferred.await()
+            val groupResult = groupBoxesResultDeferred.await()
+
+            val allServerBoxes = mutableListOf<Box>()
+            personalResult.onSuccess { allServerBoxes.add(it) }
+            groupResult.onSuccess { allServerBoxes.addAll(it) }
+
+            val finalUiStateList = allServerBoxes.map { serverBox ->
+                async { serverBox.toBoxStoreUiState(userDataManager) }
+            }.awaitAll()
+
+            // BoxStore의 내부 상태를 직접 업데이트
+            _boxUiStates.value = finalUiStateList
+
+            personalResult.onSuccess { personalBox ->
+                val currencies = personalBox.balances
+                    .map { CurrencyData(name = getCurrencyName(it.currency), code = it.currency) }
+                _personalCurrencies.value = currencies
+            }
+        }
     }
 
     // BoxStore 초기화
