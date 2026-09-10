@@ -8,6 +8,7 @@
 - [기술 스택](#️-기술-스택)
 - [프로젝트 구조](#-프로젝트-구조)
 - [화면](#-화면)
+- [ERD](#-ERD)
 
 ## 🚀 프로젝트 소개
 
@@ -126,4 +127,7 @@ S13P21D108/
 <img width="540" height="1200" alt="Screenshot_20250928_234757" src="https://github.com/user-attachments/assets/52ed8acb-9943-4a8a-8afd-f956279b01fc" />
 <img width="540" height="1200" alt="Screenshot_20250928_234820" src="https://github.com/user-attachments/assets/0963a56f-5867-47d0-b52c-cb9e6dca99e7" />
 <img width="540" height="1200" alt="Screenshot_20250928_235139" src="https://github.com/user-attachments/assets/ef08ae5d-4e29-4d12-9d0e-20d8a0a13a2c" />
+
+## ERD
+<img width="1538" height="1275" alt="moyeo_erd" src="https://github.com/user-attachments/assets/f4bd23f1-063a-4245-b07c-43ac9eaea9b0" />
 
